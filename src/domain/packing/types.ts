@@ -18,3 +18,12 @@ export type PackingHeader = {
   invoice_no?: string;
   date?: string;             // ISO yyyy-mm-dd
 };
+
+export type InvoiceLine = {
+  boxes: number;
+  pounds: number;
+  description_en: string;
+  size: string;
+  form: string;
+  scientific_name?: string;
+};
