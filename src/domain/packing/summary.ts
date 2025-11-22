@@ -13,10 +13,21 @@ export function buildInvoice(lines: PackingLine[], sciByDesc: Record<string,stri
     g.pounds += l.pounds;
   });
 
-  return [...groups.entries()].map(([k, g]) => {
-    const [description_en, size, form] = k.split("|||");
-    const scientific_name = sciByDesc[description_en] || "";
-    return { boxes: g.boxes.size, pounds: g.pounds, description_en, size, form, scientific_name };
-  });
+ return [...groups.entries()].map(([k, g]) => {
+  const [description_en, size, form] = k.split("|||");
+  const scientific_name = sciByDesc[description_en] || "";
+
+  return {
+    amount: "",       // <--- agregado
+    price: "",        // <--- agregado
+    boxes: g.boxes.size,
+    pounds: g.pounds,
+    description_en,
+    size,
+    form,
+    scientific_name,
+  };
+});
+
 }
 
