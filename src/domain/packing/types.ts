@@ -20,6 +20,8 @@ export type PackingHeader = {
 };
 
 export type InvoiceLine = {
+  amount: string;
+  price: string;
   boxes: number;
   pounds: number;
   description_en: string;
