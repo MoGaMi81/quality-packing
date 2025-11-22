@@ -1,0 +1,411 @@
+[
+  {
+    "status": "draft",
+    "packing": {
+      "invoice_no": "1A",
+      "header": {
+        "client_code": "GM",
+        "client_name": "GRANMAR PRODUCTS, INC.",
+        "address": "2731 N.W. 104 COURT",
+        "tax_id": "582101842",
+        "guide": "",
+        "invoice_no": "1A",
+        "date": "2025-11-02"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "BLACK GROUPER FRESH",
+          "size": "5-10",
+          "form": "W&G",
+          "pounds": 100
+        },
+        {
+          "box_no": 2,
+          "description_en": "BLACK GROUPER FRESH",
+          "size": "10-20",
+          "form": "W&G",
+          "pounds": 102
+        },
+        {
+          "box_no": 3,
+          "description_en": "BLACK GROUPER FRESH",
+          "size": "10-20",
+          "form": "W&G",
+          "pounds": 104
+        }
+      ],
+      "created_at": "2025-11-02T22:11:06.015Z"
+    }
+  },
+  {
+    "id": 1,
+    "status": "final",
+    "invoice": "",
+    "header": {
+      "client_code": "",
+      "client_name": "",
+      "invoice": "",
+      "date": "",
+      "country": "",
+      "guide": ""
+    },
+    "lines": [],
+    "created_at": "2025-11-11T20:36:29.888Z",
+    "updated_at": "2025-11-11T20:36:29.888Z"
+  },
+  {
+    "id": 2,
+    "status": "final",
+    "invoice": "",
+    "header": {
+      "client_code": "",
+      "client_name": "",
+      "invoice": "",
+      "date": "",
+      "country": "",
+      "guide": ""
+    },
+    "lines": [],
+    "created_at": "2025-11-11T20:37:17.774Z",
+    "updated_at": "2025-11-11T20:37:17.774Z"
+  },
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "2A",
+      "header": {
+        "client_code": "GM",
+        "client_name": "GRANMAR PRODUCTS, INC.",
+        "address": "2731 N.W. 104 COURT",
+        "tax_id": "582101842",
+        "guide": "1",
+        "invoice_no": "2A",
+        "date": "2025-11-19"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "10-20",
+          "pounds": 100
+        },
+        {
+          "box_no": 2,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "30-40",
+          "pounds": 120
+        },
+        {
+          "box_no": 3,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 4,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 5,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 6,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 7,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 8,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 9,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 10,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 11,
+          "description_en": "RED GROUPER FRESH",
+          "form": "W&G",
+          "size": "3-5",
+          "pounds": 45
+        },
+        {
+          "box_no": 11,
+          "description_en": "RED GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 55
+        }
+      ],
+      "created_at": "2025-11-19T15:13:38.649Z"
+    }
+  },
+  {
+    "status": "draft",
+    "packing": {
+      "invoice_no": "3A",
+      "header": {
+        "client_code": "TW",
+        "client_name": "Two Oceans LLC",
+        "address": "121 South Orange Ave,Suite 1581",
+        "tax_id": "831994321",
+        "guide": "1",
+        "invoice_no": "3A",
+        "date": "2025-11-19"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 112
+        }
+      ],
+      "created_at": "2025-11-19T16:30:46.068Z"
+    }
+  },
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "4A",
+      "header": {
+        "client_code": "TW",
+        "client_name": "Two Oceans LLC",
+        "address": "121 South Orange Ave,Suite 1581",
+        "tax_id": "831994321",
+        "guide": "1",
+        "invoice_no": "4A",
+        "date": "2025-11-19"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 112
+        },
+        {
+          "box_no": 2,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 3,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 4,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 5,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 6,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 7,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 8,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 9,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 10,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        }
+      ],
+      "created_at": "2025-11-19T16:42:12.652Z"
+    }
+  },
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "5A",
+      "header": {
+        "client_code": "GM",
+        "client_name": "GRANMAR PRODUCTS, INC.",
+        "address": "2731 N.W. 104 COURT",
+        "tax_id": "582101842",
+        "guide": "1",
+        "invoice_no": "5A",
+        "date": "2025-11-19"
+      },
+      "lines": [
+        {
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 123,
+          "box_no": 1
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 2
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 3
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 4
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 5
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 6
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 7
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 8
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 9
+        },
+        {
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55,
+          "box_no": 10
+        },
+        {
+          "description_en": "RED GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 45,
+          "box_no": 11
+        },
+        {
+          "description_en": "RED GROUPER FRESH",
+          "form": "W&G",
+          "size": "3-5",
+          "pounds": 45,
+          "box_no": 11
+        },
+        {
+          "description_en": "AMERICAN RED SNAPPER FRESH",
+          "form": "W&G",
+          "size": "1-2",
+          "pounds": 35,
+          "box_no": 11
+        },
+        {
+          "description_en": "AMERICAN RED SNAPPER FRESH",
+          "form": "W&G",
+          "size": "2-4",
+          "pounds": 55,
+          "box_no": 11
+        },
+        {
+          "description_en": "MUTTON SNAPPER FRESH",
+          "form": "W&G",
+          "size": "10-20",
+          "pounds": 100,
+          "box_no": 11
+        }
+      ],
+      "created_at": "2025-11-19T19:25:02.411Z"
+    }
+  }
+]

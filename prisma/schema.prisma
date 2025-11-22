@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Species {
+  id               String   @id @default(uuid())
+  code             String   @unique
+  name_en          String
+  scientific_name  String?  @default("")
+  form             String?  @default("")
+  size             String?  @default("")
+  createdAt        DateTime @default(now())
+}
+
+model Packing {
+  id        String        @id @default(uuid())
+  invoice   String        @unique
+  date      DateTime?
+  customer  String?
+  vessel    String?
+  status    String?
+  items     PackingItem[]
+}
+
+model PackingItem {
+  id         String   @id @default(uuid())
+  packingId  String
+  boxNo      Int
+  species    String
+  size       String?
+  pieces     Int?
+  weightKg   Float?
+  weightLb   Float?
+  Packing    Packing  @relation(fields: [packingId], references: [id])
+}

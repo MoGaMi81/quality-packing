@@ -1,0 +1,10 @@
+{
+  "/page": "app/page.js",
+  "/packing/page": "app/packing/page.js",
+  "/packing/view/page": "app/packing/view/page.js",
+  "/packing/[invoice]/pricing/page": "app/packing/[invoice]/pricing/page.js",
+  "/packing/[invoice]/view/page": "app/packing/[invoice]/view/page.js",
+  "/api/invoices/check/route": "app/api/invoices/check/route.js",
+  "/packing/[invoice]/edit/page": "app/packing/[invoice]/edit/page.js",
+  "/api/export/excel/route": "app/api/export/excel/route.js"
+}
