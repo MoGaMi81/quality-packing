@@ -1,5 +1,5 @@
 // src/lib/packing.ts
-import { prisma } from "./prisma";
+import prisma from "@/lib/prisma";
 
 export type PackingItem = {
   boxNo: number;
