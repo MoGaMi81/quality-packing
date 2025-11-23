@@ -3,6 +3,7 @@
 
 export type Role = "proceso" | "facturacion" | "admin";
 
+// Lee el rol SOLO desde la cookie qp_session
 export function getRole(): Role | null {
   const raw = document.cookie
     .split("; ")
@@ -13,8 +14,11 @@ export function getRole(): Role | null {
   try {
     const base64 = raw.split("=")[1];
     const json = JSON.parse(atob(base64));
-    const role = (json.rol || json.role || "").toLowerCase();
-    return role as Role;
+    const role = (json.role || json.rol || "").toLowerCase();
+    if (role === "proceso" || role === "facturacion" || role === "admin") {
+      return role as Role;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -29,5 +33,6 @@ export const can = {
   exportAny:    (r: Role) => r === "admin",
   viewOnly:     (r: Role) => r === "facturacion",
 };
+
 
 

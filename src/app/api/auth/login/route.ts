@@ -10,7 +10,6 @@ export async function POST(req: Request) {
 
   const ct = req.headers.get("content-type") || "";
 
-  // Acepta JSON y también form-data / x-www-form-urlencoded
   try {
     if (ct.includes("application/json")) {
       const body = await req.json().catch(() => ({}));
@@ -36,15 +35,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
-  // sesión simple (dev)
   const res = NextResponse.json({
     ok: true,
     user: { email: user.email, role: user.role, name: user.name ?? "" },
   });
 
+  // Payload consistente
   const payload = JSON.stringify({
     email: user.email,
-    role: user.role,
+    role: user.role,   // 👈 nombre estandarizado
     name: user.name ?? "",
     t: Date.now(),
   });
