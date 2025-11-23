@@ -1,6 +1,9 @@
 //src/app/packing/page.tsx
 "use client";
 
+export const dynamic = "force-dynamic";   // 🔥 CLAVE
+export const fetchCache = "force-no-store";
+
 import { useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import AddBoxModal from "@/components/AddBoxModal";
@@ -10,7 +13,6 @@ import NewPackingWizard from "@/components/NewPackingWizard";
 import type { PackingHeader } from "@/domain/packing/types";
 import { fetchJSON } from "@/lib/fetchJSON";
 
-// Tipo de línea simple
 type SimpleItem = {
   description_en: string;
   size: string;
@@ -18,7 +20,6 @@ type SimpleItem = {
   pounds: number;
 };
 
-// utilidad para obtener siguiente número de caja
 function getNextBox(lines: { box_no: number }[]): number {
   if (!lines.length) return 1;
   const max = lines.reduce(
@@ -32,16 +33,12 @@ export default function PackingPage() {
   const { header, setHeader, lines, addLine, deleteBox, clear } =
     usePackingStore();
 
-  // Abrir Wizard solo si no existe header
   const [openWizard, setOpenWizard] = useState(!header);
-
-  // Modales de cajas
   const [openAdd, setOpenAdd] = useState(false);
   const [openRange, setOpenRange] = useState(false);
   const [openComb, setOpenComb] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
 
-  // Encabezado
   const [clientCode, setClientCode] = useState(header?.client_code ?? "");
   const [guide, setGuide] = useState(header?.guide ?? "");
   const [invoiceNo, setInvoiceNo] = useState(header?.invoice_no ?? "");
@@ -55,9 +52,7 @@ export default function PackingPage() {
     const c = clientCode.trim().toUpperCase();
     if (!c) return;
     try {
-      const r = await fetchJSON<any>(
-        `/api/catalogs/client/${encodeURIComponent(c)}`
-      );
+      const r = await fetchJSON<any>(`/api/catalogs/client/${encodeURIComponent(c)}`);
       const h: PackingHeader = {
         client_code: c,
         client_name: r.name,
@@ -73,39 +68,28 @@ export default function PackingPage() {
     }
   };
 
-  // simple
   const addSimple = (item: SimpleItem) => {
     const newBox = getNextBox(lines);
     addLine(item, newBox);
   };
 
-  const deleteSelected = () => {
-    if (selBox == null) return;
-    deleteBox(selBox);
-    setSelBox(null);
-  };
-
   const sortedLines = [...lines].sort(
-    (a, b) => a.box_no - b.box_no || a.description_en.localeCompare(b.description_en)
+    (a, b) =>
+      a.box_no - b.box_no ||
+      a.description_en.localeCompare(b.description_en)
   );
 
   const totalBoxes = new Set(lines.map((l) => l.box_no)).size;
   const totalLbs = lines.reduce((s, l) => s + l.pounds, 0);
 
-  // ***********************
-  //      RENDER
-  // ***********************
   return (
     <main className="w-full flex justify-center">
       <div className="w-full max-w-4xl p-6 space-y-6">
-
-        {/* WIZARD */}
         <NewPackingWizard
           open={openWizard}
           onClose={() => setOpenWizard(false)}
         />
 
-        {/* Si NO hay header → no mostrar nada más */}
         {!header && !openWizard && (
           <div className="text-center mt-10 text-gray-500">
             Iniciando packing...
@@ -114,10 +98,8 @@ export default function PackingPage() {
 
         {header && !openWizard && (
           <>
-            {/* ENCABEZADO PRINCIPAL */}
-            <h1 className="text-3xl font-bold text-center">
-              Ingreso de Packing
-            </h1>
+            {/* HEADER */}
+            <h1 className="text-3xl font-bold text-center">Ingreso de Packing</h1>
 
             <section className="border rounded-xl p-4 space-y-4 bg-white shadow-sm">
 

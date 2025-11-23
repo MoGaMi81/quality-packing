@@ -1,4 +1,7 @@
+//src/app/page.tsx
 "use client";
+
+export const dynamic = "force-dynamic"; // 🔥 evita prerender
 
 import { useEffect, useState } from "react";
 import { getRole } from "@/lib/role";
