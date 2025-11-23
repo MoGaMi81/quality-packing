@@ -1,12 +1,25 @@
 // src/lib/role.ts
+"use client";
+
 export type Role = "proceso" | "facturacion" | "admin";
 
-export const getRole = (): Role =>
-  (process.env.NEXT_PUBLIC_ROLE as Role) || "admin";
-export function getRoleClient(): "proceso" | "facturacion" | "admin" | null {
-  const m = document.cookie.match(/(?:^|;\s*)role=([^;]+)/);
-  return (m?.[1] as any) ?? null;
+export function getRole(): Role | null {
+  const raw = document.cookie
+    .split("; ")
+    .find(x => x.startsWith("qp_session="));
+
+  if (!raw) return null;
+
+  try {
+    const base64 = raw.split("=")[1];
+    const json = JSON.parse(atob(base64));
+    const role = (json.rol || json.role || "").toLowerCase();
+    return role as Role;
+  } catch {
+    return null;
+  }
 }
+
 export const can = {
   startPacking: (r: Role) => r === "proceso" || r === "admin",
   addBoxes:     (r: Role) => r === "proceso" || r === "admin",
@@ -16,4 +29,5 @@ export const can = {
   exportAny:    (r: Role) => r === "admin",
   viewOnly:     (r: Role) => r === "facturacion",
 };
+
 

@@ -8,7 +8,12 @@ export default function Home() {
 
   useEffect(() => {
     const r = getRole();
-    setRole(r);
+if (!r) {
+  window.location.href = "/login";
+  return;
+}
+setRole(r);
+
 
     if (r === "proceso") {
       window.location.href = "/packing"; // captura directa
