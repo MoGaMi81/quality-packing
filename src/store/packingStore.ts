@@ -1,5 +1,5 @@
-// src/store/packingStore.ts 
 "use client";
+
 import { create } from "zustand";
 import type { PackingHeader } from "@/domain/packing/types";
 
@@ -37,7 +37,6 @@ export const usePackingStore = create<State>((set, get) => ({
           : state.lastBoxNo + 1;
 
       const newLast = Math.max(state.lastBoxNo, box_no);
-
       return {
         lines: [...state.lines, { box_no, ...item }],
         lastBoxNo: newLast,

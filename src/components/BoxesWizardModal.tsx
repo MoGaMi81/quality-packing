@@ -1,3 +1,4 @@
+//src/components/BoxesWinzardModal.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";

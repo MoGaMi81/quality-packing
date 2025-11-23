@@ -10,20 +10,24 @@ type Props = { open: boolean; onClose: () => void };
 
 export default function NewPackingWizard({ open, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [role, setRole] = useState<"proceso"|"facturacion"|"admin"|null>(null);
 
-  const role = getRole() as "proceso" | "facturacion" | "admin";
+  useEffect(() => {
+    setMounted(true);
+    setRole(getRole());   // 🔥 SOLO EN CLIENTE
+  }, []);
+
   const { setHeader } = usePackingStore();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-
   const [invoiceNo, setInvoiceNo] = useState("");
   const [clientCode, setClientCode] = useState("");
   const [clientResolved, setClientResolved] = useState<any | null>(null);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [guide, setGuide] = useState("");
 
-  if (!mounted || !open) return null;
+  if (!mounted || !open || !role) return null;
+
 
   // -------------------------------------------------
   // 1. Verificar Invoice
