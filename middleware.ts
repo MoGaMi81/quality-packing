@@ -14,15 +14,19 @@ const ACL: Record<string, Array<"admin"|"proceso"|"facturacion">> = {
 function readUser(req: NextRequest) {
   const cookie = req.cookies.get("qp_session")?.value;
   if (!cookie) return null;
-  try { return JSON.parse(Buffer.from(cookie, "base64").toString("utf8")); }
-  catch { return null; }
+
+  try {
+    return JSON.parse(Buffer.from(cookie, "base64").toString("utf8"));
+  } catch {
+    return null;
+  }
 }
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // público
-  if (PUBLIC.some(p => pathname.startsWith(p))) return NextResponse.next();
+  if (PUBLIC.some(p => pathname.startsWith(p)))
+    return NextResponse.next();
 
   const user = readUser(req);
   if (!user) {
@@ -31,15 +35,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const role: string = String(user.role || "").toLowerCase();
+  // 🔥 FIX: Detectar tu campo real correcto
+  const role = String(user.rol || user.role || "").toLowerCase();
 
-  // 🔥 FIX PRINCIPAL:
-  // PERMITIR "/" tal cual, NO redirigir
-  if (pathname === "/") {
-    return NextResponse.next();
-  }
+  if (pathname === "/") return NextResponse.next();
 
-  // Coincidir prefijo más largo
   let matched = Object.keys(ACL)
     .filter(p => pathname === p || pathname.startsWith(p + "/"))
     .sort((a, b) => b.length - a.length)[0];
@@ -49,11 +49,12 @@ export function middleware(req: NextRequest) {
   const allow = ACL[matched].includes(role as any);
   if (allow) return NextResponse.next();
 
-  // ❌ No tiene permiso → redirigir según rol
+  // Redirección por rol
   const url = req.nextUrl.clone();
   if (role === "proceso") url.pathname = "/packing";
   else if (role === "facturacion") url.pathname = "/packing/view";
   else url.pathname = "/admin";
+
   return NextResponse.redirect(url);
 }
 
