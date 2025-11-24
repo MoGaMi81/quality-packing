@@ -20,15 +20,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/packing/page.js"
     ],
-    "/packing/[invoice]/view/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/packing/[invoice]/view/page.js"
-    ],
     "/packing/view/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/packing/view/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
