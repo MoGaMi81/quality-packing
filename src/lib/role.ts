@@ -1,39 +1,32 @@
+// src/lib/role.ts
 "use client";
 
-export type Role = "proceso" | "facturacion" | "admin";
+export type Role = "admin" | "proceso" | "facturacion" | null;
 
-// Lee el rol desde la cookie qp_session
-export function getRole(): Role | null {
-  const raw = document.cookie
-    .split("; ")
-    .find(x => x.startsWith("qp_session="));
+/**
+ * Lee el rol desde la etiqueta <meta name="x-user-role">
+ * que el middleware coloca en el HTML antes del render.
+ */
+export function getRole(): Role {
+  const meta = document.head.querySelector(
+    "meta[name='x-user-role']"
+  ) as HTMLMetaElement | null;
 
-  if (!raw) return null;
+  if (!meta) return null;
+  const r = (meta.content || "").trim().toLowerCase();
 
-  try {
-    const base64 = raw.split("=")[1];
-    const json = JSON.parse(atob(base64));
-
-    const role = (json.role || json.rol || "").toLowerCase();
-    if (role === "proceso" || role === "facturacion" || role === "admin") {
-      return role as Role;
-    }
-    return null;
-  } catch {
-    return null;
+  if (r === "admin" || r === "proceso" || r === "facturacion") {
+    return r;
   }
+  return null;
 }
 
-// 🔥 VOLVEMOS A EXPORTAR 'can'
 export const can = {
-  startPacking: (r: Role) => r === "proceso" || r === "admin",
-  addBoxes:     (r: Role) => r === "proceso" || r === "admin",
-  editBoxes:    (r: Role) => r === "proceso" || r === "admin",
-  finalize:     (r: Role) => r === "proceso" || r === "admin",
-  pricing:      (r: Role) => r === "admin",
-  exportAny:    (r: Role) => r === "admin",
-  viewOnly:     (r: Role) => r === "facturacion",
+  startPacking: (r: Role) => r === "admin" || r === "proceso",
+  addBoxes: (r: Role) => r === "admin" || r === "proceso",
+  editBoxes: (r: Role) => r === "admin" || r === "proceso",
+  finalize: (r: Role) => r === "admin" || r === "proceso",
+  pricing: (r: Role) => r === "admin",
+  exportAny: (r: Role) => r === "admin",
+  viewOnly: (r: Role) => r === "facturacion",
 };
-
-
-

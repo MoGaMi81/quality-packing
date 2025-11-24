@@ -48,12 +48,12 @@ export async function POST(req: Request) {
     t: Date.now(),
   });
 
-  res.cookies.set("qp_session", Buffer.from(payload).toString("base64"), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24,
-  });
+  res.cookies.set("qp_session", JSON.stringify(payload), {
+  httpOnly: true,
+  sameSite: "lax",
+  path: "/",
+  maxAge: 60 * 60 * 24,
+});
 
   return res;
 }

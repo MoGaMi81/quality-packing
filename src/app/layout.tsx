@@ -1,16 +1,14 @@
-import "./globals.css";
-import NavBar from "@/components/NavBar";
+// app/layout.tsx
+import type { ReactNode } from "react";
 
-export const metadata = {
-  title: "Quality Packing",
-  description: "Sistema de gestión de packings",
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="max-w-6xl mx-auto p-4">
-        <NavBar />
+      <head>
+        {/* Aquí Next inyectará el rol */}
+        <meta name="x-user-role" content="" />
+      </head>
+      <body>
         {children}
       </body>
     </html>

@@ -1,3 +1,4 @@
+// src/components/NewPackingWizard.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,28 +11,22 @@ type Props = { open: boolean; onClose: () => void };
 
 export default function NewPackingWizard({ open, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
-  const [role, setRole] = useState<"proceso"|"facturacion"|"admin"|null>(null);
+  useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    setMounted(true);
-    setRole(getRole());   // 🔥 SOLO EN CLIENTE
-  }, []);
-
+  const role = getRole();
   const { setHeader } = usePackingStore();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+
   const [invoiceNo, setInvoiceNo] = useState("");
   const [clientCode, setClientCode] = useState("");
   const [clientResolved, setClientResolved] = useState<any | null>(null);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [guide, setGuide] = useState("");
 
-  if (!mounted || !open || !role) return null;
+  if (!mounted || !open) return null;
 
-
-  // -------------------------------------------------
-  // 1. Verificar Invoice
-  // -------------------------------------------------
+  // -------- Paso 1: Buscar invoice --------
   const checkInvoice = async () => {
     const v = invoiceNo.trim().toUpperCase();
     if (!v) return;
@@ -50,14 +45,18 @@ export default function NewPackingWizard({ open, onClose }: Props) {
         return;
       }
 
-      const opt = prompt(`Invoice ${v} ya existe.\nOpciones: view, edit, pricing, export`, "view");
+      const opt = prompt(
+        `Invoice ${v} ya existe.\nOpciones: view, edit, pricing, export`,
+        "view"
+      );
       if (!opt) return;
 
       const cmd = opt.toLowerCase();
       if (cmd === "view") window.location.href = `/packing/${v}/view`;
       if (cmd === "edit") window.location.href = `/packing/${v}/edit`;
       if (cmd === "pricing") window.location.href = `/packing/${v}/pricing`;
-      if (cmd === "export") window.location.href = `/api/export/excel?invoice=${v}`;
+      if (cmd === "export")
+        window.location.href = `/api/export/excel?invoice=${v}`;
 
       return;
     }
@@ -65,15 +64,15 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     setStep(2);
   };
 
-  // -------------------------------------------------
-  // 2. Resolver Cliente
-  // -------------------------------------------------
+  // -------- Paso 2: Buscar cliente --------
   const resolveClient = async () => {
     const code = clientCode.trim().toUpperCase();
     if (!code) return;
 
     try {
-      const c = await fetchJSON(`/api/catalogs/client/${encodeURIComponent(code)}`);
+      const c = await fetchJSON(
+        `/api/catalogs/client/${encodeURIComponent(code)}`
+      );
       setClientResolved(c);
       setStep(3);
     } catch {
@@ -82,7 +81,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
         return;
       }
 
-      const go = confirm(`Cliente ${code} no existe.\n¿Crear ahora?`);
+      const go = confirm(
+        `Cliente ${code} no existe.\n¿Crear ahora?`
+      );
       if (!go) return;
 
       const name = prompt("Nombre del cliente:");
@@ -110,9 +111,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     }
   };
 
-  // -------------------------------------------------
-  // 3. Finalizar Wizard
-  // -------------------------------------------------
+  // -------- Paso 3: Terminar wizard --------
   const finishWizard = () => {
     if (!clientResolved) return;
 
@@ -126,93 +125,81 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       date,
     };
 
-    setHeader(h); // NO clear()
+    setHeader(h);
     onClose();
     alert("Packing iniciado → ahora agrega cajas.");
   };
 
-  // -------------------------------------------------
-  // UI
-  // -------------------------------------------------
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white p-5 rounded-xl w-full max-w-md space-y-5">
-        <h2 className="text-xl font-bold">Nuevo Packing</h2>
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-xl shadow">
+        <h2 className="text-xl font-bold mb-4">Nuevo Packing</h2>
 
-        {/* Paso 1: Invoice */}
         {step === 1 && (
-          <div className="space-y-3">
-            <label>Factura / Invoice</label>
+          <>
+            <label>Invoice:</label>
             <input
-              className="border rounded px-3 py-2 w-full"
+              className="border rounded px-2 py-1 w-full"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && checkInvoice()}
             />
 
-            <div className="flex justify-end gap-2">
-              <button className="border px-3 py-1 rounded" onClick={onClose}>Cancelar</button>
-              <button className="px-3 py-1 bg-black text-white rounded" onClick={checkInvoice}>
-                Continuar
-              </button>
-            </div>
-          </div>
+            <button
+              className="bg-black text-white px-4 py-2 rounded mt-4"
+              onClick={checkInvoice}
+            >
+              Continuar
+            </button>
+          </>
         )}
 
-        {/* Paso 2: Cliente */}
         {step === 2 && (
-          <div className="space-y-3">
-            <label>Cliente / Código</label>
+          <>
+            <label>Cliente código:</label>
             <input
-              className="border rounded px-3 py-2 w-full"
+              className="border rounded px-2 py-1 w-full"
               value={clientCode}
               onChange={(e) => setClientCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && resolveClient()}
             />
 
-            <div className="flex justify-end gap-2">
-              <button className="border px-3 py-1 rounded" onClick={() => setStep(1)}>Atrás</button>
-              <button className="px-3 py-1 bg-black text-white rounded" onClick={resolveClient}>Resolver</button>
-            </div>
-          </div>
+            <button
+              className="bg-black text-white px-4 py-2 rounded mt-4"
+              onClick={resolveClient}
+            >
+              Continuar
+            </button>
+          </>
         )}
 
-        {/* Paso 3: Fecha + AWB */}
-        {step === 3 && clientResolved && (
-          <div className="space-y-3">
-            <div className="text-sm">
-              <b>{clientResolved.name}</b><br />
-              {clientResolved.address}<br />
-              TAX: {clientResolved.tax_id}
-            </div>
-
-            <label>Fecha</label>
+        {step === 3 && (
+          <>
+            <label>AWB / Guía:</label>
             <input
-              type="date"
-              className="border rounded px-3 py-2 w-full"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-
-            <label>AWB / Guía</label>
-            <input
-              className="border rounded px-3 py-2 w-full"
+              className="border rounded px-2 py-1 w-full"
               value={guide}
               onChange={(e) => setGuide(e.target.value)}
             />
 
-            <div className="flex justify-end gap-2">
-              <button className="border px-3 py-1 rounded" onClick={() => setStep(2)}>Atrás</button>
-              <button className="px-3 py-1 bg-green-600 text-white rounded" onClick={finishWizard}>
-                Iniciar Packing
-              </button>
-            </div>
-          </div>
-        )}
+            <label className="mt-3">Fecha:</label>
+            <input
+              type="date"
+              className="border rounded px-2 py-1 w-full"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
 
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded mt-4"
+              onClick={finishWizard}
+            >
+              Finalizar
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 }
+
 
 

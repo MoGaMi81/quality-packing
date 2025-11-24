@@ -46,7 +46,7 @@ export default function PackingPage() {
     header?.date ?? new Date().toISOString().slice(0, 10)
   );
 
-  const [selBox, setSelBox] = useState<number | null>(null);
+  const [selBox] = useState<number | null>(null);
 
   const resolveClient = async () => {
     const c = clientCode.trim().toUpperCase();
