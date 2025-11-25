@@ -32,6 +32,9 @@ export function middleware(req: NextRequest) {
   }
 
   // Permitir continuar
+  const res = NextResponse.next();
+res.headers.set("x-user-role", role);
+return res;
   return NextResponse.next();
 }
 
