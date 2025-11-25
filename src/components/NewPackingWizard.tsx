@@ -13,7 +13,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const role = getRole();
+  const role = getRole() ?? "proceso";
   const { setHeader } = usePackingStore();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
