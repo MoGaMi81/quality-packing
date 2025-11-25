@@ -1,4 +1,3 @@
-// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -7,17 +6,21 @@ const PUBLIC = ["/login", "/api/auth/login"];
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Rutas permitidas sin login
   if (PUBLIC.some(p => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
+  // Cookie real
   const raw = req.cookies.get("qp_session")?.value;
+
   if (!raw) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
+  // Validar JSON
   let role = "";
   try {
     const json = JSON.parse(decodeURIComponent(raw));
@@ -28,11 +31,8 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Meter rol en headers (visible solo en server → seguro)
-  const res = NextResponse.next();
-  res.headers.set("x-user-role", role);
-  res.headers.set("x-middleware-set-cookie", `x-role=${role}`);
-  return res;
+  // Permitir continuar
+  return NextResponse.next();
 }
 
 export const config = {
