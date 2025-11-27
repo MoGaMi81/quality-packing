@@ -586,5 +586,188 @@
       ],
       "created_at": "2025-11-24T19:34:36.489Z"
     }
+  },
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "6a",
+      "header": {
+        "client_code": "SL",
+        "client_name": "SEA LION INTERNATIONAL",
+        "address": "2000 BANKS ROAD SUITE 222",
+        "tax_id": "954376601",
+        "guide": "1",
+        "invoice_no": "GM",
+        "date": "2025-11-26"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 100
+        },
+        {
+          "box_no": 2,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 3,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 4,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 5,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 6,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 7,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 8,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 9,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 10,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 11,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "10-20",
+          "pounds": 45
+        },
+        {
+          "box_no": 11,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "20-30",
+          "pounds": 55
+        },
+        {
+          "box_no": 11,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "30-40",
+          "pounds": 20
+        }
+      ],
+      "created_at": "2025-11-26T20:27:03.558Z"
+    }
+  },
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "7A",
+      "header": {
+        "client_code": "SL",
+        "client_name": "SEA LION INTERNATIONAL",
+        "address": "2000 BANKS ROAD SUITE 222",
+        "tax_id": "954376601",
+        "guide": "123",
+        "invoice_no": "7A",
+        "date": "2025-11-26"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "RED GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 100
+        },
+        {
+          "box_no": 2,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 3,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 4,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 5,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 6,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 45
+        },
+        {
+          "box_no": 6,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "10-20",
+          "pounds": 35
+        },
+        {
+          "box_no": 6,
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "30-40",
+          "pounds": 25
+        }
+      ],
+      "created_at": "2025-11-26T20:35:38.314Z"
+    }
   }
 ]

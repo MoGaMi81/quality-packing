@@ -1,14 +1,21 @@
 // src/app/layout.tsx
 import type { ReactNode } from "react";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const h = headers();
-  const role = h.get("x-user-role") ?? ""; // ← viene del middleware
+  const raw = cookies().get("qp_session")?.value ?? "";
+  let role = "";
+
+  try {
+    const json = JSON.parse(decodeURIComponent(raw));
+    role = json.role ?? "";
+  } catch {
+    role = "";
+  }
 
   return (
     <html lang="en">
-      <body data-role={role}> 
+      <body data-role={role}>
         {children}
       </body>
     </html>

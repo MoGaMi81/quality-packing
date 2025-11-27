@@ -3,10 +3,6 @@
 
 export type Role = "admin" | "proceso" | "facturacion" | null;
 
-/**
- * Lee el rol desde <body data-role="...">
- * que fue inyectado por middleware → layout
- */
 export function getRole(): Role {
   if (typeof document === "undefined") return null;
   const r = document.body.dataset.role;

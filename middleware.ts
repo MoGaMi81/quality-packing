@@ -6,38 +6,33 @@ const PUBLIC = ["/login", "/api/auth/login"];
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Rutas permitidas sin login
   if (PUBLIC.some(p => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // Cookie real
   const raw = req.cookies.get("qp_session")?.value;
-
   if (!raw) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Validar JSON
-  let role = "";
   try {
     const json = JSON.parse(decodeURIComponent(raw));
-    role = (json.role || "").toLowerCase();
+    const role = (json.role || "").toLowerCase();
+
+    if (!["admin", "proceso", "facturacion"].includes(role)) {
+      throw new Error("Rol inválido");
+    }
+
+    return NextResponse.next();
   } catch {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
-
-  // Permitir continuar
-  const res = NextResponse.next();
-res.headers.set("x-user-role", role);
-return res;
-  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"],
+  matcher: ["/((?!_next|static|favicon.ico).*)"],
 };

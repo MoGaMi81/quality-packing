@@ -5,25 +5,35 @@ import { useEffect, useState } from "react";
 import { getRole } from "@/lib/role";
 
 export default function Home() {
-  const [role, setRole] = useState<null | string>("loading");
+  const [role, setRole] = useState<null | string>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const r = getRole();
     setRole(r);
+    setLoading(false);
 
-    if (!r) return; // esperar render
+    if (!r) return;
+
     if (r === "proceso") window.location.href = "/packing";
     if (r === "facturacion") window.location.href = "/packing/view";
   }, []);
 
-  if (role === "loading")
+  if (loading) {
     return <div style={{ padding: 24 }}>Cargando…</div>;
+  }
 
-  if (!role)
-    return <div style={{ padding: 24 }}>No autenticado. <a href="/login">Ir a login</a></div>;
+  if (!role) {
+    return (
+      <div style={{ padding: 24 }}>
+        No autenticado. <a href="/login">Ir a login</a>
+      </div>
+    );
+  }
 
-  if (role !== "admin")
+  if (role !== "admin") {
     return <div style={{ padding: 24 }}>Redirigiendo…</div>;
+  }
 
   return (
     <main style={{ padding: 24 }}>
@@ -36,4 +46,3 @@ export default function Home() {
     </main>
   );
 }
-
