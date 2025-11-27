@@ -20,25 +20,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/packing/page.js"
     ],
-    "/packing/[invoice]/pricing/page": [
+    "/packing/view/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/packing/[invoice]/pricing/page.js"
-    ],
-    "/packing/[invoice]/view/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/packing/[invoice]/view/page.js"
-    ],
-    "/packing/[invoice]/edit/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/packing/[invoice]/edit/page.js"
-    ],
-    "/catalogs/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/catalogs/page.js"
+      "static/chunks/app/packing/view/page.js"
     ]
   }
 }

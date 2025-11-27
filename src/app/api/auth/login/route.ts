@@ -2,15 +2,18 @@
 import { NextResponse } from "next/server";
 
 // Simulación base de usuarios.
-const USERS = {
-  "admin@quality.test":       { role: "admin",        name: "admin" },
-  "proceso@quality.test":     { role: "proceso",      name: "proceso" },
-  "facturacion@quality.test": { role: "facturacion",  name: "facturación" },
+const USERS: Record<string, { role: string; name: string }> = {
+  "admin@quality.test": { role: "admin", name: "Admin" },
+  "proceso@quality.test": { role: "proceso", name: "Proceso" },
+  "facturacion@quality.test": { role: "facturacion", name: "Facturación" },
 };
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const email = (body.email || "").toLowerCase();
+    const password = body.password ?? "";
+
 
     if (!email || !password) {
       return NextResponse.json(
@@ -18,6 +21,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    
 
     const user = USERS[email.toLowerCase()];
     if (!user) {
