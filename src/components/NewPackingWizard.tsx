@@ -16,7 +16,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const role = getRole() ?? "proceso";
   const { setHeader } = usePackingStore();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   const [invoiceNo, setInvoiceNo] = useState("");
   const [clientCode, setClientCode] = useState("");
@@ -35,7 +35,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
     if (r.exists) {
       if (role === "proceso") {
-        const go = confirm(`Invoice ${v} ya existe.\n¿Abrir en edición?`);
+        const go = confirm(`La factura ${v} ya existe.\n¿Abrir en edición?`);
         if (go) window.location.href = `/packing/${v}/edit`;
         return;
       }
@@ -46,7 +46,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       }
 
       const opt = prompt(
-        `Invoice ${v} ya existe.\nOpciones: view, edit, pricing, export`,
+        `La factura ${v} ya existe.\nOpciones: view, edit, pricing, export`,
         "view"
       );
       if (!opt) return;
@@ -127,75 +127,98 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
     setHeader(h);
     onClose();
-    alert("Packing iniciado → ahora agrega cajas.");
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-xl shadow">
-        <h2 className="text-xl font-bold mb-4">Nuevo Packing</h2>
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-xl space-y-6">
 
+        {/* TÍTULO */}
+        <h2 className="text-2xl font-bold text-center">
+          Nuevo Packing
+        </h2>
+
+        {/* INDICADOR DE PASO */}
+        <div className="text-center text-sm text-gray-500">
+          Paso {step} de 3
+        </div>
+
+        {/* ------------------ PASO 1 ------------------ */}
         {step === 1 && (
-          <>
-            <label>Invoice:</label>
+          <div className="space-y-4">
+            <label className="font-semibold">Número de Factura (Invoice):</label>
             <input
-              className="border rounded px-2 py-1 w-full"
+              className="border rounded px-3 py-2 w-full"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
+              placeholder="Ej: 1092A"
             />
 
             <button
-              className="bg-black text-white px-4 py-2 rounded mt-4"
+              className="bg-black text-white px-4 py-2 rounded w-full"
               onClick={checkInvoice}
             >
               Continuar
             </button>
-          </>
+          </div>
         )}
 
+        {/* ------------------ PASO 2 ------------------ */}
         {step === 2 && (
-          <>
-            <label>Cliente código:</label>
+          <div className="space-y-4">
+            <label className="font-semibold">Código del Cliente:</label>
             <input
-              className="border rounded px-2 py-1 w-full"
+              className="border rounded px-3 py-2 w-full"
               value={clientCode}
               onChange={(e) => setClientCode(e.target.value)}
+              placeholder="Ej: SL, HE, OC, …"
             />
 
             <button
-              className="bg-black text-white px-4 py-2 rounded mt-4"
+              className="bg-black text-white px-4 py-2 rounded w-full"
               onClick={resolveClient}
             >
               Continuar
             </button>
-          </>
+          </div>
         )}
 
+        {/* ------------------ PASO 3 ------------------ */}
         {step === 3 && (
-          <>
-            <label>AWB / Guía:</label>
+          <div className="space-y-4">
+            <label className="font-semibold">AWB / Guía:</label>
             <input
-              className="border rounded px-2 py-1 w-full"
+              className="border rounded px-3 py-2 w-full"
               value={guide}
               onChange={(e) => setGuide(e.target.value)}
+              placeholder="Ej: SMLU8838614A"
             />
 
-            <label className="mt-3">Fecha:</label>
+            <label className="font-semibold block">Fecha:</label>
             <input
               type="date"
-              className="border rounded px-2 py-1 w-full"
+              className="border rounded px-3 py-2 w-full"
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
 
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded mt-4"
+              className="bg-green-600 text-white px-4 py-2 rounded w-full"
               onClick={finishWizard}
             >
-              Finalizar
+              Iniciar Packing
             </button>
-          </>
+          </div>
         )}
+
+        {/* CANCELAR */}
+        <button
+          className="text-center text-red-500 text-sm underline w-full"
+          onClick={onClose}
+        >
+          Cancelar
+        </button>
+
       </div>
     </div>
   );
