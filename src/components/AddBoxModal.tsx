@@ -1,7 +1,7 @@
 // src/components/AddBoxModal.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 
 type SimpleItem = {
@@ -21,15 +21,47 @@ export default function AddBoxModal({ open, onClose, onAdded }: Props) {
   const [key, setKey] = useState("");
   const [lbs, setLbs] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // cerrar con ESC
+  useEffect(() => {
+    if (!open) return;
+    const fn = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [open, onClose]);
+
+  // cuando se abre, limpiar
+  useEffect(() => {
+    if (open) {
+      setKey("");
+      setLbs("");
+      setError("");
+      setLoading(false);
+    }
+  }, [open]);
 
   if (!open) return null;
 
   const add = async () => {
+    setError("");
+
     const code = key.trim().toUpperCase();
     const nLbs = Number(lbs);
-    if (!code || !nLbs) return;
+
+    if (!code) {
+      setError("Ingresa una clave de especie.");
+      return;
+    }
+    if (!nLbs || nLbs <= 0) {
+      setError("Ingresa libras válidas.");
+      return;
+    }
 
     setLoading(true);
+
     try {
       const r = await fetchJSON<any>(
         `/api/catalogs/species-by-code/${encodeURIComponent(code)}`
@@ -43,46 +75,56 @@ export default function AddBoxModal({ open, onClose, onAdded }: Props) {
       };
 
       onAdded(item);
-      setKey("");
-      setLbs("");
       onClose();
     } catch (e: any) {
-      alert(e?.message || "Species not found");
+      setError(e?.message || "Especie no encontrada.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-5">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      {/* fondo clicable */}
+      <div
+        className="absolute inset-0"
+        onClick={() => !loading && onClose()}
+      />
 
-        <h3 className="text-xl font-bold text-center">Agregar Caja Simple</h3>
+      <div className="relative bg-white rounded-xl p-6 w-[420px] shadow-xl animate-fade space-y-4">
+        <h3 className="text-xl font-bold text-gray-800">Agregar Caja</h3>
 
-        <div className="space-y-2">
-          <label className="font-semibold text-sm">Clave de especie</label>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Clave de especie</label>
           <input
             className="border rounded px-3 py-2 w-full"
-            placeholder="Ej: BG5"
+            placeholder="Ej. BG5"
             value={key}
             onChange={(e) => setKey(e.target.value)}
+            disabled={loading}
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="font-semibold text-sm">Pounds</label>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Libras</label>
           <input
             className="border rounded px-3 py-2 w-full"
             type="number"
             value={lbs}
             onChange={(e) => setLbs(e.target.value)}
+            disabled={loading}
           />
         </div>
 
+        {error && (
+          <div className="text-red-600 text-sm">{error}</div>
+        )}
+
         <div className="flex justify-end gap-3 pt-2">
           <button
-            className="px-4 py-2 rounded border hover:bg-gray-100"
+            className="px-4 py-2 rounded border"
             onClick={onClose}
+            disabled={loading}
           >
             Cancelar
           </button>
@@ -92,10 +134,9 @@ export default function AddBoxModal({ open, onClose, onAdded }: Props) {
             onClick={add}
             disabled={loading || !key.trim() || !lbs}
           >
-            Agregar
+            {loading ? "Procesando..." : "Agregar"}
           </button>
         </div>
-
       </div>
     </div>
   );
