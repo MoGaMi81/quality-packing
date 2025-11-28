@@ -332,7 +332,6 @@ export default function PackingPage() {
                 items.forEach((it) => addLine(it, selBox));
               }}
             />
-
           </div>
         )}
       </div>
