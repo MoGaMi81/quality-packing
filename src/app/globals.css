@@ -25,3 +25,12 @@ button {
 button:hover {
   background-color: #e5e7eb;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade {
+  animation: fadeIn 0.15s ease-out;
+}

@@ -48,9 +48,7 @@ export default function AddRangeModal({ open, onClose, onAdded }: Props) {
       };
 
       const items: SimpleItem[] = [];
-      for (let i = nFrom; i <= nTo; i++) {
-        items.push({ ...base });
-      }
+      for (let i = nFrom; i <= nTo; i++) items.push({ ...base });
 
       onAdded(items);
       setKey("");
@@ -66,68 +64,75 @@ export default function AddRangeModal({ open, onClose, onAdded }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-      <div className="bg-white rounded-xl p-4 w-[420px] space-y-3">
-        <h3 className="text-lg font-semibold">Add range</h3>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-6">
 
-        <div className="space-y-1">
-          <label>Species key</label>
+        <h3 className="text-xl font-bold text-center">Agregar Rango</h3>
+
+        <div className="space-y-2">
+          <label className="font-semibold text-sm">Clave de especie</label>
           <input
-            className="border rounded px-2 py-1 w-full"
+            className="border rounded px-3 py-2 w-full"
             value={key}
             onChange={(e) => setKey(e.target.value)}
           />
         </div>
 
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label>From</label>
+        <div className="flex gap-4">
+          <div className="flex-1 space-y-2">
+            <label className="font-semibold text-sm">Desde</label>
             <input
               type="number"
-              className="border rounded px-2 py-1 w-full"
+              className="border rounded px-3 py-2 w-full"
               value={from === "" ? "" : from}
               onChange={(e) =>
-                setFrom(e.target.value === "" ? "" : parseInt(e.target.value, 10))
+                setFrom(e.target.value === "" ? "" : parseInt(e.target.value))
               }
             />
           </div>
-          <div className="flex-1">
-            <label>To</label>
+
+          <div className="flex-1 space-y-2">
+            <label className="font-semibold text-sm">Hasta</label>
             <input
               type="number"
-              className="border rounded px-2 py-1 w-full"
+              className="border rounded px-3 py-2 w-full"
               value={to === "" ? "" : to}
               onChange={(e) =>
-                setTo(e.target.value === "" ? "" : parseInt(e.target.value, 10))
+                setTo(e.target.value === "" ? "" : parseInt(e.target.value))
               }
             />
           </div>
         </div>
 
-        <div>
-          <label>Pounds per box</label>
+        <div className="space-y-2">
+          <label className="font-semibold text-sm">Pounds por caja</label>
           <input
             type="number"
-            className="border rounded px-2 py-1 w-full"
+            className="border rounded px-3 py-2 w-full"
             value={lbs === "" ? "" : lbs}
             onChange={(e) =>
-              setLbs(e.target.value === "" ? "" : parseInt(e.target.value, 10))
+              setLbs(e.target.value === "" ? "" : parseInt(e.target.value))
             }
           />
         </div>
 
-        <div className="flex gap-2 justify-end">
-          <button className="px-3 py-1 rounded border" onClick={onClose}>
-            Cancel
-          </button>
+        <div className="flex justify-end gap-3 pt-2">
           <button
-            className="px-3 py-1 rounded bg-black text-white"
+            className="px-4 py-2 rounded border hover:bg-gray-100"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+
+          <button
+            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
             onClick={add}
             disabled={loading}
           >
-            Add
+            Agregar
           </button>
         </div>
+
       </div>
     </div>
   );

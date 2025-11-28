@@ -54,42 +54,48 @@ export default function AddBoxModal({ open, onClose, onAdded }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-      <div className="bg-white rounded-xl p-4 w-[420px] space-y-3">
-        <h3 className="text-lg font-semibold">Agregar Caja</h3>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-5">
 
-        <div className="space-y-1">
-          <label className="text-sm">Especie</label>
+        <h3 className="text-xl font-bold text-center">Agregar Caja Simple</h3>
+
+        <div className="space-y-2">
+          <label className="font-semibold text-sm">Clave de especie</label>
           <input
-            className="border rounded px-2 py-1 w-full"
-            placeholder="e.g. BG5"
+            className="border rounded px-3 py-2 w-full"
+            placeholder="Ej: BG5"
             value={key}
             onChange={(e) => setKey(e.target.value)}
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="text-sm">Pounds (int)</label>
+        <div className="space-y-2">
+          <label className="font-semibold text-sm">Pounds</label>
           <input
-            className="border rounded px-2 py-1 w-full"
+            className="border rounded px-3 py-2 w-full"
             type="number"
             value={lbs}
             onChange={(e) => setLbs(e.target.value)}
           />
         </div>
 
-        <div className="flex gap-2 justify-end">
-          <button className="px-3 py-1 rounded border" onClick={onClose}>
-            Cancel
-          </button>
+        <div className="flex justify-end gap-3 pt-2">
           <button
-            className="px-3 py-1 rounded bg-black text-white disabled:opacity-50"
+            className="px-4 py-2 rounded border hover:bg-gray-100"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+
+          <button
+            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
             onClick={add}
             disabled={loading || !key.trim() || !lbs}
           >
-            Add
+            Agregar
           </button>
         </div>
+
       </div>
     </div>
   );

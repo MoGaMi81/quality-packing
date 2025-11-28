@@ -52,7 +52,6 @@ export default function AddCombinedModal({ open, onClose, onAdded }: Props) {
   };
 
   const save = async () => {
-    // Filtrar líneas vacías
     const valid = subs.filter(
       (s) => s.key.trim() !== "" && s.lbs !== "" && Number(s.lbs) > 0
     );
@@ -87,55 +86,69 @@ export default function AddCombinedModal({ open, onClose, onAdded }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-      <div className="bg-white rounded-xl p-4 w-[460px] space-y-3">
-        <h3 className="text-lg font-semibold">Add combined box</h3>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl space-y-6">
 
-        <div className="space-y-2">
+        <h3 className="text-xl font-bold text-center">Caja Combinada</h3>
+
+        <div className="space-y-4">
           {subs.map((s, i) => (
-            <div key={i} className="flex gap-2 items-end">
-              <div className="flex-1">
-                <label>Key</label>
+            <div key={i} className="flex gap-3 items-end">
+
+              <div className="flex-1 space-y-1">
+                <label className="font-semibold text-sm">Clave</label>
                 <input
-                  className="border rounded px-2 py-1 w-full"
+                  className="border rounded px-3 py-2 w-full"
                   value={s.key}
                   onChange={(e) => update(i, "key", e.target.value)}
                 />
               </div>
-              <div className="w-28">
-                <label>Lbs</label>
+
+              <div className="w-32 space-y-1">
+                <label className="font-semibold text-sm">Lbs</label>
                 <input
                   type="number"
-                  className="border rounded px-2 py-1 w-full"
+                  className="border rounded px-3 py-2 w-full"
                   value={s.lbs === "" ? "" : s.lbs}
                   onChange={(e) => update(i, "lbs", e.target.value)}
                 />
               </div>
+
               <button
                 onClick={() => remove(i)}
-                className="border rounded px-2 h-8"
+                className="border rounded px-2 py-2 h-[40px] hover:bg-gray-100"
               >
                 ✕
               </button>
+
             </div>
           ))}
-          <button className="text-sm underline" onClick={addRow}>
-            + Add line
+
+          <button
+            className="text-sm underline text-blue-600 hover:text-blue-800"
+            onClick={addRow}
+          >
+            + Agregar línea
           </button>
         </div>
 
-        <div className="flex justify-end gap-2">
-          <button className="px-3 py-1 border rounded" onClick={onClose}>
-            Cancel
-          </button>
+        <div className="flex justify-end gap-3 pt-2">
           <button
-            className="px-3 py-1 bg-black text-white rounded"
+            className="px-4 py-2 rounded border hover:bg-gray-100"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+
+          <button
+            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
             onClick={save}
             disabled={loading}
           >
-            Save
+            Guardar
           </button>
         </div>
+
       </div>
     </div>
   );
