@@ -89,9 +89,6 @@ export default function PackingPage() {
 
   return (
     <main className="w-full flex justify-center bg-gray-100 min-h-screen">
-      console.log("VERSION NUEVA CARGADA");
-
-      {/* 🔥🔥🔥 PRUEBA VISUAL ROJA 🔥🔥🔥 */}
       <div style={{
         background: "red",
         color: "white",
