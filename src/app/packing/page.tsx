@@ -56,7 +56,7 @@ export default function PackingPage() {
       const r = await fetchJSON<any>(
         `/api/catalogs/client/${encodeURIComponent(c)}`
       );
-console.log("VERSION NUEVA CARGADA");
+
       const h: PackingHeader = {
         client_code: c,
         client_name: r.name,
@@ -89,6 +89,7 @@ console.log("VERSION NUEVA CARGADA");
 
   return (
     <main className="w-full flex justify-center bg-gray-100 min-h-screen">
+      console.log("VERSION NUEVA CARGADA");
 
       {/* 🔥🔥🔥 PRUEBA VISUAL ROJA 🔥🔥🔥 */}
       <div style={{
