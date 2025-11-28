@@ -13,6 +13,8 @@ import NewPackingWizard from "@/components/NewPackingWizard";
 import type { PackingHeader } from "@/domain/packing/types";
 import { fetchJSON } from "@/lib/fetchJSON";
 
+
+
 type SimpleItem = {
   description_en: string;
   size: string;
@@ -54,7 +56,7 @@ export default function PackingPage() {
       const r = await fetchJSON<any>(
         `/api/catalogs/client/${encodeURIComponent(c)}`
       );
-
+console.log("VERSION NUEVA CARGADA");
       const h: PackingHeader = {
         client_code: c,
         client_name: r.name,
