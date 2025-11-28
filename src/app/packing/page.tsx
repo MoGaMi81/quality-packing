@@ -1,7 +1,7 @@
-//src/app/packing/page.tsx
+// src/app/packing/page.tsx
 "use client";
 
-export const dynamic = "force-dynamic";   // 🔥 CLAVE
+export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 import { useState } from "react";
@@ -33,12 +33,15 @@ export default function PackingPage() {
   const { header, setHeader, lines, addLine, deleteBox, clear } =
     usePackingStore();
 
+  // NAVIGATION STATE
   const [openWizard, setOpenWizard] = useState(!header);
   const [openAdd, setOpenAdd] = useState(false);
   const [openRange, setOpenRange] = useState(false);
   const [openComb, setOpenComb] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [selBox] = useState<number | null>(null);
 
+  // HEADER STATE
   const [clientCode, setClientCode] = useState(header?.client_code ?? "");
   const [guide, setGuide] = useState(header?.guide ?? "");
   const [invoiceNo, setInvoiceNo] = useState(header?.invoice_no ?? "");
@@ -46,13 +49,15 @@ export default function PackingPage() {
     header?.date ?? new Date().toISOString().slice(0, 10)
   );
 
-  const [selBox] = useState<number | null>(null);
-
+  // RESOLVE CLIENT
   const resolveClient = async () => {
     const c = clientCode.trim().toUpperCase();
     if (!c) return;
     try {
-      const r = await fetchJSON<any>(`/api/catalogs/client/${encodeURIComponent(c)}`);
+      const r = await fetchJSON<any>(
+        `/api/catalogs/client/${encodeURIComponent(c)}`
+      );
+
       const h: PackingHeader = {
         client_code: c,
         client_name: r.name,
@@ -62,17 +67,20 @@ export default function PackingPage() {
         invoice_no: invoiceNo,
         date,
       };
+
       setHeader(h);
     } catch {
       alert("Cliente no encontrado.");
     }
   };
 
+  // ADD SIMPLE LINE
   const addSimple = (item: SimpleItem) => {
     const newBox = getNextBox(lines);
     addLine(item, newBox);
   };
 
+  // SORT LINES
   const sortedLines = [...lines].sort(
     (a, b) =>
       a.box_no - b.box_no ||
@@ -83,111 +91,128 @@ export default function PackingPage() {
   const totalLbs = lines.reduce((s, l) => s + l.pounds, 0);
 
   return (
-    <main className="w-full flex justify-center">
+    <main className="w-full flex justify-center bg-gray-100 min-h-screen">
       <div className="w-full max-w-4xl p-6 space-y-6">
+        
+        {/* WIZARD */}
         <NewPackingWizard
           open={openWizard}
           onClose={() => setOpenWizard(false)}
         />
 
+        {/* LOADING */}
         {!header && !openWizard && (
           <div className="text-center mt-10 text-gray-500">
             Iniciando packing...
           </div>
         )}
 
+        {/* MAIN CONTENT */}
         {header && !openWizard && (
-          <>
-            {/* HEADER */}
+          <div className="bg-white p-6 rounded-xl shadow-md space-y-10">
+
+            {/* --------------------------------------------------------- */}
+            {/*                         TÍTULO                           */}
+            {/* --------------------------------------------------------- */}
             <h1 className="text-3xl font-bold text-center">Ingreso de Packing</h1>
 
-            <section className="border rounded-xl p-4 space-y-4 bg-white shadow-sm">
+            {/* --------------------------------------------------------- */}
+            {/*                   SECCIÓN ENCABEZADO                     */}
+            {/* --------------------------------------------------------- */}
+            <section className="border rounded-xl p-6 bg-gray-50 shadow-inner space-y-6">
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Cliente */}
-                <div className="space-y-2">
-                  <label className="text-sm">Cliente:</label>
+              {/* 2 COLUMN GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* ---------------- CLIENTE ---------------- */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold">Cliente:</label>
+
                   <div className="flex gap-2">
                     <input
-                      className="border rounded px-2 py-1 w-full"
+                      className="border rounded px-3 py-2 w-full"
                       value={clientCode}
                       onChange={(e) => setClientCode(e.target.value)}
                       placeholder="HE, SL, ..."
                     />
                     <button
-                      className="px-3 py-1 rounded bg-black text-white"
+                      className="px-3 py-2 rounded bg-black text-white"
                       onClick={resolveClient}
                     >
                       Ok
                     </button>
                   </div>
 
-                  <div className="text-sm mt-1">
-                    <b>{header.client_name}</b>
+                  <div className="text-sm leading-snug">
+                    <b className="text-base">{header.client_name}</b>
                     <div>{header.address}</div>
-                    <div>TAX: {header.tax_id}</div>
+                    <div className="font-semibold">TAX: {header.tax_id}</div>
                   </div>
                 </div>
 
-                {/* Factura / AWB / Fecha */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm">AWB:</label>
+                {/* ----------- AWB / FACTURA / FECHA ----------- */}
+                <div className="grid grid-cols-2 gap-4">
+
+                  <div className="col-span-2">
+                    <label className="text-sm font-semibold">AWB:</label>
                     <input
-                      className="border rounded px-2 py-1 w-full"
+                      className="border rounded px-3 py-2 w-full"
                       value={guide}
                       onChange={(e) => setGuide(e.target.value)}
                     />
                   </div>
 
-                  <div>
-                    <label className="text-sm">Factura #:</label>
+                  <div className="col-span-2">
+                    <label className="text-sm font-semibold">Factura #:</label>
                     <input
-                      className="border rounded px-2 py-1 w-full"
+                      className="border rounded px-3 py-2 w-full"
                       value={invoiceNo}
                       onChange={(e) => setInvoiceNo(e.target.value)}
                     />
                   </div>
 
-                  <div>
-                    <label className="text-sm">Fecha:</label>
+                  <div className="col-span-2">
+                    <label className="text-sm font-semibold">Fecha:</label>
                     <input
                       type="date"
-                      className="border rounded px-2 py-1 w-full"
+                      className="border rounded px-3 py-2 w-full"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                     />
                   </div>
+
                 </div>
               </div>
             </section>
 
-            {/* BOTONES DE CAJAS */}
-            <section className="flex gap-2">
+            {/* --------------------------------------------------------- */}
+            {/*                     BOTONES CAJAS                         */}
+            {/* --------------------------------------------------------- */}
+            <section className="flex gap-3 pt-2">
+
               <button
-                className="px-3 py-1 rounded bg-black text-white"
+                className="px-4 py-2 rounded bg-black text-white"
                 onClick={() => setOpenAdd(true)}
               >
                 + Simple
               </button>
 
               <button
-                className="px-3 py-1 rounded border"
+                className="px-4 py-2 rounded bg-gray-200"
                 onClick={() => setOpenRange(true)}
               >
                 + Rango
               </button>
 
               <button
-                className="px-3 py-1 rounded border"
+                className="px-4 py-2 rounded bg-gray-200"
                 onClick={() => setOpenComb(true)}
               >
                 + Combinada
               </button>
 
-              {/* Guardar */}
               <button
-                className="px-3 py-1 rounded bg-green-600 text-white ml-auto"
+                className="px-4 py-2 rounded bg-green-600 text-white ml-auto"
                 onClick={async () => {
                   const ok = confirm("¿Guardar packing?");
                   if (!ok) return;
@@ -212,10 +237,14 @@ export default function PackingPage() {
               >
                 Guardar
               </button>
+
             </section>
 
-            {/* TABLA */}
-            <section className="overflow-x-auto">
+            {/* --------------------------------------------------------- */}
+            {/*                         TABLA                             */}
+            {/* --------------------------------------------------------- */}
+            <section className="overflow-x-auto bg-white p-4 rounded-xl shadow-sm">
+
               <table className="min-w-full border rounded bg-white shadow-sm">
                 <thead className="bg-gray-100">
                   <tr>
@@ -262,10 +291,13 @@ export default function PackingPage() {
                     </td>
                   </tr>
                 </tfoot>
+
               </table>
             </section>
 
-            {/* MODALES */}
+            {/* --------------------------------------------------------- */}
+            {/*                       MODALES                             */}
+            {/* --------------------------------------------------------- */}
             <AddBoxModal
               open={openAdd}
               onClose={() => setOpenAdd(false)}
@@ -300,7 +332,8 @@ export default function PackingPage() {
                 items.forEach((it) => addLine(it, selBox));
               }}
             />
-          </>
+
+          </div>
         )}
       </div>
     </main>
