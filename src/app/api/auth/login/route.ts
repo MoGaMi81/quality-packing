@@ -22,7 +22,6 @@ export async function POST(req: Request) {
       );
     }
     
-
     const user = USERS[email.toLowerCase()];
     if (!user) {
       return NextResponse.json(
