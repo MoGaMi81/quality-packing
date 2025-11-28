@@ -171,7 +171,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               className="border rounded px-3 py-2 w-full"
               value={clientCode}
               onChange={(e) => setClientCode(e.target.value)}
-              placeholder="Ej: SL, HE, OC, …"
+              placeholder="Codigo..."
             />
 
             <button

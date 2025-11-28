@@ -89,17 +89,7 @@ export default function PackingPage() {
 
   return (
     <main className="w-full flex justify-center bg-gray-100 min-h-screen">
-      <div style={{
-        background: "red",
-        color: "white",
-        padding: "20px",
-        fontSize: "24px",
-        textAlign: "center",
-        width: "100%"
-      }}>
-        PRUEBA DE VERSION — DEBE VERSE EN ROJO
-      </div>
-
+      
       <div className="w-full max-w-4xl p-6 space-y-6">
         <NewPackingWizard
           open={openWizard}
@@ -131,7 +121,7 @@ export default function PackingPage() {
                       className="border rounded px-3 py-2 w-full"
                       value={clientCode}
                       onChange={(e) => setClientCode(e.target.value)}
-                      placeholder="HE, SL, ..."
+                      placeholder="codigo.."
                     />
                     <button
                       className="px-3 py-2 rounded bg-black text-white"
