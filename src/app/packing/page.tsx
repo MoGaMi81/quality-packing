@@ -33,7 +33,6 @@ export default function PackingPage() {
   const { header, setHeader, lines, addLine, deleteBox, clear } =
     usePackingStore();
 
-  // NAVIGATION STATE
   const [openWizard, setOpenWizard] = useState(!header);
   const [openAdd, setOpenAdd] = useState(false);
   const [openRange, setOpenRange] = useState(false);
@@ -41,7 +40,6 @@ export default function PackingPage() {
   const [openEdit, setOpenEdit] = useState(false);
   const [selBox] = useState<number | null>(null);
 
-  // HEADER STATE
   const [clientCode, setClientCode] = useState(header?.client_code ?? "");
   const [guide, setGuide] = useState(header?.guide ?? "");
   const [invoiceNo, setInvoiceNo] = useState(header?.invoice_no ?? "");
@@ -49,7 +47,6 @@ export default function PackingPage() {
     header?.date ?? new Date().toISOString().slice(0, 10)
   );
 
-  // RESOLVE CLIENT
   const resolveClient = async () => {
     const c = clientCode.trim().toUpperCase();
     if (!c) return;
@@ -74,13 +71,11 @@ export default function PackingPage() {
     }
   };
 
-  // ADD SIMPLE LINE
   const addSimple = (item: SimpleItem) => {
     const newBox = getNextBox(lines);
     addLine(item, newBox);
   };
 
-  // SORT LINES
   const sortedLines = [...lines].sort(
     (a, b) =>
       a.box_no - b.box_no ||
@@ -92,42 +87,45 @@ export default function PackingPage() {
 
   return (
     <main className="w-full flex justify-center bg-gray-100 min-h-screen">
+
+      {/* 🔥🔥🔥 PRUEBA VISUAL ROJA 🔥🔥🔥 */}
+      <div style={{
+        background: "red",
+        color: "white",
+        padding: "20px",
+        fontSize: "24px",
+        textAlign: "center",
+        width: "100%"
+      }}>
+        PRUEBA DE VERSION — DEBE VERSE EN ROJO
+      </div>
+
       <div className="w-full max-w-4xl p-6 space-y-6">
-        
-        {/* WIZARD */}
         <NewPackingWizard
           open={openWizard}
           onClose={() => setOpenWizard(false)}
         />
 
-        {/* LOADING */}
         {!header && !openWizard && (
           <div className="text-center mt-10 text-gray-500">
             Iniciando packing...
           </div>
         )}
 
-        {/* MAIN CONTENT */}
         {header && !openWizard && (
           <div className="bg-white p-6 rounded-xl shadow-md space-y-10">
 
-            {/* --------------------------------------------------------- */}
-            {/*                         TÍTULO                           */}
-            {/* --------------------------------------------------------- */}
+            {/* TÍTULO */}
             <h1 className="text-3xl font-bold text-center">Ingreso de Packing</h1>
 
-            {/* --------------------------------------------------------- */}
-            {/*                   SECCIÓN ENCABEZADO                     */}
-            {/* --------------------------------------------------------- */}
+            {/* Sección del encabezado */}
             <section className="border rounded-xl p-6 bg-gray-50 shadow-inner space-y-6">
 
-              {/* 2 COLUMN GRID */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* ---------------- CLIENTE ---------------- */}
+                {/* Cliente */}
                 <div className="space-y-3">
                   <label className="text-sm font-semibold">Cliente:</label>
-
                   <div className="flex gap-2">
                     <input
                       className="border rounded px-3 py-2 w-full"
@@ -150,7 +148,7 @@ export default function PackingPage() {
                   </div>
                 </div>
 
-                {/* ----------- AWB / FACTURA / FECHA ----------- */}
+                {/* AWB / Factura / Fecha */}
                 <div className="grid grid-cols-2 gap-4">
 
                   <div className="col-span-2">
@@ -185,9 +183,7 @@ export default function PackingPage() {
               </div>
             </section>
 
-            {/* --------------------------------------------------------- */}
-            {/*                     BOTONES CAJAS                         */}
-            {/* --------------------------------------------------------- */}
+            {/* BOTONES */}
             <section className="flex gap-3 pt-2">
 
               <button
@@ -240,11 +236,8 @@ export default function PackingPage() {
 
             </section>
 
-            {/* --------------------------------------------------------- */}
-            {/*                         TABLA                             */}
-            {/* --------------------------------------------------------- */}
+            {/* TABLA */}
             <section className="overflow-x-auto bg-white p-4 rounded-xl shadow-sm">
-
               <table className="min-w-full border rounded bg-white shadow-sm">
                 <thead className="bg-gray-100">
                   <tr>
@@ -295,47 +288,28 @@ export default function PackingPage() {
               </table>
             </section>
 
-            {/* --------------------------------------------------------- */}
-            {/*                       MODALES                             */}
-            {/* --------------------------------------------------------- */}
-            <AddBoxModal
-              open={openAdd}
-              onClose={() => setOpenAdd(false)}
-              onAdded={addSimple}
-            />
+            {/* MODALES */}
+            <AddBoxModal open={openAdd} onClose={() => setOpenAdd(false)} onAdded={addSimple} />
+            <AddRangeModal open={openRange} onClose={() => setOpenRange(false)} onAdded={(items: SimpleItem[]) => {
+              const start = getNextBox(lines);
+              items.forEach((it, idx) => addLine(it, start + idx));
+            }} />
+            <AddCombinedModal open={openComb} onClose={() => setOpenComb(false)} onAdded={(items: SimpleItem[]) => {
+              if (!items.length) return;
+              const box = getNextBox(lines);
+              items.forEach((it) => addLine(it, box));
+            }} />
+            <AddCombinedModal open={openEdit} onClose={() => setOpenEdit(false)} onAdded={(items: SimpleItem[]) => {
+              if (!selBox) return;
+              deleteBox(selBox);
+              items.forEach((it) => addLine(it, selBox));
+            }} />
 
-            <AddRangeModal
-              open={openRange}
-              onClose={() => setOpenRange(false)}
-              onAdded={(items: SimpleItem[]) => {
-                const start = getNextBox(lines);
-                items.forEach((it, idx) => addLine(it, start + idx));
-              }}
-            />
-
-            <AddCombinedModal
-              open={openComb}
-              onClose={() => setOpenComb(false)}
-              onAdded={(items: SimpleItem[]) => {
-                if (!items.length) return;
-                const box = getNextBox(lines);
-                items.forEach((it) => addLine(it, box));
-              }}
-            />
-
-            <AddCombinedModal
-              open={openEdit}
-              onClose={() => setOpenEdit(false)}
-              onAdded={(items: SimpleItem[]) => {
-                if (!selBox) return;
-                deleteBox(selBox);
-                items.forEach((it) => addLine(it, selBox));
-              }}
-            />
           </div>
         )}
       </div>
     </main>
   );
 }
+
 
