@@ -4,7 +4,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import AddBoxModal from "@/components/AddBoxModal";
 import AddRangeModal from "@/components/AddRangeModal";
@@ -42,12 +42,22 @@ export default function PackingPage() {
   const [openEdit, setOpenEdit] = useState(false);
   const [selBox] = useState<number | null>(null);
 
-  const [clientCode, setClientCode] = useState(header?.client_code ?? "");
-  const [guide, setGuide] = useState(header?.guide ?? "");
-  const [invoiceNo, setInvoiceNo] = useState(header?.invoice_no ?? "");
-  const [date, setDate] = useState(
-    header?.date ?? new Date().toISOString().slice(0, 10)
-  );
+  // Estados controlados sincronizados con el header real
+const [clientCode, setClientCode] = useState("");
+const [guide, setGuide] = useState("");
+const [invoiceNo, setInvoiceNo] = useState("");
+const [date, setDate] = useState("");
+
+// Cuando el header cambia (desde el wizard), actualizar los campos
+useEffect(() => {
+  if (!header) return;
+
+  setClientCode(header.client_code ?? "");
+  setGuide(header.guide ?? "");
+  setInvoiceNo(header.invoice_no ?? "");
+  setDate(header.date ?? new Date().toISOString().slice(0, 10));
+}, [header]);
+
 
   const resolveClient = async () => {
     const c = clientCode.trim().toUpperCase();

@@ -111,23 +111,27 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     }
   };
 
-  // -------- Paso 3: Terminar wizard --------
-  const finishWizard = () => {
-    if (!clientResolved) return;
+ // -------- Paso 3: Terminar wizard --------
+const finishWizard = () => {
+  if (!clientResolved) return;
 
-    const h: PackingHeader = {
-      client_code: clientResolved.code,
-      client_name: clientResolved.name,
-      address: clientResolved.address,
-      tax_id: clientResolved.tax_id,
-      guide,
-      invoice_no: invoiceNo.trim().toUpperCase(),
-      date,
-    };
-
-    setHeader(h);
-    onClose();
+  // Construimos el header COMPLETO y limpio
+  const h: PackingHeader = {
+    client_code: clientResolved.code.trim(),
+    client_name: clientResolved.name.trim(),
+    address: clientResolved.address.trim(),
+    tax_id: clientResolved.tax_id.trim(),
+    guide: guide.trim(),
+    invoice_no: invoiceNo.trim().toUpperCase(),
+    date: date || new Date().toISOString().slice(0, 10),
   };
+
+  // Guardamos en el store
+  setHeader(h);
+
+  // Cerramos wizard
+  onClose();
+};
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
