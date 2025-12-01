@@ -2,19 +2,20 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-const DATA_DIR = path.join(process.cwd(), "src", "data");
+const DATA_DIR = path.join(process.cwd(), "data"); // <--- CORRECTO
 
-export async function readJson<T=any>(fileName: string, fallback: T): Promise<T> {
+export async function readJson<T>(file: string, fallback: T): Promise<T> {
   try {
-    const p = path.join(DATA_DIR, fileName);
-    const raw = await fs.readFile(p, "utf8");
-    return JSON.parse(raw) as T;
+    const full = path.join(DATA_DIR, file);
+    const txt = await fs.readFile(full, "utf8");
+    return JSON.parse(txt);
   } catch {
     return fallback;
   }
 }
 
-export async function writeJson(fileName: string, data: any) {
-  const p = path.join(DATA_DIR, fileName);
-  await fs.writeFile(p, JSON.stringify(data, null, 2), "utf8");
+export async function writeJson(file: string, data: any) {
+  const full = path.join(DATA_DIR, file);
+  await fs.writeFile(full, JSON.stringify(data, null, 2), "utf8");
 }
+
