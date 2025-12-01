@@ -1,8 +1,8 @@
-// File: C:\Users\logis\OneDrive\Desktop\Proyecto\Poyecto Web\Packing List\quality-packing\src\app\login\page.tsx
-import * as entry from '../../../../src/app/login/page.js'
+// File: C:\Users\logis\OneDrive\Desktop\Proyecto\Poyecto Web\Packing List\quality-packing\src\app\packing\view\page.tsx
+import * as entry from '../../../../../src/app/packing/view/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
-type TEntry = typeof import('../../../../src/app/login/page.js')
+type TEntry = typeof import('../../../../../src/app/packing/view/page.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{

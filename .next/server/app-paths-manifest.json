@@ -1,10 +1,5 @@
 {
   "/page": "app/page.js",
-  "/packing/page": "app/packing/page.js",
-  "/login/page": "app/login/page.js",
-  "/api/invoices/check/route": "app/api/invoices/check/route.js",
-  "/api/catalogs/client/[code]/route": "app/api/catalogs/client/[code]/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/catalogs/species-by-code/[code]/route": "app/api/catalogs/species-by-code/[code]/route.js",
-  "/api/packing/save/route": "app/api/packing/save/route.js"
+  "/packing/view/page": "app/packing/view/page.js",
+  "/catalogs/page": "app/catalogs/page.js"
 }
