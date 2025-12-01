@@ -13,7 +13,22 @@ import NewPackingWizard from "@/components/NewPackingWizard";
 import type { PackingHeader } from "@/domain/packing/types";
 import { fetchJSON } from "@/lib/fetchJSON";
 
+// Convierte "2025-11-30" → "11/30/2025"
+function isoToDisplay(iso: string) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${m}/${d}/${y}`;
+}
 
+// Convierte "11/30/2025" → "2025-11-30"
+function displayToIso(display: string) {
+  if (!display) return "";
+  const parts = display.split("/");
+  if (parts.length !== 3) return display; // por si el usuario escribe basura
+
+  const [m, d, y] = parts;
+  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
 
 type SimpleItem = {
   description_en: string;
@@ -172,12 +187,16 @@ useEffect(() => {
                   <div className="col-span-2">
                     <label className="text-sm font-semibold">Fecha:</label>
                     <input
-                      type="date"
-                      className="border rounded px-3 py-2 w-full"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
-                  </div>
+                    type="text"
+                    className="border rounded px-3 py-2 w-full"
+                  placeholder="mm/dd/yyyy"
+                 value={isoToDisplay(date)}
+                 onChange={(e) => {
+               const display = e.target.value;
+             setDate(displayToIso(display));
+              }}
+              />
+               </div>
 
                 </div>
               </div>
