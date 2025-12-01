@@ -1,3 +1,55 @@
 [
-  
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "1A",
+      "header": {
+        "client_code": "GM",
+        "client_name": "GRANMAR PRODUCTS, INC.",
+        "address": "2731 N.W. 104 COURT",
+        "tax_id": "582101842",
+        "guide": "1234",
+        "invoice_no": "1A",
+        "date": "2025-12-01"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "B. LINE SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 2,
+          "description_en": "B. LINE SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 3,
+          "description_en": "B. LINE SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 4,
+          "description_en": "B. LINE SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        },
+        {
+          "box_no": 5,
+          "description_en": "B. LINE SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 60
+        }
+      ],
+      "created_at": "2025-12-01T18:38:48.562Z"
+    }
+  }
 ]
