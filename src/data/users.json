@@ -1,7 +1,0 @@
-[
-  { "email": "admin@quality.test", "password": "1234", "role": "admin", "name": "admin" },
-  { "email": "proceso@quality.test", "password": "1234", "role": "proceso", "name": "proceso" },
-  { "email": "facturacion@quality.test", "password": "1234", "role": "facturacion", "name": "facturación" }
-]
-
-
