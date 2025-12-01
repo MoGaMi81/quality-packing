@@ -2,20 +2,24 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-const DATA_DIR = path.join(process.cwd(), "data"); // <--- CORRECTO
+// Siempre apunta a /data (RAÍZ DEL PROYECTO)
+function resolveDataPath(file: string) {
+  return path.join(process.cwd(), "data", file);
+}
 
-export async function readJson<T>(file: string, fallback: T): Promise<T> {
+export async function readJson<T = any>(file: string, fallback: T): Promise<T> {
   try {
-    const full = path.join(DATA_DIR, file);
-    const txt = await fs.readFile(full, "utf8");
-    return JSON.parse(txt);
+    const fullPath = resolveDataPath(file);
+    const content = await fs.readFile(fullPath, "utf8");
+    return JSON.parse(content) as T;
   } catch {
     return fallback;
   }
 }
 
-export async function writeJson(file: string, data: any) {
-  const full = path.join(DATA_DIR, file);
-  await fs.writeFile(full, JSON.stringify(data, null, 2), "utf8");
+export async function writeJson(file: string, data: any): Promise<void> {
+  const fullPath = resolveDataPath(file);
+  await fs.writeFile(fullPath, JSON.stringify(data, null, 2), "utf8");
 }
+
 

@@ -1,6 +1,6 @@
 // src/app/api/catalogs/client/[code]/route.ts
 import { NextResponse } from "next/server";
-import { readJson } from "@/lib/json-db";
+import clients from "@/../data/clients.json";
 
 type RawClient = {
   code: string;
@@ -14,29 +14,19 @@ type RawClient = {
 };
 
 export async function GET(
-  _req: Request,
-  ctx: { params: { code: string } }
+  req: Request,
+  { params }: { params: { code: string } }
 ) {
-  const code = (ctx.params.code ?? "").toUpperCase().trim();
-  if (!code) {
-    return NextResponse.json(
-      { error: "Missing code" },
-      { status: 400 }
-    );
-  }
+  const code = params.code.toUpperCase();
+  const client = clients.find((c) => c.code.toUpperCase() === code);
 
-  const clients = await readJson<RawClient[]>("clients.json", []);
-  const found = clients.find(
-    (c) => (c.code ?? "").toUpperCase() === code
-  );
-
-  if (!found) {
+  if (!client) {
     return NextResponse.json(
       { error: "Client not found" },
       { status: 404 }
     );
   }
 
-  return NextResponse.json(found);
+  return NextResponse.json(client);
 }
 

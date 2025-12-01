@@ -14,7 +14,7 @@ type SaveBody = {
 // Convierte 30/11/2025 → 11/30/2025
 function normalizeDate(d: string) {
   if (!d) return "";
-  if (d.includes("-")) return d; // viene en ISO
+  if (d.includes("-")) return d; // ISO
 
   const parts = d.split("/");
   if (parts.length === 3) {
@@ -28,43 +28,31 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as SaveBody;
 
-    // VALIDACIONES BÁSICAS
-    if (!body?.packing?.invoice_no?.trim()) {
+    if (!body?.packing?.invoice_no) {
       return NextResponse.json(
-        { error: "Invoice number is required" },
+        { error: "Invoice number required" },
         { status: 400 }
       );
     }
     if (!body.packing.header) {
-      return NextResponse.json(
-        { error: "Header missing" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Header missing" }, { status: 400 });
     }
     if (!Array.isArray(body.packing.lines) || body.packing.lines.length === 0) {
       return NextResponse.json(
-        { error: "At least one box is required" },
+        { error: "At least one line required" },
         { status: 400 }
       );
     }
 
-    // Normalizar fecha
     body.packing.header.date = normalizeDate(body.packing.header.date);
 
-    // Cargar base
     const store = await readJson<any[]>("packings.json", []);
+
     const exists = store.find(
       (p) =>
         String(p.packing?.invoice_no).toUpperCase() ===
         body.packing.invoice_no.toUpperCase()
     );
-
-    if (exists && body.status === "final") {
-      return NextResponse.json(
-        { error: "Invoice already exists" },
-        { status: 409 }
-      );
-    }
 
     const payload = {
       ...body,
@@ -82,8 +70,8 @@ export async function POST(req: Request) {
     }
 
     await writeJson("packings.json", store);
-    return NextResponse.json({ ok: true });
 
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("SAVE PACKING ERROR:", err);
     return NextResponse.json(

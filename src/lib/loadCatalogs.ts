@@ -1,9 +1,17 @@
-import clientsRaw from "../../data/clients.json";
-import speciesRaw from "../../data/species.json";
-import sizesRaw from "../../data/sizes.json";
-import formsRaw from "../../data/forms.json";
-import settingsRaw from "../../data/settings.json";
-import speciesCodesRaw from "../../data/species_codes.json";
+import clientsRaw from "@/../data/clients.json";
+import speciesRaw from "@/../data/species.json";
+import sizesRaw from "@/../data/sizes.json";
+import formsRaw from "@/../data/forms.json";
+import settingsRaw from "@/../data/settings.json";
+import speciesCodesRaw from "@/../data/species_codes.json";
+
+export const clients = clientsRaw;
+export const species = speciesRaw;
+export const sizes = sizesRaw;
+export const forms = formsRaw;
+export const settings = settingsRaw;
+export const speciesCodes = speciesCodesRaw;
+
 
 import { ClientsSchema, type Clients } from "@/domain/models/cliente";
 import { SpeciesSchema, type Species } from "@/domain/models/species";
