@@ -2,17 +2,6 @@
 import { NextResponse } from "next/server";
 import clients from "@/../data/clients.json";
 
-type RawClient = {
-  code: string;
-  name: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  zip?: string;
-  tax_id?: string;
-};
-
 export async function GET(
   req: Request,
   { params }: { params: { code: string } }
@@ -29,4 +18,3 @@ export async function GET(
 
   return NextResponse.json(client);
 }
-
