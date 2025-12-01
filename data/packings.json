@@ -51,5 +51,58 @@
       ],
       "created_at": "2025-12-01T18:38:48.562Z"
     }
+  },
+  {
+    "status": "final",
+    "packing": {
+      "invoice_no": "2A",
+      "header": {
+        "client_code": "HE",
+        "client_name": "HEADS OR TAILS SEAFOOD",
+        "address": "8020 NW 60 TH STREET",
+        "tax_id": "650567837",
+        "guide": "123",
+        "invoice_no": "2A",
+        "date": "2025-12-01"
+      },
+      "lines": [
+        {
+          "box_no": 1,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 2,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 3,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 4,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        },
+        {
+          "box_no": 5,
+          "description_en": "GULF YELLOW TAIL SNAPPER FRESH",
+          "form": "W&G",
+          "size": "3/4-1",
+          "pounds": 55
+        }
+      ],
+      "created_at": "2025-12-01T20:01:25.452Z"
+    }
   }
 ]
