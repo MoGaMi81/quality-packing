@@ -1,82 +1,75 @@
 import { NextResponse } from "next/server";
-import { readJson, writeJson } from "@/lib/json-db";
+import { createClient } from "@supabase/supabase-js";
 
-type SaveBody = {
-  status: "draft" | "final";
-  packing: {
-    invoice_no: string;
-    header: any;
-    lines: any[];
-    created_at?: string;
-  };
-};
-
-// Convierte 30/11/2025 → 11/30/2025
-function normalizeDate(d: string) {
-  if (!d) return "";
-  if (d.includes("-")) return d; // ISO
-
-  const parts = d.split("/");
-  if (parts.length === 3) {
-    const [day, month, year] = parts;
-    return `${month}/${day}/${year}`;
-  }
-  return d;
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE!
+);
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as SaveBody;
+    const { status, packing } = await req.json();
+    const { invoice_no, header, lines } = packing;
 
-    if (!body?.packing?.invoice_no) {
+    if (!invoice_no || !header || !lines?.length) {
       return NextResponse.json(
-        { error: "Invoice number required" },
-        { status: 400 }
-      );
-    }
-    if (!body.packing.header) {
-      return NextResponse.json({ error: "Header missing" }, { status: 400 });
-    }
-    if (!Array.isArray(body.packing.lines) || body.packing.lines.length === 0) {
-      return NextResponse.json(
-        { error: "At least one line required" },
+        { error: "Missing fields" },
         { status: 400 }
       );
     }
 
-    body.packing.header.date = normalizeDate(body.packing.header.date);
+    // 1) Insert header
+    const { data: p, error: err1 } = await supabase
+      .from("packings")
+      .upsert({
+        invoice_no: invoice_no.toUpperCase(),
+        client_code: header.client_code,
+        client_name: header.client_name,
+        address: header.address,
+        tax_id: header.tax_id,
+        guide: header.guide,
+        date: header.date,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-    const store = await readJson<any[]>("packings.json", []);
-
-    const exists = store.find(
-      (p) =>
-        String(p.packing?.invoice_no).toUpperCase() ===
-        body.packing.invoice_no.toUpperCase()
-    );
-
-    const payload = {
-      ...body,
-      packing: {
-        ...body.packing,
-        created_at: body.packing.created_at ?? new Date().toISOString(),
-      },
-    };
-
-    if (exists) {
-      exists.status = body.status;
-      exists.packing = payload.packing;
-    } else {
-      store.push(payload);
+    if (err1) {
+      console.error(err1);
+      return NextResponse.json({ error: err1.message }, { status: 500 });
     }
 
-    await writeJson("packings.json", store);
+    const packingId = p.id;
+
+    // 2) Replace all lines
+    await supabase.from("packing_lines").delete().eq("packing_id", packingId);
+
+    const formatted = lines.map((l: any) => ({
+      packing_id: packingId,
+      box_no: l.box_no,
+      description_en: l.description_en,
+      form: l.form,
+      size: l.size,
+      pounds: l.pounds,
+    }));
+
+    const { error: err2 } = await supabase
+      .from("packing_lines")
+      .insert(formatted);
+
+    if (err2) {
+      console.error(err2);
+      return NextResponse.json({ error: err2.message }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("SAVE PACKING ERROR:", err);
+
+  } catch (e: any) {
+    console.error("SAVE ERROR", e);
     return NextResponse.json(
-      { error: "Internal error while saving packing" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
