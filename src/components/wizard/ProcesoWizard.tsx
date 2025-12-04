@@ -1,3 +1,5 @@
+//src/components/ProcesoWizard.tsx
+
 "use client";
 import { useState } from "react";
 import Modal from "@/components/Modal";
@@ -9,23 +11,34 @@ export default function NewPackingButton() {
   const router = useRouter();
 
   const continueOrRoute = async () => {
-    const inv = invoice.trim().toUpperCase();
-    if (!inv) return;
-    const r = await fetch(`/api/packing/check-invoice?invoice=${encodeURIComponent(inv)}`);
-    const data = await r.json();
-    if (data.exists) {
-      const opt = prompt(`Invoice ${inv} ya existe.\nOpciones: view, edit, export`, "view");
-      if (!opt) return;
-      if (opt.toLowerCase().startsWith("v")) router.push(`/packing/view?invoice=${inv}`);
-      else if (opt.toLowerCase().startsWith("e")) router.push(`/packing?invoice=${inv}`);
-      else if (opt.toLowerCase().startsWith("ex")) window.location.href = `/api/packing/export?invoice=${inv}`;
-      setOpen(false);
-      return;
-    }
-    // si no existe → navegar a captura (limpia store)
-    router.push(`/packing?invoice=${inv}`);
+  const inv = invoice.trim().toUpperCase();
+  if (!inv) return;
+
+  // Ruta nueva que consulta SUPABASE
+  const r = await fetch(`/api/invoices/check?no=${encodeURIComponent(inv)}`);
+  const data = await r.json();
+
+  if (data.exists) {
+    const opt = prompt(
+      `Invoice ${inv} ya existe.\nOpciones: view, edit, export`,
+      "view"
+    );
+    if (!opt) return;
+
+    const cmd = opt.toLowerCase();
+
+    if (cmd.startsWith("v")) router.push(`/packing/view?invoice=${inv}`);
+    else if (cmd.startsWith("e")) router.push(`/packing?invoice=${inv}`);
+    else if (cmd.startsWith("ex")) window.location.href = `/api/packing/export?invoice=${inv}`;
+
     setOpen(false);
-  };
+    return;
+  }
+
+  // Si no existe → iniciar captura
+  router.push(`/packing?invoice=${inv}`);
+  setOpen(false);
+};
 
   return (
     <>
