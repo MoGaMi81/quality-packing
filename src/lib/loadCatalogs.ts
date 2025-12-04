@@ -1,5 +1,5 @@
 // ======================================
-// 1) IMPORTAR RAW JSON DESDE /data
+//  IMPORT RAW JSON DESDE /data
 // ======================================
 import clientsRaw from "@/../data/clients.json";
 import speciesRaw from "@/../data/species.json";
@@ -9,7 +9,7 @@ import settingsRaw from "@/../data/settings.json";
 import speciesCodesRaw from "@/../data/species_codes.json";
 
 // ======================================
-// 2) IMPORTAR SCHEMAS / TIPOS
+//  IMPORTAR SCHEMAS DE ZOD
 // ======================================
 import { ClientsSchema, type Clients } from "@/domain/models/cliente";
 import { SpeciesSchema, type Species } from "@/domain/models/species";
@@ -18,26 +18,72 @@ import { FormSchema, type FormModel } from "@/domain/models/form";
 import { SettingsSchema, type Settings } from "@/domain/models/settings";
 import { SpeciesCodeSchema, type SpeciesCode } from "@/domain/models/speciesCode";
 
-// ======================================
-// 3) VALIDAR JSONs con Zod
-// ======================================
-export const clients = ClientsSchema.parse(clientsRaw);
-export const species = SpeciesSchema.parse(speciesRaw);
-export const sizes = SizeSchema.parse(sizesRaw);
-export const forms = FormSchema.parse(formsRaw);
-export const settings = SettingsSchema.parse(settingsRaw);
-export const speciesCodes = SpeciesCodeSchema.parse(speciesCodesRaw);
+// --------------------------------------
+// Helpers
+// --------------------------------------
+function forceArray(v: unknown): any[] {
+  if (Array.isArray(v)) return v;
+  if (v && typeof v === "object") return Object.values(v);
+  return [];
+}
+
+function safe<T>(fn: () => T, label: string, item?: unknown): T {
+  try {
+    return fn();
+  } catch (err) {
+    console.error(`❌ Error parsing ${label}:`, item);
+    throw err;
+  }
+}
 
 // ======================================
-// 4) EXPORTAR TODO JUNTO
+//  FUNCIÓN PRINCIPAL
 // ======================================
-export const catalogs = {
-  clients,
-  species,
-  sizes,
-  forms,
-  settings,
-  speciesCodes,
-};
+export function loadCatalogs() {
+  const rawClients = forceArray(clientsRaw);
+  const rawSpecies = forceArray(speciesRaw);
+  const rawSizes = forceArray(sizesRaw);
+  const rawForms = forceArray(formsRaw);
+  const rawSpeciesCodes = forceArray(speciesCodesRaw);
 
-export type Catalogs = typeof catalogs;
+  // Validar cada elemento con su esquema Zod
+  const clients: Clients[] = rawClients
+    .filter((c: any) => c?.code && c?.name)
+    .map((c) => safe(() => ClientsSchema.parse(c), "client", c));
+
+  const species: Species[] = rawSpecies.map((s) =>
+    safe(() => SpeciesSchema.parse(s), "species", s)
+  );
+
+  const sizes: Size[] = rawSizes.map((s) =>
+    safe(() => SizeSchema.parse(s), "size", s)
+  );
+
+  const forms: FormModel[] = rawForms.map((f) =>
+    safe(() => FormSchema.parse(f), "form", f)
+  );
+
+  const speciesCodes: SpeciesCode[] = rawSpeciesCodes
+    .filter((sc: any) => sc?.code)
+    .map((sc) => safe(() => SpeciesCodeSchema.parse(sc), "species_code", sc));
+
+  const settings: Settings = safe(
+    () => SettingsSchema.parse(settingsRaw),
+    "settings.json"
+  );
+
+  return {
+    clients,
+    species,
+    sizes,
+    forms,
+    settings,
+    speciesCodes,
+  };
+}
+
+// ======================================
+// TIPO EXPORTADO
+// ======================================
+export type Catalogs = ReturnType<typeof loadCatalogs>;
+
