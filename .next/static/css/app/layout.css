@@ -912,6 +912,11 @@ button:hover {
   animation: fadeIn 0.15s ease-out;
 }
 
+.hover\:bg-gray-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+
 .disabled\:opacity-50:disabled {
   opacity: 0.5;
 }
