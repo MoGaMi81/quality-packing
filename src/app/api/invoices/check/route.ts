@@ -8,26 +8,20 @@ const supabase = createClient(
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const invoice = searchParams.get("no")?.toUpperCase();
+  const invoice = (searchParams.get("no") ?? "").trim().toUpperCase();
 
   if (!invoice) {
-    return NextResponse.json({ error: "Missing invoice number" }, { status: 400 });
+    return NextResponse.json({ error: "Missing invoice" }, { status: 400 });
   }
 
   const { data, error } = await supabase
     .from("packings")
-    .select("id, invoice_no, status")
+    .select("id")
     .eq("invoice_no", invoice)
     .maybeSingle();
 
-  if (error && error.code !== "PGRST116") {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  if (!data) {
-    return NextResponse.json({ exists: false });
-  }
-
-  return NextResponse.json({ exists: true, data });
+  return NextResponse.json({
+    ok: true,
+    exists: !!data,
+  });
 }

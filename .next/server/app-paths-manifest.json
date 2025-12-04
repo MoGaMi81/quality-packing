@@ -1,7 +1,7 @@
 {
   "/page": "app/page.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/invoices/check/route": "app/api/invoices/check/route.js",
   "/login/page": "app/login/page.js",
-  "/packing/page": "app/packing/page.js"
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/packing/page": "app/packing/page.js",
+  "/api/invoices/check/route": "app/api/invoices/check/route.js"
 }
