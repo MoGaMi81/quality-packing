@@ -95,20 +95,28 @@ export default function ProcesoWizard() {
             placeholder="p. ej. 1A"
           />
 
-          <div className="flex justify-end gap-2">
-            <button
-              className="rounded border px-3 py-2"
-              onClick={() => setOpen(false)}
-            >
-              Cancelar
-            </button>
-            <button
-              className="rounded bg-black px-3 py-2 text-white"
-              onClick={continueOrRoute}
-            >
-              Continuar
-            </button>
-          </div>
+          <form
+  onSubmit={(e) => {
+    e.preventDefault();
+    continueOrRoute();
+  }}
+  className="flex justify-end gap-2"
+>
+  <button
+    type="button"
+    className="rounded border px-3 py-2"
+    onClick={() => setOpen(false)}
+  >
+    Cancelar
+  </button>
+
+  <button
+    type="submit"
+    className="rounded bg-black px-3 py-2 text-white"
+  >
+    Continuar
+         </button>
+         </form>
         </div>
       </Modal>
     </>
