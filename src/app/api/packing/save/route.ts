@@ -19,27 +19,42 @@ export async function POST(req: Request) {
     }
 
     // 1) Insert header
-    const { data: p, error: err1 } = await supabase
-      .from("packings")
-      .upsert({
-        invoice_no: invoice_no.toUpperCase(),
-        client_code: header.client_code,
-        client_name: header.client_name,
-        address: header.address,
-        tax_id: header.tax_id,
-        guide: header.guide,
-        date: header.date,
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+   // 0) Validar duplicados
+const { data: existing, error: checkErr } = await supabase
+  .from("packings")
+  .select("id")
+  .eq("invoice_no", invoice_no.toUpperCase())
+  .single();
 
-    if (err1) {
-      console.error(err1);
-      return NextResponse.json({ error: err1.message }, { status: 500 });
-    }
+if (existing) {
+  return NextResponse.json(
+    { error: `La factura ${invoice_no.toUpperCase()} ya existe` },
+    { status: 409 }
+  );
+}
 
-    const packingId = p.id;
+// 1) Insertar header
+const { data: p, error: err1 } = await supabase
+  .from("packings")
+  .insert({
+    invoice_no: invoice_no.toUpperCase(),
+    client_code: header.client_code,
+    client_name: header.client_name,
+    address: header.address,
+    tax_id: header.tax_id,
+    guide: header.guide,
+    date: header.date,
+    updated_at: new Date().toISOString(),
+  })
+  .select()
+  .single();
+
+if (err1) {
+  console.error(err1);
+  return NextResponse.json({ error: err1.message }, { status: 500 });
+}
+
+const packingId = p.id;
 
     // 2) Replace all lines
     await supabase.from("packing_lines").delete().eq("packing_id", packingId);
