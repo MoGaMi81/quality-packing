@@ -1,7 +1,7 @@
 {
-  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
-  "/api/drafts/get/[id]/route": "app/api/drafts/get/[id]/route.js",
+  "/login/page": "app/login/page.js",
+  "/drafts/[id]/page": "app/drafts/[id]/page.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/drafts/[id]/page": "app/drafts/[id]/page.js"
+  "/api/drafts/get/[id]/route": "app/api/drafts/get/[id]/route.js"
 }
