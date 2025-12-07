@@ -7,18 +7,41 @@ const supabase = createClient(
 );
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const id = Number(params.id);
 
-  const { data, error } = await supabase
-    .from("packing_drafts")
+  // Obtener draft
+  const { data: draft, error: e1 } = await supabase
+    .from("drafts")
     .select("*")
     .eq("id", id)
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (e1 || !draft) {
+    return NextResponse.json(
+      { error: e1?.message || "Draft no encontrado" },
+      { status: 500 }
+    );
+  }
 
-  return NextResponse.json({ ok: true, draft: data });
+  // Obtener líneas
+  const { data: lines, error: e2 } = await supabase
+    .from("draft_lines")
+    .select("*")
+    .eq("draft_id", id)
+    .order("box_no");
+
+  if (e2) {
+    return NextResponse.json({ error: e2.message }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    id: draft.id,
+    client_code: draft.client_code,
+    draft_name: draft.draft_name,
+    header: draft.header || {},
+    lines: lines || []
+  });
 }

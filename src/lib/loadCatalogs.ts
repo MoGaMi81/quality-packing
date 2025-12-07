@@ -86,4 +86,4 @@ export function loadCatalogs() {
 // TIPO EXPORTADO
 // ======================================
 export type Catalogs = ReturnType<typeof loadCatalogs>;
-
+export const catalogs = loadCatalogs();

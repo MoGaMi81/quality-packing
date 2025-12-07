@@ -1,4 +1,3 @@
-//src/app/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -26,7 +25,7 @@ export default function Home() {
   if (!role) {
     return (
       <div style={{ padding: 24 }}>
-        No autenticado. <a href="/login">Ir a login</a>
+        Iniciar Cesion. <a href="/login">Ir a login</a>
       </div>
     );
   }
@@ -42,6 +41,7 @@ export default function Home() {
         <li><a href="/packing">➤ Capturar packing</a></li>
         <li><a href="/packing/view">➤ Ver packings</a></li>
         <li><a href="/catalogs">➤ Catálogos</a></li>
+        <li><a href="/drafts/list">➤ Drafts</a></li>   {/* NUEVO */}
       </ul>
     </main>
   );

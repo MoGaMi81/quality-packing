@@ -1,5 +1,4 @@
 // src/components/Modal.tsx
-// src/components/Modal.tsx
 "use client";
 
 import { ReactNode } from "react";
