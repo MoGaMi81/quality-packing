@@ -25,7 +25,7 @@ export default function Home() {
   if (!role) {
     return (
       <div style={{ padding: 24 }}>
-        Iniciar Cesion. <a href="/login">Ir a login</a>
+        Iniciar Sesion. <a href="/login">Ir a login</a>
       </div>
     );
   }

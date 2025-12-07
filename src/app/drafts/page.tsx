@@ -14,7 +14,7 @@ export default function DraftsPage() {
       try {
         const r = await fetch("/api/drafts/list");
         const data = await r.json();
-        setDrafts(data || []);
+        setDrafts(data.drafts || []);
       } catch (e) {
         console.error(e);
       }
