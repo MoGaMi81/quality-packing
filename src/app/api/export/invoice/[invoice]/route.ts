@@ -4,17 +4,7 @@ import ExcelJS from "exceljs";
 
 // ----- Helpers -----
 function numberToWordsUSD(value: number): string {
-  const formatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
-
-  const parts = formatter.formatToParts(value);
-  const [intStr, decStr] = [parts.find(p => p.type === "integer")?.value || "0",
-                            parts.find(p => p.type === "fraction")?.value || "00"];
-
-  const words = require("number-to-words").toWords(Number(intStr)).toUpperCase();
-  return `${words} USD ${decStr}/100`;
+  return ""; // Se implementará en fase 2
 }
 
 function isSeaLion(clientCode: string) {
