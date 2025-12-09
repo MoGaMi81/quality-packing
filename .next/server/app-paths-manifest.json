@@ -1,9 +1,8 @@
 {
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/packing/view/page": "app/packing/view/page.js",
-  "/api/packing/by-invoice/[invoice]/route": "app/api/packing/by-invoice/[invoice]/route.js",
-  "/packing/page": "app/packing/page.js",
-  "/api/invoices/check/route": "app/api/invoices/check/route.js",
-  "/api/export/excel/route": "app/api/export/excel/route.js"
+  "/drafts/[id]/page": "app/drafts/[id]/page.js",
+  "/api/drafts/get/[id]/route": "app/api/drafts/get/[id]/route.js",
+  "/login/page": "app/login/page.js"
 }
