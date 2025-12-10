@@ -16,15 +16,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
     ],
-    "/packing/view/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/packing/view/page.js"
-    ],
-    "/drafts/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/drafts/[id]/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
