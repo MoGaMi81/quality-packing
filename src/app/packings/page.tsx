@@ -233,7 +233,7 @@ useEffect(() => {
                   if (!ok) return;
 
                   try {
-                    await fetchJSON("/api/packing/save", {
+                    await fetchJSON("/api/packings/save", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -244,7 +244,7 @@ useEffect(() => {
 
                     alert("Packing guardado.");
                     clear();
-                    window.location.href = "/packing";
+                    window.location.href = "/packings";
                   } catch (err: any) {
                     alert(err.message || "Error al guardar.");
                   }
@@ -289,17 +289,17 @@ useEffect(() => {
 
                 <tfoot>
                   <tr>
-                    <td className="p-2 border font-semibold">TOTAL BOXES</td>
-                    <td className="p-2 border" colSpan={3}></td>
-                    <td className="p-2 border text-right font-semibold">
-                      {totalBoxes}
-                    </td>
-                  </tr>
-                  <tr>
                     <td className="p-2 border font-semibold">TOTAL LBS</td>
                     <td className="p-2 border" colSpan={3}></td>
                     <td className="p-2 border text-right font-semibold">
                       {totalLbs}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border font-semibold">TOTAL BOXES</td>
+                    <td className="p-2 border" colSpan={3}></td>
+                    <td className="p-2 border text-right font-semibold">
+                      {totalBoxes}
                     </td>
                   </tr>
                 </tfoot>

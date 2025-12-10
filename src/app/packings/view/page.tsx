@@ -12,7 +12,7 @@ export default function ViewPacking() {
     setErr(null); setP(null);
     if (!invoice.trim()) return;
     try {
-      const res = await fetchJSON(`/api/packing/by-invoice/${encodeURIComponent(invoice.trim())}`);
+      const res = await fetchJSON(`/api/packings/by-invoice/${encodeURIComponent(invoice.trim())}`);
       setP(res?.packing ?? null);
       if (!res?.packing) setErr("No encontrado.");
     } catch (e:any) {

@@ -21,7 +21,7 @@ export default function PricingPage({ params }: { params: { invoice: string } })
 
     (async () => {
       try {
-        const res = await fetchJSON(`/api/packing/by-invoice/${invoice}`);
+        const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
         if (!res.packing) {
           setErr("Packing no encontrado.");
         } else {
@@ -38,7 +38,7 @@ export default function PricingPage({ params }: { params: { invoice: string } })
 
   return (
     <main className="p-8 max-w-4xl mx-auto space-y-6">
-      <a href={`/packing/${invoice}/view`} className="px-3 py-1 border rounded">
+      <a href={`/packings/${invoice}/view`} className="px-3 py-1 border rounded">
         ← Regresar
       </a>
 
