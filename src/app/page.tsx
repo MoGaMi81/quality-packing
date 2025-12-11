@@ -14,8 +14,8 @@ export default function Home() {
 
     if (!r) return;
 
-    if (r === "proceso") window.location.href = "/packing";
-    if (r === "facturacion") window.location.href = "/packing/view";
+    if (r === "proceso") window.location.href = "/packings";
+    if (r === "facturacion") window.location.href = "/packings/view";
   }, []);
 
   if (loading) {
@@ -38,8 +38,8 @@ export default function Home() {
     <main style={{ padding: 24 }}>
       <h1 style={{ fontSize: 32, fontWeight: 800 }}>Quality Packing — Admin</h1>
       <ul style={{ marginTop: 12, lineHeight: 1.9 }}>
-        <li><a href="/packing">➤ Capturar packing</a></li>
-        <li><a href="/packing/view">➤ Ver packings</a></li>
+        <li><a href="/packings">➤ Capturar packing</a></li>
+        <li><a href="/packings/view">➤ Ver packings</a></li>
         <li><a href="/catalogs">➤ Catálogos</a></li>
         <li><a href="/drafts/list">➤ Drafts</a></li>   {/* NUEVO */}
       </ul>

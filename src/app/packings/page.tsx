@@ -1,4 +1,4 @@
-// src/app/packing/page.tsx
+// src/app/packings/page.tsx
 "use client";
 
 export const dynamic = "force-dynamic";

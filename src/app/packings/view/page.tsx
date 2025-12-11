@@ -1,4 +1,4 @@
-// src/app/packing/view/page.tsx
+// src/app/packings/view/page.tsx
 "use client";
 import { useState } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";

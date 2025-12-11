@@ -1,4 +1,4 @@
-// src/app/packing/[invoice]/view/page.tsx
+// src/app/packings/[invoice]/view/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
