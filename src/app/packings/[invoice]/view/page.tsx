@@ -15,7 +15,7 @@ export default function PackingReadOnly({ params }: { params: { invoice: string 
   useEffect(() => {
     (async () => {
       const data = await fetchJSON<{ header: Header; lines: Line[] }>(
-        `/api/packing/by-invoice?invoice=${encodeURIComponent(inv)}`
+        `/api/packings/by-invoice?invoice=${encodeURIComponent(inv)}`
       );
       setHeader(data.header);
       setLines(data.lines ?? []);

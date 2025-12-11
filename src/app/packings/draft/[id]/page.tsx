@@ -116,7 +116,7 @@ export default function DraftEditor({ params }: { params: { id: string } }) {
         {/* FINALIZAR (solo Admin o Facturación) */}
         <button
           className="ml-auto px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => router.push(`/packing/finalize/${draftId}`)}
+          onClick={() => router.push(`/packings/finalize/${draftId}`)}
         >
           Finalizar →
         </button>

@@ -584,9 +584,6 @@ video {
 .w-32 {
   width: 8rem;
 }
-.w-60 {
-  width: 15rem;
-}
 .w-\[420px\] {
   width: 420px;
 }
@@ -817,10 +814,6 @@ video {
 .text-3xl {
   font-size: 1.875rem;
   line-height: 2.25rem;
-}
-.text-4xl {
-  font-size: 2.25rem;
-  line-height: 2.5rem;
 }
 .text-base {
   font-size: 1rem;
