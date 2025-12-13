@@ -36,12 +36,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     if (r.exists) {
       if (role === "proceso") {
         const go = confirm(`La factura ${v} ya existe.\n¿Abrir en edición?`);
-        if (go) window.location.href = `/packing/${v}/edit`;
+        if (go) window.location.href = `/packings/${v}/edit`;
         return;
       }
 
       if (role === "facturacion") {
-        window.location.href = `/packing/${v}/view`;
+        window.location.href = `/packings/${v}/view`;
         return;
       }
 
@@ -52,9 +52,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       if (!opt) return;
 
       const cmd = opt.toLowerCase();
-      if (cmd === "view") window.location.href = `/packing/${v}/view`;
-      if (cmd === "edit") window.location.href = `/packing/${v}/edit`;
-      if (cmd === "pricing") window.location.href = `/packing/${v}/pricing`;
+      if (cmd === "view") window.location.href = `/packings/${v}/view`;
+      if (cmd === "edit") window.location.href = `/packings/${v}/edit`;
+      if (cmd === "pricing") window.location.href = `/packings/${v}/pricing`;
       if (cmd === "export")
         window.location.href = `/api/export/excel?invoice=${v}`;
 
