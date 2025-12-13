@@ -1,13 +1,10 @@
 {
   "/page": "app/page.js",
-  "/packings/page": "app/packings/page.js",
   "/login/page": "app/login/page.js",
-  "/api/invoices/check/route": "app/api/invoices/check/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/packings/[invoice]/view/page": "app/packings/[invoice]/view/page.js",
-  "/api/packings/by-invoice/route": "app/api/packings/by-invoice/route.js",
-  "/packings/[invoice]/edit/page": "app/packings/[invoice]/edit/page.js",
-  "/packings/[invoice]/pricing/page": "app/packings/[invoice]/pricing/page.js",
-  "/api/export/excel/route": "app/api/export/excel/route.js",
-  "/api/packings/by-invoice/[invoice]/route": "app/api/packings/by-invoice/[invoice]/route.js",
-  "/packings/view/page": "app/packings/view/page.js"
+  "/api/invoices/check/route": "app/api/invoices/check/route.js",
+  "/packings/page": "app/packings/page.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/api/packings/by-invoice/route": "app/api/packings/by-invoice/route.js"
 }

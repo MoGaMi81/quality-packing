@@ -31,7 +31,7 @@ export default function ProcesoWizard() {
         const go = confirm(
           `La factura ${inv} ya existe.\n¿Deseas abrirla en edición?`
         );
-        if (go) router.push(`/packing/${inv}/edit`);
+        if (go) router.push(`/packings/${inv}/edit`);
         setOpen(false);
         return;
       }
@@ -39,7 +39,7 @@ export default function ProcesoWizard() {
       // ---- ROL FACTURACIÓN ----
       if (role === "facturacion") {
         const go = confirm(`La factura ${inv} ya existe.\n¿Ver factura?`);
-        if (go) router.push(`/packing/${inv}/view`);
+        if (go) router.push(`/packings/${inv}/view`);
         setOpen(false);
         return;
       }
@@ -53,9 +53,9 @@ export default function ProcesoWizard() {
       if (!opt) return;
       const cmd = opt.toLowerCase();
 
-      if (cmd === "view") router.push(`/packing/${inv}/view`);
-      if (cmd === "edit") router.push(`/packing/${inv}/edit`);
-      if (cmd === "pricing") router.push(`/packing/${inv}/pricing`);
+      if (cmd === "view") router.push(`/packings/${inv}/view`);
+      if (cmd === "edit") router.push(`/packings/${inv}/edit`);
+      if (cmd === "pricing") router.push(`/packings/${inv}/pricing`);
       if (cmd === "export")
         window.location.href = `/api/export/excel?invoice=${inv}`;
 
@@ -71,7 +71,7 @@ export default function ProcesoWizard() {
       return;
     }
 
-    router.push(`/packing?invoice=${inv}`);
+    router.push(`/packings?invoice=${inv}`);
     setOpen(false);
   };
 
