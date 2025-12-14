@@ -54,60 +54,90 @@
     "pricing": {
       "lines": [
         {
-          "box_no": 1,
+          "box_no": "1",
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "5-10",
+          "pounds": 25,
+          "price": 7,
+          "total": 175,
+          "key": "BLACK GROUPER FRESH||W&G||5-10"
+        },
+        {
+          "box_no": "1",
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "10-20",
+          "pounds": 35,
+          "price": 7,
+          "total": 245,
+          "key": "BLACK GROUPER FRESH||W&G||10-20"
+        },
+        {
+          "box_no": "1",
+          "description_en": "BLACK GROUPER FRESH",
+          "form": "W&G",
+          "size": "20-30",
+          "pounds": 30,
+          "price": 7,
+          "total": 210,
+          "key": "BLACK GROUPER FRESH||W&G||20-30"
+        },
+        {
+          "box_no": "2",
           "description_en": "B. LINE SNAPPER FRESH",
           "form": "W&G",
           "size": "3/4-1",
-          "pounds": 60,
-          "price": 3.1,
-          "total": 186,
+          "pounds": 55,
+          "price": 3,
+          "total": 165,
           "key": "B. LINE SNAPPER FRESH||W&G||3/4-1"
         },
         {
-          "box_no": 2,
+          "box_no": "3",
           "description_en": "B. LINE SNAPPER FRESH",
           "form": "W&G",
           "size": "3/4-1",
-          "pounds": 60,
-          "price": 3.1,
-          "total": 186,
+          "pounds": 55,
+          "price": 3,
+          "total": 165,
           "key": "B. LINE SNAPPER FRESH||W&G||3/4-1"
         },
         {
-          "box_no": 3,
+          "box_no": "4",
           "description_en": "B. LINE SNAPPER FRESH",
           "form": "W&G",
           "size": "3/4-1",
-          "pounds": 60,
-          "price": 3.1,
-          "total": 186,
+          "pounds": 55,
+          "price": 3,
+          "total": 165,
           "key": "B. LINE SNAPPER FRESH||W&G||3/4-1"
         },
         {
-          "box_no": 4,
+          "box_no": "5",
           "description_en": "B. LINE SNAPPER FRESH",
           "form": "W&G",
           "size": "3/4-1",
-          "pounds": 60,
-          "price": 3.1,
-          "total": 186,
+          "pounds": 55,
+          "price": 3,
+          "total": 165,
           "key": "B. LINE SNAPPER FRESH||W&G||3/4-1"
         },
         {
-          "box_no": 5,
-          "description_en": "B. LINE SNAPPER FRESH",
+          "box_no": "6",
+          "description_en": "RED GROUPER FRESH",
           "form": "W&G",
-          "size": "3/4-1",
-          "pounds": 60,
-          "price": 3.1,
-          "total": 186,
-          "key": "B. LINE SNAPPER FRESH||W&G||3/4-1"
+          "size": "5-10",
+          "pounds": 110,
+          "price": 6,
+          "total": 660,
+          "key": "RED GROUPER FRESH||W&G||5-10"
         }
       ],
       "air_freight": 0,
-      "total_pounds": 300,
-      "subtotal": 930,
-      "grand_total": 930
+      "total_pounds": 420,
+      "subtotal": 1950,
+      "grand_total": 1950
     }
   },
   {
