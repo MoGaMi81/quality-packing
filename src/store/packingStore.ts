@@ -1,4 +1,4 @@
-//src/store/packingStore.ts
+// src/store/packingStore.ts
 "use client";
 
 import { create } from "zustand";
@@ -13,13 +13,26 @@ export type SimpleLine = {
   pounds: number;
 };
 
+// 👇 Este tipo representa EXPLICITAMENTE lo que reciben los modales
+export type SimpleItem = {
+  code: string;
+  description_en: string;
+  form: string;
+  size: string;
+  pounds: number;
+};
+
 type State = {
   header: PackingHeader | null;
   lines: SimpleLine[];
   lastBoxNo: number;
 
   setHeader: (h: PackingHeader) => void;
-  addLine: (item: Omit<SimpleLine, "box_no">, boxNoOverride?: number) => void;
+
+  // antes aceptaba Omit<SimpleLine, "box_no">
+  // ahora acepta SimpleItem para evitar errores TS
+  addLine: (item: SimpleItem, boxNoOverride?: number) => void;
+
   deleteBox: (boxNo: number) => void;
   clear: () => void;
 };
@@ -39,8 +52,19 @@ export const usePackingStore = create<State>((set, get) => ({
           : state.lastBoxNo + 1;
 
       const newLast = Math.max(state.lastBoxNo, box_no);
+
       return {
-        lines: [...state.lines, { box_no, ...item }],
+        lines: [
+          ...state.lines,
+          {
+            box_no,
+            code: item.code,
+            description_en: item.description_en,
+            form: item.form,
+            size: item.size,
+            pounds: item.pounds,
+          },
+        ],
         lastBoxNo: newLast,
       };
     }),
@@ -48,6 +72,7 @@ export const usePackingStore = create<State>((set, get) => ({
   deleteBox: (boxNo) =>
     set((state) => {
       const filtered = state.lines.filter((l) => l.box_no !== boxNo);
+
       const newLast =
         filtered.length === 0
           ? 0
@@ -58,3 +83,4 @@ export const usePackingStore = create<State>((set, get) => ({
 
   clear: () => set({ header: null, lines: [], lastBoxNo: 0 }),
 }));
+
