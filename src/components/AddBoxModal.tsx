@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 
 type SimpleItem = {
-  code: string
+  code: string;
   description_en: string;
   form: string;
   size: string;
