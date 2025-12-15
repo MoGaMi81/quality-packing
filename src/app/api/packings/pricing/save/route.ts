@@ -16,7 +16,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing data" }, { status: 400 });
     }
 
+    // ----------------------------------------------------
     // 1) Buscar packing_id por invoice_no
+    // ----------------------------------------------------
     const { data: packing, error: err1 } = await supabase
       .from("packings")
       .select("id")
@@ -29,23 +31,31 @@ export async function POST(req: Request) {
 
     const packing_id = packing.id;
 
-    // 2) Borrar pricing anterior
+    // ----------------------------------------------------
+    // 2) Eliminar pricing previo
+    // ----------------------------------------------------
     await supabase
       .from("packing_pricing_lines")
       .delete()
       .eq("packing_id", packing_id);
 
-    // 3) Insertar nuevo pricing
+    // ----------------------------------------------------
+    // 3) Insertar el nuevo pricing
+    // ----------------------------------------------------
     const payload = lines.map((l: any) => ({
       packing_id,
-      box_no: l.box_no,
-      pounds: l.pounds,
-      price: l.price,
-      total: l.total,
+      // siempre la caja REAL (MX jamás se guarda)
+      box_no: l.combined_with ?? l.box_no,
+
       description_en: l.description_en,
       size: l.size,
       form: l.form,
-      scientific_name: l.scientific_name,
+
+      pounds: l.pounds,
+      price: l.price,
+      total: l.total,
+
+      // IMPORTANTE: scientific_name NO SE GUARDA EN ESTE MODELO
     }));
 
     const { error: err2 } = await supabase
@@ -58,6 +68,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true });
+
   } catch (e: any) {
     console.error("SAVE ERROR", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
