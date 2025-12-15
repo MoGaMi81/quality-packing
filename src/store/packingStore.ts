@@ -6,7 +6,7 @@ import type { PackingHeader } from "@/domain/packing/types";
 
 export type SimpleLine = {
   box_no: number;
-  code: string
+  code: string;
   description_en: string;
   form: string;
   size: string;
