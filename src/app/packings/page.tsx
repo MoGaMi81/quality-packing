@@ -31,6 +31,7 @@ function displayToIso(display: string) {
 }
 
 type SimpleItem = {
+  code: string;
   description_en: string;
   size: string;
   form: string;
