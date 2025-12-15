@@ -2,138 +2,186 @@
 
 import { useEffect, useState } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
-import PricingSpeciesModal from "@/components/PricingSpeciesModal";
-import { loadSpeciesBundle, findSpeciesCode } from "@/lib/speciesCatalog";
-import { getFamilyKeyFromCode } from "@/domain/packing/families";
+import PricingModal from "@/components/PricingModal";
+import { applyPricing } from "@/domain/packing/pricing";
+import type { PackingLine } from "@/domain/packing/types";
+import { getRole } from "@/lib/role";
 
 export default function PricingPage({ params }: { params: { invoice: string } }) {
-  const invoice = params.invoice;
+  const invoice = params.invoice.toUpperCase();
+  const role = getRole(); // admin / proceso / facturación
 
   const [packing, setPacking] = useState<any | null>(null);
-  const [rows, setRows] = useState<any[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [speciesList, setSpeciesList] = useState<{ key: string; label: string }[]>([]);
-  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [priced, setPriced] = useState<any[]>([]);
+  const [openModal, setOpenModal] = useState(false);
 
-  // Cargar species bundle y packing
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  // --------------------------
+  // CARGAR PACKING REAL
+  // --------------------------
   useEffect(() => {
+    if (role !== "admin") {
+      alert("Solo el Administrador puede acceder a pricing.");
+      window.location.href = "/";
+      return;
+    }
+
     (async () => {
-      await loadSpeciesBundle();
-
-      const r = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
-      if (!r.packing) {
-        alert("Packing not found");
-        return;
+      try {
+        const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
+        if (!res.packing) {
+          setErr("Packing no encontrado.");
+        } else {
+          setPacking(res.packing);
+          setPriced(res.packing.lines); // mostrar sin precios al inicio
+        }
+      } catch (e: any) {
+        setErr(e.message || "Error al cargar packing.");
       }
-      setPacking(r.packing);
-      setRows(r.packing.lines);
+      setLoading(false);
     })();
-  }, [invoice]);
+  }, [invoice, role]);
 
-  // Detectar especies únicas
-  const prepareSpeciesList = () => {
-    const set = new Map<string, string>();
+  if (loading) return <main className="p-6">Cargando…</main>;
+  if (err) return <main className="p-6 text-red-600">{err}</main>;
+  if (!packing) return null;
 
-    rows.forEach((l) => {
-      const code = findSpeciesCode(l);
-      const fam = getFamilyKeyFromCode(code);
+  const lines: PackingLine[] = packing.lines;
 
-      if (fam) {
-        // BLACK GROUPER only once
-        set.set("BLACK GROUPER", "BLACK GROUPER");
+  // --------------------------
+  // MANEJO DE PRECIOS
+  // --------------------------
+  const handleSavePrices = (prices: Record<string, number>) => {
+    const applied = applyPricing(lines, prices);
+    setPriced(applied);
+  };
+
+  const totalLbs = priced.reduce((s, x) => s + (x.pounds ?? 0), 0);
+  const grandTotal = priced.reduce((s, x) => s + (x.total ?? 0), 0);
+
+  // --------------------------
+  // GUARDAR EN SUPABASE
+  // --------------------------
+  const saveToDb = async () => {
+    try {
+      const res = await fetchJSON(`/api/packings/pricing/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoice_no: invoice,
+          pricing: priced,
+        }),
+      });
+
+      if (res.ok) {
+        alert("Pricing guardado correctamente.");
       } else {
-        const key = `${l.description_en}|||${l.size}`;
-        const label = `${l.description_en} ${l.size}`;
-        set.set(key, label);
+        alert(res.error || "Error al guardar.");
       }
-    });
-
-    const list = [...set.entries()].map(([key, label]) => ({ key, label }));
-    setSpeciesList(list);
-    setModalOpen(true);
+    } catch (e: any) {
+      alert(e.message || "Error al guardar pricing.");
+    }
   };
-
-  const applyPrices = (prices: Record<string, number>) => {
-    const newRows = rows.map((l) => {
-      const code = findSpeciesCode(l);
-      const fam = getFamilyKeyFromCode(code);
-
-      let key: string;
-      if (fam) key = fam; // BLACK GROUPER
-      else key = `${l.description_en}|||${l.size}`;
-
-      return {
-        ...l,
-        price: prices[key] ?? 0,
-        total: l.pounds * (prices[key] ?? 0),
-      };
-    });
-
-    setRows(newRows);
-    setPrices(prices);
-  };
-
-  const totalLbs = rows.reduce((s, r) => s + (r.pounds || 0), 0);
-  const subtotal = rows.reduce((s, r) => s + (r.total || 0), 0);
-
-  if (!packing) return <main className="p-6">Loading…</main>;
 
   return (
-    <main className="p-6 max-w-4xl mx-auto space-y-6">
-
+    <main className="p-8 max-w-5xl mx-auto space-y-6">
+      {/* BACK */}
       <a href={`/packings/${invoice}/view`} className="px-3 py-1 border rounded">
-        ← Back
+        ← Regresar
       </a>
 
+      {/* TITULO */}
       <h1 className="text-3xl font-bold">Pricing — Invoice {invoice}</h1>
 
-      <button
-        className="px-4 py-2 bg-black text-white rounded"
-        onClick={prepareSpeciesList}
-      >
-        Enter Prices
-      </button>
-
-      <PricingSpeciesModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        speciesList={speciesList}
-        onSave={(p) => {
-          setModalOpen(false);
-          applyPrices(p);
-        }}
-      />
-
-      <table className="min-w-full border mt-4">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="border p-2">Box</th>
-            <th className="border p-2">Item</th>
-            <th className="border p-2">Size</th>
-            <th className="border p-2">Lbs</th>
-            <th className="border p-2">USD/lb</th>
-            <th className="border p-2">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>
-              <td className="border p-2">{r.box_no}</td>
-              <td className="border p-2">{r.description_en}</td>
-              <td className="border p-2">{r.size}</td>
-              <td className="border p-2 text-right">{r.pounds}</td>
-              <td className="border p-2 text-right">{r.price ?? 0}</td>
-              <td className="border p-2 text-right">{(r.total ?? 0).toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="text-right text-lg font-bold">
-        Total Lbs: {totalLbs} <br />
-        Subtotal: ${subtotal.toFixed(2)}
+      <div className="text-sm text-gray-600">
+        Cliente: <b>{packing.header.client_name}</b><br />
+        Fecha: {packing.header.date}<br />
+        AWB: {packing.header.guide}
       </div>
+
+      {/* BOTONES */}
+      <div className="flex gap-4">
+        <button
+          className="px-4 py-2 bg-black text-white rounded"
+          onClick={() => setOpenModal(true)}
+        >
+          Capturar precios
+        </button>
+
+        <button
+          className="px-4 py-2 bg-green-700 text-white rounded"
+          onClick={saveToDb}
+        >
+          Guardar Pricing
+        </button>
+      </div>
+
+      {/* TABLA DE PRICING */}
+      <section className="overflow-x-auto">
+        <table className="min-w-full border mt-4 text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border p-2">Box</th>
+              <th className="border p-2">Item</th>
+              <th className="border p-2">Form</th>
+              <th className="border p-2">Size</th>
+              <th className="border p-2 text-right">Lbs</th>
+              <th className="border p-2 text-right">Price</th>
+              <th className="border p-2 text-right">Total</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {priced.map((l, i) => {
+              const showBox =
+                typeof l.box_no === "number"
+                  ? l.box_no
+                  : "MX"; // soporte para combinadas
+
+              return (
+                <tr key={i}>
+                  <td className="border p-2">{showBox}</td>
+                  <td className="border p-2">{l.description_en}</td>
+                  <td className="border p-2">{l.form}</td>
+                  <td className="border p-2">{l.size}</td>
+                  <td className="border p-2 text-right">{l.pounds}</td>
+                  <td className="border p-2 text-right">
+                    {l.price ? l.price.toFixed(2) : ""}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {l.total ? l.total.toFixed(2) : ""}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+
+          <tfoot>
+            <tr className="font-semibold bg-gray-100">
+              <td className="border p-2" colSpan={4}>
+                TOTAL LBS
+              </td>
+              <td className="border p-2 text-right">{totalLbs}</td>
+              <td className="border p-2"></td>
+              <td className="border p-2 text-right">
+                {grandTotal.toFixed(2)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      {/* MODAL */}
+      <PricingModal
+        open={openModal}
+        lines={lines}
+        onClose={() => setOpenModal(false)}
+        onSave={handleSavePrices}
+      />
     </main>
   );
 }
+
 
