@@ -62,6 +62,7 @@ const packingId = p.id;
     const formatted = lines.map((l: any) => ({
       packing_id: packingId,
       box_no: l.box_no,
+      code: l.code ?? null,
       description_en: l.description_en,
       form: l.form,
       size: l.size,

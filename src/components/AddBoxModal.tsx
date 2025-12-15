@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 
 type SimpleItem = {
+  code: string
   description_en: string;
   form: string;
   size: string;
@@ -68,6 +69,7 @@ export default function AddBoxModal({ open, onClose, onAdded }: Props) {
       );
 
       const item: SimpleItem = {
+        code,
         description_en: r.species.name_en,
         form: r.form.name,
         size: r.size.name,

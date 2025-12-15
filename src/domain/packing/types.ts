@@ -5,6 +5,7 @@
 // =====================================
 
 export type PackingLine = {
+  code?: string | null;
   box_no: number | "MX";            // número de caja
   description_en: string;    // nombre comercial EN
   form: string;              // presentación (W&G, Fillet…)
