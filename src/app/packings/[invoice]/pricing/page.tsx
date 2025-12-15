@@ -2,189 +2,138 @@
 
 import { useEffect, useState } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { getRole } from "@/lib/role";
 import PricingSpeciesModal from "@/components/PricingSpeciesModal";
-import type { PricingLine, SpeciesGroup } from "@/domain/packing/types";
+import { loadSpeciesBundle, findSpeciesCode } from "@/lib/speciesCatalog";
+import { getFamilyKeyFromCode } from "@/domain/packing/families";
 
-function groupSpecies(lines: any) {
-  const map = new Map();
-  for (const l of lines) {
-    const key = `${l.description_en}||${l.form}||${l.size}`;
-    if (!map.has(key)) {
-      map.set(key, {
-        key,
-        description_en: l.description_en,
-        form: l.form,
-        size: l.size,
-        boxes: 1,
-        pounds: l.pounds,
-      });
-    } else {
-      const item = map.get(key);
-      item.boxes++;
-      item.pounds += l.pounds;
-    }
-  }
-  return Array.from(map.values());
-}
-
-type PricingPageProps = {
-  params: {
-    invoice: string;
-  };
-};
-
-export default function PricingPage({ params }: PricingPageProps) {
+export default function PricingPage({ params }: { params: { invoice: string } }) {
   const invoice = params.invoice;
 
-  const role = getRole();
-
   const [packing, setPacking] = useState<any | null>(null);
-  const [pricing, setPricing] = useState<PricingLine[]>([]);
-  const [species, setSpecies] = useState<SpeciesGroup[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [speciesList, setSpeciesList] = useState<{ key: string; label: string }[]>([]);
+  const [prices, setPrices] = useState<Record<string, number>>({});
 
-  const [showModal, setShowModal] = useState(false);
-
+  // Cargar species bundle y packing
   useEffect(() => {
-    if (role !== "admin") {
-      alert("Solo Administrador puede acceder a Pricing.");
-      window.location.href = "/";
-      return;
-    }
-
     (async () => {
-      const res = await fetchJSON(`/api/packings/pricing/${invoice}`);
+      await loadSpeciesBundle();
 
-      if (!res.packing) {
-        alert("Packing no encontrado");
+      const r = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
+      if (!r.packing) {
+        alert("Packing not found");
         return;
       }
-
-      setPacking(res.packing);
-
-      const sp = groupSpecies(res.packing.lines);
-      setSpecies(sp);
-
-      if (!res.pricing) {
-        const initialPricing = res.packing.lines.map((l: { box_no: any; description_en: any; form: any; size: any; pounds: any; }) => ({
-          box_no: l.box_no,
-          description_en: l.description_en,
-          form: l.form,
-          size: l.size,
-          pounds: l.pounds,
-          price: 0,
-          total: 0,
-          key: `${l.description_en}||${l.form}||${l.size}`,
-        }));
-        setPricing(initialPricing);
-
-        setShowModal(true);
-      } else {
-        setPricing(res.pricing.lines);
-      }
+      setPacking(r.packing);
+      setRows(r.packing.lines);
     })();
-  }, []);
+  }, [invoice]);
 
-  const applyPrices = (priceMap: { [x: string]: any; }) => {
-    setPricing((prev) =>
-      prev.map((l) => {
-        const price = priceMap[l.key] ?? l.price ?? 0;
-        return {
-          ...l,
-          price,
-          total: l.pounds * price,
-        };
-      })
-    );
-  };
+  // Detectar especies únicas
+  const prepareSpeciesList = () => {
+    const set = new Map<string, string>();
 
-  const totalPounds = pricing.reduce((s, l) => s + l.pounds, 0);
-  const subtotal = pricing.reduce((s, l) => s + l.total, 0);
+    rows.forEach((l) => {
+      const code = findSpeciesCode(l);
+      const fam = getFamilyKeyFromCode(code);
 
-  const savePricing = async () => {
-    const payload = {
-      invoice_no: invoice,
-      pricing: {
-        lines: pricing,
-        air_freight: 0,
-        total_pounds: totalPounds,
-        subtotal,
-        grand_total: subtotal,
-      },
-    };
-
-    await fetchJSON(`/api/packings/pricing/save`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      if (fam) {
+        // BLACK GROUPER only once
+        set.set("BLACK GROUPER", "BLACK GROUPER");
+      } else {
+        const key = `${l.description_en}|||${l.size}`;
+        const label = `${l.description_en} ${l.size}`;
+        set.set(key, label);
+      }
     });
 
-    alert("Pricing guardado.");
+    const list = [...set.entries()].map(([key, label]) => ({ key, label }));
+    setSpeciesList(list);
+    setModalOpen(true);
   };
 
-  if (!packing) return <main className="p-6">Cargando…</main>;
+  const applyPrices = (prices: Record<string, number>) => {
+    const newRows = rows.map((l) => {
+      const code = findSpeciesCode(l);
+      const fam = getFamilyKeyFromCode(code);
+
+      let key: string;
+      if (fam) key = fam; // BLACK GROUPER
+      else key = `${l.description_en}|||${l.size}`;
+
+      return {
+        ...l,
+        price: prices[key] ?? 0,
+        total: l.pounds * (prices[key] ?? 0),
+      };
+    });
+
+    setRows(newRows);
+    setPrices(prices);
+  };
+
+  const totalLbs = rows.reduce((s, r) => s + (r.pounds || 0), 0);
+  const subtotal = rows.reduce((s, r) => s + (r.total || 0), 0);
+
+  if (!packing) return <main className="p-6">Loading…</main>;
 
   return (
     <main className="p-6 max-w-4xl mx-auto space-y-6">
 
       <a href={`/packings/${invoice}/view`} className="px-3 py-1 border rounded">
-        ← Regresar
+        ← Back
       </a>
 
       <h1 className="text-3xl font-bold">Pricing — Invoice {invoice}</h1>
 
-      <div className="text-sm text-gray-600 space-y-1">
-        <div>Cliente: <b>{packing.header.client_name}</b></div>
-        <div>Fecha: {packing.header.date}</div>
-        <div>AWB: {packing.header.guide}</div>
-      </div>
+      <button
+        className="px-4 py-2 bg-black text-white rounded"
+        onClick={prepareSpeciesList}
+      >
+        Enter Prices
+      </button>
 
-      <table className="min-w-full border mt-6">
+      <PricingSpeciesModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        speciesList={speciesList}
+        onSave={(p) => {
+          setModalOpen(false);
+          applyPrices(p);
+        }}
+      />
+
+      <table className="min-w-full border mt-4">
         <thead className="bg-gray-100">
           <tr>
             <th className="border p-2">Box</th>
-            <th className="border p-2">Especie</th>
-            <th className="border p-2">Form</th>
+            <th className="border p-2">Item</th>
             <th className="border p-2">Size</th>
             <th className="border p-2">Lbs</th>
             <th className="border p-2">USD/lb</th>
-            <th className="border p-2">Total USD</th>
+            <th className="border p-2">Total</th>
           </tr>
         </thead>
         <tbody>
-          {pricing.map((l) => (
-            <tr key={l.box_no}>
-              <td className="border p-2">{l.box_no}</td>
-              <td className="border p-2">{l.description_en}</td>
-              <td className="border p-2">{l.form}</td>
-              <td className="border p-2">{l.size}</td>
-              <td className="border p-2">{l.pounds}</td>
-              <td className="border p-2">{l.price}</td>
-              <td className="border p-2 text-right">{l.total.toFixed(2)}</td>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              <td className="border p-2">{r.box_no}</td>
+              <td className="border p-2">{r.description_en}</td>
+              <td className="border p-2">{r.size}</td>
+              <td className="border p-2 text-right">{r.pounds}</td>
+              <td className="border p-2 text-right">{r.price ?? 0}</td>
+              <td className="border p-2 text-right">{(r.total ?? 0).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div className="text-right space-y-1">
-        <div>Total Lbs: <b>{totalPounds.toFixed(2)}</b></div>
-        <div>Subtotal USD: <b>{subtotal.toFixed(2)}</b></div>
-        <div className="text-lg font-bold">Grand Total USD: {subtotal.toFixed(2)}</div>
+      <div className="text-right text-lg font-bold">
+        Total Lbs: {totalLbs} <br />
+        Subtotal: ${subtotal.toFixed(2)}
       </div>
-
-      <button
-        className="px-4 py-2 bg-green-600 text-white rounded"
-        onClick={savePricing}
-      >
-        Guardar Pricing
-      </button>
-
-      <PricingSpeciesModal
-        open={showModal}
-        species={species}
-        onClose={() => setShowModal(false)}
-        onSave={applyPrices}
-      />
     </main>
   );
 }
+

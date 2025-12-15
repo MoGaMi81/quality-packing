@@ -5,7 +5,7 @@
 // =====================================
 
 export type PackingLine = {
-  box_no: number;            // número de caja
+  box_no: number | "MX";            // número de caja
   description_en: string;    // nombre comercial EN
   form: string;              // presentación (W&G, Fillet…)
   size: string;              // calibre (1-2, 3/4-1…)
@@ -57,7 +57,7 @@ export type SpeciesGroup = {
 // =====================================
 
 export type PricingLine = {
-  box_no: number;
+  box_no: number | "MX";
   description_en: string;
   form: string;
   size: string;
