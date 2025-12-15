@@ -9,7 +9,7 @@ import { getRole } from "@/lib/role";
 
 export default function PricingPage({ params }: { params: { invoice: string } }) {
   const invoice = params.invoice.toUpperCase();
-  const role = getRole(); // admin / proceso / facturación
+  const role = getRole();
 
   const [packing, setPacking] = useState<any | null>(null);
   const [priced, setPriced] = useState<any[]>([]);
@@ -18,9 +18,9 @@ export default function PricingPage({ params }: { params: { invoice: string } })
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // --------------------------
+  // -------------------------------------------------
   // CARGAR PACKING REAL
-  // --------------------------
+  // -------------------------------------------------
   useEffect(() => {
     if (role !== "admin") {
       alert("Solo el Administrador puede acceder a pricing.");
@@ -31,11 +31,14 @@ export default function PricingPage({ params }: { params: { invoice: string } })
     (async () => {
       try {
         const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
+
         if (!res.packing) {
           setErr("Packing no encontrado.");
         } else {
           setPacking(res.packing);
-          setPriced(res.packing.lines); // mostrar sin precios al inicio
+
+          // si NO tiene pricing previo → usar packing original
+          setPriced(res.packing.lines);
         }
       } catch (e: any) {
         setErr(e.message || "Error al cargar packing.");
@@ -50,9 +53,10 @@ export default function PricingPage({ params }: { params: { invoice: string } })
 
   const lines: PackingLine[] = packing.lines;
 
-  // --------------------------
-  // MANEJO DE PRECIOS
-  // --------------------------
+  // -------------------------------------------------
+  // APLICAR PRECIOS DESDE EL MODAL
+  // prices = { "desc|||size|||form" : 7.00 }
+  // -------------------------------------------------
   const handleSavePrices = (prices: Record<string, number>) => {
     const applied = applyPricing(lines, prices);
     setPriced(applied);
@@ -61,47 +65,51 @@ export default function PricingPage({ params }: { params: { invoice: string } })
   const totalLbs = priced.reduce((s, x) => s + (x.pounds ?? 0), 0);
   const grandTotal = priced.reduce((s, x) => s + (x.total ?? 0), 0);
 
-  // --------------------------
-  // GUARDAR EN SUPABASE
-  // --------------------------
+  // -------------------------------------------------
+  // GUARDAR PRICING EN SUPABASE
+  // -------------------------------------------------
   const saveToDb = async () => {
     try {
-      const res = await fetchJSON(`/api/packings/pricing/save`, {
+      const res = await fetch("/api/packings/pricing/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          invoice_no: invoice,
-          pricing: priced,
+          invoice_no: packing.header.invoice_no,
+          lines: priced, // las líneas ya con precios aplicados
         }),
       });
+
+      const json = await res.json();
 
       if (res.ok) {
         alert("Pricing guardado correctamente.");
       } else {
-        alert(res.error || "Error al guardar.");
+        alert(json.error || "Error al guardar.");
       }
     } catch (e: any) {
       alert(e.message || "Error al guardar pricing.");
     }
   };
 
+  // Render helper para BOX / MX
+  const renderBox = (l: any) => {
+    if (l.combined_with && l.box_no !== l.combined_with) return "MX";
+    return l.box_no;
+  };
+
   return (
     <main className="p-8 max-w-5xl mx-auto space-y-6">
+
       {/* BACK */}
       <a href={`/packings/${invoice}/view`} className="px-3 py-1 border rounded">
         ← Regresar
       </a>
 
-      {/* TITULO */}
-      <h1 className="text-3xl font-bold">Pricing — Invoice {invoice}</h1>
+      <h1 className="text-3xl font-bold">
+        Pricing — Invoice {invoice}
+      </h1>
 
-      <div className="text-sm text-gray-600">
-        Cliente: <b>{packing.header.client_name}</b><br />
-        Fecha: {packing.header.date}<br />
-        AWB: {packing.header.guide}
-      </div>
-
-      {/* BOTONES */}
+      {/* Botones */}
       <div className="flex gap-4">
         <button
           className="px-4 py-2 bg-black text-white rounded"
@@ -118,70 +126,50 @@ export default function PricingPage({ params }: { params: { invoice: string } })
         </button>
       </div>
 
-      {/* TABLA DE PRICING */}
-      <section className="overflow-x-auto">
-        <table className="min-w-full border mt-4 text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border p-2">Box</th>
-              <th className="border p-2">Item</th>
-              <th className="border p-2">Form</th>
-              <th className="border p-2">Size</th>
-              <th className="border p-2 text-right">Lbs</th>
-              <th className="border p-2 text-right">Price</th>
-              <th className="border p-2 text-right">Total</th>
+      {/* TABLA */}
+      <table className="w-full border mt-4">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-2 border">Box</th>
+            <th className="p-2 border">Item</th>
+            <th className="p-2 border">Size</th>
+            <th className="p-2 border">Lbs</th>
+            <th className="p-2 border">USD/lb</th>
+            <th className="p-2 border">Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {priced.map((l: any, i: number) => (
+            <tr key={i}>
+              <td className="p-2 border text-center">{renderBox(l)}</td>
+              <td className="p-2 border">{l.description_en}</td>
+              <td className="p-2 border text-center">{l.size}</td>
+              <td className="p-2 border text-right">{l.pounds}</td>
+              <td className="p-2 border text-right">{l.price?.toFixed(2)}</td>
+              <td className="p-2 border text-right">{l.total?.toFixed(2)}</td>
             </tr>
-          </thead>
+          ))}
+        </tbody>
+      </table>
 
-          <tbody>
-            {priced.map((l, i) => {
-              const showBox =
-                typeof l.box_no === "number"
-                  ? l.box_no
-                  : "MX"; // soporte para combinadas
+      <div className="text-right text-lg font-bold mt-4">
+        Total LBS: {totalLbs}
+        <br />
+        Subtotal: ${grandTotal.toFixed(2)}
+      </div>
 
-              return (
-                <tr key={i}>
-                  <td className="border p-2">{showBox}</td>
-                  <td className="border p-2">{l.description_en}</td>
-                  <td className="border p-2">{l.form}</td>
-                  <td className="border p-2">{l.size}</td>
-                  <td className="border p-2 text-right">{l.pounds}</td>
-                  <td className="border p-2 text-right">
-                    {l.price ? l.price.toFixed(2) : ""}
-                  </td>
-                  <td className="border p-2 text-right">
-                    {l.total ? l.total.toFixed(2) : ""}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-
-          <tfoot>
-            <tr className="font-semibold bg-gray-100">
-              <td className="border p-2" colSpan={4}>
-                TOTAL LBS
-              </td>
-              <td className="border p-2 text-right">{totalLbs}</td>
-              <td className="border p-2"></td>
-              <td className="border p-2 text-right">
-                {grandTotal.toFixed(2)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </section>
-
-      {/* MODAL */}
-      <PricingModal
-        open={openModal}
-        lines={lines}
-        onClose={() => setOpenModal(false)}
-        onSave={handleSavePrices}
-      />
+      {openModal && (
+        <PricingModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          lines={lines}
+          onSave={handleSavePrices}
+        />
+      )}
     </main>
   );
 }
+
 
 
