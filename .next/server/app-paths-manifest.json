@@ -1,7 +1,8 @@
 {
   "/page": "app/page.js",
-  "/api/invoices/check/route": "app/api/invoices/check/route.js",
-  "/api/packings/by-invoice/[invoice]/route": "app/api/packings/by-invoice/[invoice]/route.js",
+  "/packings/[invoice]/pricing/page": "app/packings/[invoice]/pricing/page.js",
   "/packings/page": "app/packings/page.js",
-  "/packings/[invoice]/pricing/page": "app/packings/[invoice]/pricing/page.js"
+  "/api/packings/by-invoice/[invoice]/route": "app/api/packings/by-invoice/[invoice]/route.js",
+  "/api/packings/by-invoice/route": "app/api/packings/by-invoice/route.js",
+  "/packings/[invoice]/view/page": "app/packings/[invoice]/view/page.js"
 }

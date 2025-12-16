@@ -20,6 +20,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/packings/[invoice]/pricing/page.js"
+    ],
+    "/packings/[invoice]/view/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/packings/[invoice]/view/page.js"
     ]
   }
 }
