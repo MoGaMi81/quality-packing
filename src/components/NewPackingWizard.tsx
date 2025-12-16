@@ -1,232 +1,165 @@
-// src/components/NewPackingWizard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePackingStore } from "@/store/packingStore";
+import { useState, useEffect } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
-import type { PackingHeader } from "@/domain/packing/types";
-import { getRole, can } from "@/lib/role";
+import ExistingInvoiceModal from "@/components/ExistingInvoiceModal";
+import { usePackingStore } from "@/store/packingStore";
+import { getRole } from "@/lib/role";
 
-type Props = { open: boolean; onClose: () => void };
+type Props = {
+  open: boolean;
+  onClose: () => void;
+};
 
 export default function NewPackingWizard({ open, onClose }: Props) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  const role = getRole() ?? "proceso";
-  const { setHeader } = usePackingStore();
+  const role = getRole();
+  const { setHeader, clear } = usePackingStore();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-
   const [invoiceNo, setInvoiceNo] = useState("");
   const [clientCode, setClientCode] = useState("");
-  const [clientResolved, setClientResolved] = useState<any | null>(null);
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [guide, setGuide] = useState("");
+  const [existingOpen, setExistingOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  if (!mounted || !open) return null;
+  // Reset cuando se abre
+  useEffect(() => {
+    if (open) {
+      clear();
+      setStep(1);
+      setInvoiceNo("");
+      setClientCode("");
+    }
+  }, [open]);
 
-  // -------- Paso 1: Buscar invoice --------
-  const checkInvoice = async () => {
-    const v = invoiceNo.trim().toUpperCase();
-    if (!v) return;
+  if (!open) return null;
 
-    const r = await fetchJSON(`/api/invoices/check?no=${encodeURIComponent(v)}`);
+  // ============================================================
+  // PASO 1 — Validar factura
+  // ============================================================
+  const goStep2 = async () => {
+    const inv = invoiceNo.trim().toUpperCase();
+    if (!inv) return alert("Ingresa un número de factura");
 
-    if (r.exists) {
-      if (role === "proceso") {
-        const go = confirm(`La factura ${v} ya existe.\n¿Abrir en edición?`);
-        if (go) window.location.href = `/packings/${v}/edit`;
-        return;
-      }
+    setLoading(true);
+    const res = await fetchJSON(`/api/packings/by-invoice/${inv}`);
+    setLoading(false);
 
+    if (res.packing) {
+      // FACTURA YA EXISTE → Revisar rol
       if (role === "facturacion") {
-        window.location.href = `/packings/${v}/view`;
+        window.location.href = `/packings/${inv}/invoice`;
         return;
       }
 
-      const opt = prompt(
-        `La factura ${v} ya existe.\nOpciones: view, edit, pricing, export`,
-        "view"
-      );
-      if (!opt) return;
+      if (role === "proceso") {
+        window.location.href = `/packings/${inv}/edit`;
+        return;
+      }
 
-      const cmd = opt.toLowerCase();
-      if (cmd === "view") window.location.href = `/packings/${v}/view`;
-      if (cmd === "edit") window.location.href = `/packings/${v}/edit`;
-      if (cmd === "pricing") window.location.href = `/packings/${v}/pricing`;
-      if (cmd === "export")
-        window.location.href = `/api/export/excel?invoice=${v}`;
-
+      // admin → mostrar menú
+      setExistingOpen(true);
       return;
     }
 
+    // Factura nueva → continuar
     setStep(2);
   };
 
-  // -------- Paso 2: Buscar cliente --------
-  const resolveClient = async () => {
-    const code = clientCode.trim().toUpperCase();
-    if (!code) return;
+  // ============================================================
+  // PASO 2 — Validar cliente
+  // ============================================================
+  const goStep3 = async () => {
+    if (!clientCode.trim()) return alert("Ingresa cliente");
 
     try {
-      const c = await fetchJSON(
-        `/api/catalogs/client/${encodeURIComponent(code)}`
-      );
-      setClientResolved(c);
-      setStep(3);
-    } catch {
-      if (!can.startPacking(role)) {
-        alert("Cliente no existe y tu rol no puede crearlo.");
-        return;
-      }
+      const r = await fetchJSON(`/api/catalogs/client/${clientCode.trim()}`);
 
-      const go = confirm(
-        `Cliente ${code} no existe.\n¿Crear ahora?`
-      );
-      if (!go) return;
-
-      const name = prompt("Nombre del cliente:");
-      if (!name) return;
-
-      const payload = {
-        code,
-        name,
-        address: prompt("Dirección:") || "",
-        city: prompt("Ciudad:") || "",
-        state: prompt("Estado:") || "",
-        country: prompt("País:") || "USA",
-        zip: prompt("ZIP:") || "",
-        tax_id: prompt("Tax ID:") || "",
-      };
-
-      const res = await fetchJSON("/api/catalogs/new-client", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      setHeader({
+        invoice_no: invoiceNo.trim().toUpperCase(),
+        client_code: clientCode.trim().toUpperCase(),
+        client_name: r.client.name,
+        address: r.client.address || "",
+        guide: "",
+        date: new Date().toISOString().slice(0, 10),
       });
 
-      setClientResolved(res.client);
       setStep(3);
+    } catch {
+      alert("Cliente no encontrado");
     }
   };
 
- // -------- Paso 3: Terminar wizard --------
-const finishWizard = () => {
-  if (!clientResolved) return;
-
-  // Construimos el header COMPLETO y limpio
-  const h: PackingHeader = {
-    client_code: clientResolved.code.trim(),
-    client_name: clientResolved.name.trim(),
-    address: clientResolved.address.trim(),
-    tax_id: clientResolved.tax_id.trim(),
-    guide: guide.trim(),
-    invoice_no: invoiceNo.trim().toUpperCase(),
-    date: date || new Date().toISOString().slice(0, 10),
-  };
-
-  // Guardamos en el store
-  setHeader(h);
-
-  // Cerramos wizard
-  onClose();
-};
-
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-xl space-y-6">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6">
+      <div className="bg-white rounded-xl p-6 w-full max-w-lg space-y-6">
 
-        {/* TÍTULO */}
-        <h2 className="text-2xl font-bold text-center">
-          Nuevo Packing
-        </h2>
+        <h2 className="text-xl font-bold text-center">Paso {step} de 3</h2>
 
-        {/* INDICADOR DE PASO */}
-        <div className="text-center text-sm text-gray-500">
-          Paso {step} de 3
-        </div>
-
-        {/* ------------------ PASO 1 ------------------ */}
+        {/* PASO 1 */}
         {step === 1 && (
           <div className="space-y-4">
-            <label className="font-semibold">Número de Factura (Invoice):</label>
+            <label>Factura</label>
             <input
-              className="border rounded px-3 py-2 w-full"
+              className="border rounded w-full px-2 py-1"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              placeholder="Ej: 1092A"
             />
 
             <button
-              className="bg-black text-white px-4 py-2 rounded w-full"
-              onClick={checkInvoice}
+              onClick={goStep2}
+              className="w-full py-2 bg-black text-white rounded"
             >
-              Continuar
+              {loading ? "Validando..." : "Continuar"}
             </button>
           </div>
         )}
 
-        {/* ------------------ PASO 2 ------------------ */}
+        {/* PASO 2 */}
         {step === 2 && (
           <div className="space-y-4">
-            <label className="font-semibold">Código del Cliente:</label>
+            <label>Cliente</label>
             <input
-              className="border rounded px-3 py-2 w-full"
+              className="border rounded w-full px-2 py-1"
               value={clientCode}
               onChange={(e) => setClientCode(e.target.value)}
-              placeholder="Codigo..."
             />
 
             <button
-              className="bg-black text-white px-4 py-2 rounded w-full"
-              onClick={resolveClient}
+              onClick={goStep3}
+              className="w-full py-2 bg-black text-white rounded"
             >
               Continuar
             </button>
           </div>
         )}
 
-        {/* ------------------ PASO 3 ------------------ */}
+        {/* PASO 3 */}
         {step === 3 && (
-          <div className="space-y-4">
-            <label className="font-semibold">AWB / Guía:</label>
-            <input
-              className="border rounded px-3 py-2 w-full"
-              value={guide}
-              onChange={(e) => setGuide(e.target.value)}
-              placeholder="Ej: SMLU8838614A"
-            />
-
-            <label className="font-semibold block">Fecha:</label>
-            <input
-              type="date"
-              className="border rounded px-3 py-2 w-full"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+          <div className="text-center space-y-4">
+            <p className="text-lg">Packing listo para capturar cajas.</p>
 
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded w-full"
-              onClick={finishWizard}
+              onClick={() => window.location.href = `/packings/${invoiceNo}/edit`}
+              className="w-full py-2 bg-green-600 text-white rounded"
             >
-              Iniciar Packing
+              Ir a capturar cajas
             </button>
           </div>
         )}
 
-        {/* CANCELAR */}
-        <button
-          className="text-center text-red-500 text-sm underline w-full"
-          onClick={onClose}
-        >
+        <button onClick={onClose} className="w-full text-center text-red-500 underline">
           Cancelar
         </button>
 
       </div>
+
+      {/* Modal para admin */}
+      <ExistingInvoiceModal
+        open={existingOpen}
+        invoice={invoiceNo.trim().toUpperCase()}
+        onClose={() => setExistingOpen(false)}
+      />
     </div>
   );
 }
-
-
 

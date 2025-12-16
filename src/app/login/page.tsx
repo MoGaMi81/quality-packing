@@ -29,8 +29,8 @@ export default function LoginPage() {
 
     // 🚀 Redirección CON DELAY para permitir guardar la cookie
     setTimeout(() => {
-      if (role === "proceso") window.location.href = "/packing";
-      else if (role === "facturacion") window.location.href = "/packing/view";
+      if (role === "proceso") window.location.href = "/packings";
+      else if (role === "facturacion") window.location.href = "/packings/view";
       else if (role === "admin") window.location.href = "/";
       else window.location.href = "/";
     }, 200);  // 👈 delay crítico
