@@ -1,64 +1,61 @@
 // src/app/packings/view/page.tsx
 "use client";
-import { useState } from "react";
-import { fetchJSON } from "@/lib/fetchJSON";
 
-export default function ViewPacking() {
+import { useState } from "react";
+import BackButton from "@/components/BackButton";
+import { fetchJSON } from "@/lib/fetchJSON";
+import { getRole } from "@/lib/role";
+import InvoiceSummary from "@/components/InvoiceSummary";
+
+export default function PackingViewPage() {
+  const role = getRole();
   const [invoice, setInvoice] = useState("");
-  const [p, setP] = useState<any | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [data, setData] = useState<any | null>(null);
+  const [err, setErr] = useState("");
 
   const buscar = async () => {
-    setErr(null); setP(null);
+    setErr("");
+    setData(null);
     if (!invoice.trim()) return;
+
     try {
-      const res = await fetchJSON(`/api/packings/by-invoice/${encodeURIComponent(invoice.trim())}`);
-      setP(res?.packing ?? null);
-      if (!res?.packing) setErr("No encontrado.");
-    } catch (e:any) {
-      setErr(e?.message ?? "Error buscando.");
+      const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
+      if (!res.ok) {
+        setErr(res.error || "No encontrado");
+      } else {
+        setData(res.packing);
+      }
+    } catch {
+      setErr("Error al buscar");
     }
   };
 
   return (
-    <main className="p-6 space-y-4">
-      <a href="/" className="inline-block mb-2 px-3 py-1 border rounded">← Inicio</a>
-      <h1 className="text-3xl font-bold">Packing — Read only</h1>
+    <main className="p-8 max-w-4xl mx-auto space-y-6">
+      <BackButton />
 
-      <div className="flex gap-2 items-center">
-        <input className="border rounded px-2 py-1" placeholder="Factura #:" value={invoice} onChange={e=>setInvoice(e.target.value)} />
-        <button className="px-3 py-1 rounded border" onClick={buscar}>Buscar</button>
+      <h1 className="text-4xl font-bold">
+        {role === "facturacion"
+          ? "Factura — Trámite Aduanal"
+          : "Packing — Read only"}
+      </h1>
+
+      <div className="flex gap-3">
+        <input
+          className="border px-3 py-2 rounded w-40"
+          value={invoice}
+          onChange={(e) => setInvoice(e.target.value.toUpperCase())}
+          placeholder="Factura #"
+        />
+        <button className="px-3 py-2 border rounded" onClick={buscar}>
+          Buscar
+        </button>
       </div>
 
-      {err && <div className="text-red-600">{err}</div>}
-      {p && (
-        <>
-          <div className="text-sm mt-2">
-            <b>{p.header.client_name}</b> — Invoice {p.header.invoice_no} — {p.header.date}
-          </div>
-          <table className="min-w-full border mt-3">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border">Box</th>
-                <th className="p-2 border">Item</th>
-                <th className="p-2 border">Form</th>
-                <th className="p-2 border">Size</th>
-                <th className="p-2 border">Lbs</th>
-              </tr>
-            </thead>
-            <tbody>
-              {p.lines.map((l:any,i:number)=>(
-                <tr key={i}>
-                  <td className="p-2 border">{l.box_no}</td>
-                  <td className="p-2 border">{l.description_en}</td>
-                  <td className="p-2 border">{l.form}</td>
-                  <td className="p-2 border">{l.size}</td>
-                  <td className="p-2 border text-right">{l.pounds}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
+      {err && <p className="text-red-600">{err}</p>}
+
+      {data && (
+        <InvoiceSummary packing={data} />
       )}
     </main>
   );
