@@ -16,12 +16,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing data" }, { status: 400 });
     }
 
-    // ----------------------------------------------------
-    // 1) Buscar packing_id por invoice_no
-    // ----------------------------------------------------
+    // 1) Buscar packing
     const { data: packing, error: err1 } = await supabase
       .from("packings")
-      .select("id")
+      .select("*")
       .eq("invoice_no", invoice_no.toUpperCase())
       .single();
 
@@ -29,48 +27,52 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Packing not found" }, { status: 404 });
     }
 
-    const packing_id = packing.id;
-
-    // ----------------------------------------------------
-    // 2) Eliminar pricing previo
-    // ----------------------------------------------------
-    await supabase
-      .from("packing_pricing_lines")
+    // 2) Borrar pricing anterior
+    const { error: errDelParent } = await supabase
+      .from("packing_pricing")
       .delete()
-      .eq("packing_id", packing_id);
+      .eq("packing_id", packing.id);
 
-    // ----------------------------------------------------
-    // 3) Insertar el nuevo pricing
-    // ----------------------------------------------------
+    if (errDelParent)
+      return NextResponse.json({ error: errDelParent.message }, { status: 500 });
+
+    // 3) Crear cabecera pricing
+    const { data: pricing, error: errHead } = await supabase
+      .from("packing_pricing")
+      .insert({
+        packing_id: packing.id,
+        invoice_no: invoice_no.toUpperCase()
+      })
+      .select()
+      .single();
+
+    if (errHead)
+      return NextResponse.json({ error: errHead.message }, { status: 500 });
+
+    const pricing_id = pricing.id;
+
+    // 4) Insertar líneas pricing
     const payload = lines.map((l: any) => ({
-      packing_id,
-      // siempre la caja REAL (MX jamás se guarda)
-      box_no: l.combined_with ?? l.box_no,
-
+      pricing_id,
+      box_no: l.box_no,
       description_en: l.description_en,
       size: l.size,
       form: l.form,
-
       pounds: l.pounds,
       price: l.price,
       total: l.total,
-
-      // IMPORTANTE: scientific_name NO SE GUARDA EN ESTE MODELO
+      scientific_name: l.scientific_name
     }));
 
-    const { error: err2 } = await supabase
+    const { error: errInsLines } = await supabase
       .from("packing_pricing_lines")
       .insert(payload);
 
-    if (err2) {
-      console.error(err2);
-      return NextResponse.json({ error: err2.message }, { status: 500 });
-    }
+    if (errInsLines)
+      return NextResponse.json({ error: errInsLines.message }, { status: 500 });
 
     return NextResponse.json({ ok: true });
-
   } catch (e: any) {
-    console.error("SAVE ERROR", e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
