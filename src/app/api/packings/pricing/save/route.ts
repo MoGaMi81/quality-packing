@@ -12,67 +12,45 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { invoice_no, lines } = body;
 
-    if (!invoice_no || !lines) {
-      return NextResponse.json({ error: "Missing data" }, { status: 400 });
-    }
+    const invoice = invoice_no.toUpperCase();
 
-    // 1) Buscar packing
-    const { data: packing, error: err1 } = await supabase
+    const { data: packing } = await supabase
       .from("packings")
-      .select("*")
-      .eq("invoice_no", invoice_no.toUpperCase())
+      .select("id")
+      .eq("invoice_no", invoice)
       .single();
 
-    if (err1 || !packing) {
+    if (!packing)
       return NextResponse.json({ error: "Packing not found" }, { status: 404 });
-    }
 
-    // 2) Borrar pricing anterior
-    const { error: errDelParent } = await supabase
-      .from("packing_pricing")
+    const packing_id = packing.id;
+
+    // delete old pricing
+    await supabase
+      .from("packing_pricing_lines")
       .delete()
-      .eq("packing_id", packing.id);
+      .eq("packing_id", packing_id);
 
-    if (errDelParent)
-      return NextResponse.json({ error: errDelParent.message }, { status: 500 });
-
-    // 3) Crear cabecera pricing
-    const { data: pricing, error: errHead } = await supabase
-      .from("packing_pricing")
-      .insert({
-        packing_id: packing.id,
-        invoice_no: invoice_no.toUpperCase()
-      })
-      .select()
-      .single();
-
-    if (errHead)
-      return NextResponse.json({ error: errHead.message }, { status: 500 });
-
-    const pricing_id = pricing.id;
-
-    // 4) Insertar líneas pricing
     const payload = lines.map((l: any) => ({
-      pricing_id,
+      packing_id,
       box_no: l.box_no,
-      description_en: l.description_en,
-      size: l.size,
-      form: l.form,
       pounds: l.pounds,
       price: l.price,
       total: l.total,
-      scientific_name: l.scientific_name
+      description_en: l.description_en,
+      size: l.size,
+      form: l.form,
+      scientific_name: l.scientific_name,
     }));
 
-    const { error: errInsLines } = await supabase
+    const { error } = await supabase
       .from("packing_pricing_lines")
       .insert(payload);
 
-    if (errInsLines)
-      return NextResponse.json({ error: errInsLines.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

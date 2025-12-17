@@ -10,29 +10,28 @@ export async function GET(
   req: Request,
   { params }: { params: { invoice: string } }
 ) {
-  const invoice = params.invoice?.toUpperCase();
+  const invoice = params.invoice.toUpperCase();
 
-  if (!invoice)
+  if (!invoice) {
     return NextResponse.json(
       { ok: false, error: "Missing invoice param" },
       { status: 400 }
     );
+  }
 
-  // 1) Obtener encabezado
-  const { data: packing, error: err1 } = await supabase
+  // Get header
+  const { data: packing, error } = await supabase
     .from("packings")
     .select("*")
     .eq("invoice_no", invoice)
     .single();
 
-  if (err1 || !packing)
-    return NextResponse.json(
-      { ok: false, error: "Packing not found" },
-      { status: 404 }
-    );
+  if (!packing) {
+    return NextResponse.json({ ok: false, error: "Packing not found" }, { status: 404 });
+  }
 
-  // 2) Obtener líneas reales
-  const { data: lines, error: err2 } = await supabase
+  // Get lines
+  const { data: lines } = await supabase
     .from("packing_lines")
     .select("*")
     .eq("packing_id", packing.id)
@@ -40,9 +39,6 @@ export async function GET(
 
   return NextResponse.json({
     ok: true,
-    packing: {
-      ...packing,
-      lines: lines ?? [],
-    },
+    packing: { ...packing, lines: lines ?? [] },
   });
 }
