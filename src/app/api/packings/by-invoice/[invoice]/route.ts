@@ -6,39 +6,34 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(
-  req: Request,
-  { params }: { params: { invoice: string } }
-) {
-  const invoice = params.invoice.toUpperCase();
+export async function GET(req: Request, ctx: any) {
+  const invoice = ctx.params.invoice;
 
   if (!invoice) {
-    return NextResponse.json(
-      { ok: false, error: "Missing invoice param" },
-      { status: 400 }
-    );
+    return NextResponse.json({ ok: false, error: "Missing invoice" });
   }
 
-  // Get header
-  const { data: packing, error } = await supabase
+  // 1) header
+  const { data: packing, error: err1 } = await supabase
     .from("packings")
     .select("*")
-    .eq("invoice_no", invoice)
+    .eq("invoice_no", invoice.toUpperCase())
     .single();
 
-  if (!packing) {
-    return NextResponse.json({ ok: false, error: "Packing not found" }, { status: 404 });
+  if (err1 || !packing) {
+    return NextResponse.json({ ok: false, packing: null });
   }
 
-  // Get lines
-  const { data: lines } = await supabase
+  // 2) lines
+  const { data: lines, error: err2 } = await supabase
     .from("packing_lines")
     .select("*")
     .eq("packing_id", packing.id)
-    .order("box_no", { ascending: true });
+    .order("box_no");
 
   return NextResponse.json({
     ok: true,
-    packing: { ...packing, lines: lines ?? [] },
+    packing,
+    lines: lines ?? []
   });
 }
