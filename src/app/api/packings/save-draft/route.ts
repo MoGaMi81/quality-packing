@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // IMPORTANTE
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // SERVICE ROLE (server only)
 );
 
 export async function POST(req: Request) {
@@ -32,20 +32,39 @@ export async function POST(req: Request) {
       );
     }
 
-    let packingId = packing_id;
+    let packingId: string | null = packing_id ?? null;
 
     /* =====================
-       1️⃣ Crear o actualizar header
+       1️⃣ Buscar packing por invoice_no
     ===================== */
+    if (!packingId) {
+      const { data: existing, error } = await supabase
+        .from("packings")
+        .select("id")
+        .eq("invoice_no", header.invoice_no.toUpperCase())
+        .single();
 
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = no rows found (OK)
+        throw error;
+      }
+
+      if (existing?.id) {
+        packingId = existing.id;
+      }
+    }
+
+    /* =====================
+       2️⃣ Insert o Update header
+    ===================== */
     if (!packingId) {
       const { data, error } = await supabase
         .from("packings")
         .insert({
           invoice_no: header.invoice_no.toUpperCase(),
-          client_code: header.client_code,
+          client_code: header.client_code || null,
           date: header.date,
-          guide: header.guide,
+          guide: header.guide || null,
           status: "draft",
         })
         .select("id")
@@ -57,9 +76,9 @@ export async function POST(req: Request) {
       const { error } = await supabase
         .from("packings")
         .update({
-          client_code: header.client_code,
+          client_code: header.client_code || null,
           date: header.date,
-          guide: header.guide,
+          guide: header.guide || null,
           status: "draft",
         })
         .eq("id", packingId);
@@ -68,9 +87,8 @@ export async function POST(req: Request) {
     }
 
     /* =====================
-       2️⃣ Reemplazar líneas
+       3️⃣ Reemplazar líneas
     ===================== */
-
     await supabase
       .from("packing_lines")
       .delete()
