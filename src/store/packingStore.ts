@@ -5,6 +5,7 @@ import { create } from "zustand";
 import type { PackingHeader } from "@/domain/packing/types";
 
 export type SimpleLine = {
+  scientific_name: any;
   box_no: number;
   code: string;
   description_en: string;
