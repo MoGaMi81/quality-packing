@@ -43,46 +43,48 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= PASO 1 ================= */
   async function goStep1() {
-    if (!invoice.trim()) return;
+  if (!invoice.trim()) return;
 
-    setValidating(true);
-    setError(null);
+  setValidating(true);
+  setError(null);
 
-    try {
-      const r = await fetchJSON<any>(
-        `/api/packing/by-invoice/${encodeURIComponent(invoice.trim())}`
-      );
+  try {
+    const r = await fetchJSON<any>(
+      `/api/packings/by-invoice/${encodeURIComponent(invoice.trim())}`
+    );
 
-      if (r?.packing) {
-        // 👉 continuar draft
-        loadFromDB({
-          packing_id: r.packing.id,
-          status: r.packing.status,
-          header: {
-            invoice_no: r.packing.invoice_no,
-            client_code: r.packing.client_code,
-            date: r.packing.date,
-            guide: r.packing.guide,
-          },
-          lines: r.lines ?? [],
-        });
-      } else {
-        // 👉 nuevo packing
-        setHeader({
-          invoice_no: invoice.trim().toUpperCase(),
-          client_code: clientCode.trim(),
-          date,
-          guide,
-        });
-      }
-
-      setStep(2);
-    } catch {
-      setError("Error validando factura");
-    } finally {
-      setValidating(false);
+    // 🔹 CASO 1: existe → continuar draft
+    if (r?.packing) {
+      loadFromDB({
+        packing_id: r.packing.id,
+        status: r.packing.status,
+        header: {
+          invoice_no: r.packing.invoice_no,
+          client_code: r.packing.client_code,
+          date: r.packing.date,
+          guide: r.packing.guide,
+        },
+        lines: r.lines ?? [],
+      });
+    } else {
+      // 🔹 CASO 2: NO existe → nuevo packing
+      setHeader({
+        invoice_no: invoice.trim().toUpperCase(),
+        client_code: "",
+        date: new Date().toISOString().slice(0, 10),
+        guide: "",
+      });
     }
+
+    // 👉 EN AMBOS CASOS avanzamos
+    setStep(2);
+  } catch (e: any) {
+    // 🔴 solo errores reales
+    setError("No se pudo validar la factura. Intenta de nuevo.");
+  } finally {
+    setValidating(false);
   }
+}
 
   /* ================= UI ================= */
 
