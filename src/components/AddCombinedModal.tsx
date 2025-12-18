@@ -1,7 +1,6 @@
 // src/components/AddCombinedModal.tsx
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 
 type SimpleItem = {
@@ -12,192 +11,117 @@ type SimpleItem = {
   pounds: number;
 };
 
-type SubLine = { key: string; lbs: number | "" };
+type Comb = { code: string; lbs: number };
 
-type Props = {
+export default function AddCombinedModal({
+  open,
+  onClose,
+  onAdded,
+}: {
   open: boolean;
   onClose: () => void;
   onAdded: (items: SimpleItem[]) => void;
-  initial?: SubLine[]; // opcional para editar cajas
-};
-
-export default function AddCombinedModal({ open, onClose, onAdded, initial }: Props) {
-  const [subs, setSubs] = useState<SubLine[]>([{ key: "", lbs: "" }]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // cerrar con ESC
-  useEffect(() => {
-    if (!open) return;
-    const fn = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", fn);
-    return () => window.removeEventListener("keydown", fn);
-  }, [open]);
-
-  // limpiar o cargar datos iniciales
-  useEffect(() => {
-    if (open) {
-      setError("");
-      setLoading(false);
-      if (initial && initial.length > 0) {
-        setSubs(initial);
-      } else {
-        setSubs([{ key: "", lbs: "" }]);
-      }
-    }
-  }, [open, initial]);
+}) {
+  const [rows, setRows] = useState<Comb[]>([{ code: "", lbs: 0 }]);
 
   if (!open) return null;
 
-  const update = (idx: number, field: keyof SubLine, value: any) => {
-    setSubs((prev) =>
-      prev.map((s, i) =>
-        i === idx
-          ? {
-              ...s,
-              [field]:
-                field === "lbs"
-                  ? value === "" ? "" : parseInt(value, 10)
-                  : value,
-            }
-          : s
-      )
-    );
-  };
+  async function resolveCombined() {
+    const final: SimpleItem[] = [];
 
-  const remove = (idx: number) => {
-    setSubs((prev) => prev.filter((_, i) => i !== idx));
-  };
+    for (const r of rows) {
+      if (!r.code || !r.lbs) continue;
 
-  const addRow = () => {
-    setSubs((prev) => [...prev, { key: "", lbs: "" }]);
-  };
-
-  const save = async () => {
-    setError("");
-
-    const valid = subs.filter(
-      (s) => s.key.trim() !== "" && s.lbs !== "" && Number(s.lbs) > 0
-    );
-
-    if (valid.length === 0) {
-      setError("Agrega al menos una línea válida.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const items: SimpleItem[] = [];
-
-      for (const s of valid) {
-        const code = s.key.trim().toUpperCase();
-        const r = await fetchJSON<any>(
-          `/api/catalogs/species-by-code/${encodeURIComponent(code)}`
+      try {
+        const x = await fetchJSON(
+          `/api/catalogs/species-by-code/${encodeURIComponent(
+            r.code.trim().toUpperCase()
+          )}`
         );
 
-        items.push({
-          code,
-          description_en: r.species.name_en,
-          form: r.form.name,
-          size: r.size.name,
-          pounds: Number(s.lbs),
+        final.push({
+          code: r.code.toUpperCase(),
+          description_en: x.species.name_en,
+          form: x.form.name,
+          size: x.size.name,
+          pounds: r.lbs,
         });
+      } catch {
+        alert(`Clave no encontrada: ${r.code}`);
+        return;
       }
-
-      onAdded(items);
-      onClose();
-    } catch (e: any) {
-      setError(e?.message || "Error al resolver alguna especie.");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    if (final.length === 0) return;
+
+    onAdded(final);
+    setRows([{ code: "", lbs: 0 }]);
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      
-      {/* Cerrar clic afuera */}
-      <div className="absolute inset-0" onClick={() => !loading && onClose()} />
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <div className="bg-white p-5 rounded-xl w-full max-w-xl">
+        <h2 className="text-xl font-bold mb-3">Agregar caja combinada</h2>
 
-      <div className="relative bg-white rounded-xl p-6 w-[480px] shadow-xl animate-fade space-y-5">
-        <h3 className="text-xl font-bold text-gray-800">
-          Caja Combinada
-        </h3>
+        {rows.map((r, i) => (
+          <div className="grid grid-cols-6 gap-3 mb-2" key={i}>
+            <input
+              className="col-span-4 border rounded px-2 py-1"
+              placeholder="Clave especie"
+              value={r.code}
+              onChange={(e) =>
+                setRows((prev) =>
+                  prev.map((x, idx) =>
+                    idx === i ? { ...x, code: e.target.value } : x
+                  )
+                )
+              }
+            />
 
-        {/* Lista de SubLine */}
-        <div className="space-y-4 max-h-[300px] overflow-auto pr-2">
-          {subs.map((s, i) => (
-            <div key={i} className="flex gap-3 items-end">
+            <input
+              className="border rounded px-2 py-1"
+              type="number"
+              placeholder="Lbs"
+              value={r.lbs}
+              onChange={(e) =>
+                setRows((prev) =>
+                  prev.map((x, idx) =>
+                    idx === i ? { ...x, lbs: Number(e.target.value) } : x
+                  )
+                )
+              }
+            />
 
-              {/* KEY */}
-              <div className="flex-1 space-y-1">
-                <label className="text-sm font-medium">Clave</label>
-                <input
-                  className="border rounded px-3 py-2 w-full"
-                  value={s.key}
-                  onChange={(e) => update(i, "key", e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+            <button
+              className="border rounded"
+              onClick={() =>
+                setRows((prev) => prev.filter((_, idx) => idx !== i))
+              }
+            >
+              X
+            </button>
+          </div>
+        ))}
 
-              {/* LBS */}
-              <div className="w-32 space-y-1">
-                <label className="text-sm font-medium">Libras</label>
-                <input
-                  type="number"
-                  className="border rounded px-3 py-2 w-full"
-                  value={s.lbs === "" ? "" : s.lbs}
-                  onChange={(e) => update(i, "lbs", e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+        <button
+          onClick={() => setRows([...rows, { code: "", lbs: 0 }])}
+          className="px-3 py-1 border rounded mb-4"
+        >
+          + Línea
+        </button>
 
-              {/* REMOVE */}
-              <button
-                onClick={() => remove(i)}
-                className="px-3 py-2 border rounded text-red-600"
-                disabled={loading || subs.length === 1}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          {/* Add line */}
+        <div className="flex gap-3 mt-4">
           <button
-            className="text-sm text-blue-600 underline"
-            onClick={addRow}
-            disabled={loading}
+            onClick={resolveCombined}
+            className="px-3 py-1 bg-black text-white rounded"
           >
-            + Agregar línea
+            Agregar caja
+          </button>
+
+          <button className="px-3 py-1 border rounded" onClick={onClose}>
+            Cerrar
           </button>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="text-red-600 text-sm">{error}</div>
-        )}
-
-        {/* Footer Buttons */}
-        <div className="flex justify-end gap-3 pt-2">
-          <button
-            className="px-4 py-2 rounded border"
-            onClick={onClose}
-            disabled={loading}
-          >
-            Cancelar
-          </button>
-
-          <button
-            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
-            onClick={save}
-            disabled={loading}
-          >
-            {loading ? "Procesando..." : "Guardar"}
-          </button>
-        </div>
-
       </div>
     </div>
   );
