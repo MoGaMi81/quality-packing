@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
-import { fetchJSON } from "@/lib/fetchJSON";
 
 type Props = {
   open: boolean;
@@ -9,156 +9,134 @@ type Props = {
 };
 
 export default function BoxesWizardModal({ open, onClose }: Props) {
-  const { lines, addLines } = usePackingStore();
-  const [tab, setTab] = useState<"simple" | "range" | "combined">("simple");
-
-  // SIMPLE
-  const [spKey, setSpKey] = useState("");
-  const [lbs, setLbs] = useState<number>(0);
-
-  // RANGE
-  const [rangeKey, setRangeKey] = useState("");
-  const [rangeCount, setRangeCount] = useState<number>(1);
-  const [rangeLbs, setRangeLbs] = useState<number>(0);
-
-  // COMBINED
-  const [combItems, setCombItems] = useState<{ key: string; lbs: number }[]>([
-    { key: "", lbs: 0 },
-  ]);
-
-  useEffect(() => {
-    if (!open) setTab("simple");
-  }, [open]);
-
   if (!open) return null;
 
-  const nextBoxNo = () => {
-    if (lines.length === 0) return 1;
-    return Math.max(...lines.map((l) => l.box_no)) + 1;
-  };
+  const addLine = usePackingStore((s) => s.addLine);
+  const lines = usePackingStore((s) => s.lines);
 
-  const resolveKey = async (key: string) => {
-    return fetchJSON<any>(
-      `/api/catalogs/species-by-code/${encodeURIComponent(key.trim().toUpperCase())}`
-    );
-  };
+  const [code, setCode] = useState("");
+  const [qty, setQty] = useState(1);
+  const [description, setDescription] = useState("");
+  const [form, setForm] = useState("");
+  const [size, setSize] = useState("");
+  const [pounds, setPounds] = useState(0);
+  const [scientific, setScientific] = useState("");
 
-  /* ================= SIMPLE ================= */
-  const addSimple = async () => {
-    if (!spKey || !lbs) return;
-
-    const code = spKey.trim().toUpperCase();
-    let r;
-
-    try {
-      r = await resolveKey(code);
-    } catch {
-      const create = confirm(`Clave ${code} no existe. ¿Deseas crear la especie ahora?`);
-      if (!create) return;
-
-      const name_en = prompt("Nombre (EN):");
-      if (!name_en) return;
-
-      const size = prompt("Size (p.ej., 1-2):") || "";
-      const form = prompt("Form (W&G / FILLET):") || "W&G";
-      const scientific_name = prompt("Scientific name:") || "";
-
-      await fetchJSON("/api/catalogs/new-species", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, name_en, size, form, scientific_name }),
-      });
-
-      r = await resolveKey(code);
+  function save() {
+    if (!code || qty <= 0 || pounds <= 0) {
+      alert("Completa los campos obligatorios.");
+      return;
     }
 
-    const boxNo = nextBoxNo();
+    const startBox =
+      lines.length > 0
+        ? Math.max(...lines.map((l) => l.box_no)) + 1
+        : 1;
 
-    addLines([
-      {
-        box_no: boxNo,
+    for (let i = 0; i < qty; i++) {
+      addLine({
+        box_no: startBox + i,
         code,
-        description_en: r.species.name_en,
-        form: r.form.name,
-        size: r.size.name,
-        pounds: Number(lbs),
-        scientific_name: r.species.scientific_name ?? "",
-      },
-    ]);
-
-    setSpKey("");
-    setLbs(0);
-  };
-
-  /* ================= RANGE ================= */
-  const addRange = async () => {
-    if (!rangeKey || !rangeLbs || !rangeCount) return;
-
-    const code = rangeKey.trim().toUpperCase();
-    const r = await resolveKey(code);
-
-    let boxNo = nextBoxNo();
-
-    const newLines = Array.from({ length: rangeCount }).map((_, i) => ({
-      box_no: boxNo + i,
-      code,
-      description_en: r.species.name_en,
-      form: r.form.name,
-      size: r.size.name,
-      pounds: Number(rangeLbs),
-      scientific_name: r.species.scientific_name ?? "",
-    }));
-
-    addLines(newLines);
-
-    setRangeKey("");
-    setRangeCount(1);
-    setRangeLbs(0);
-  };
-
-  /* ================= COMBINED ================= */
-  const addCombined = async () => {
-    if (combItems.length === 0) return;
-
-    const boxNo = nextBoxNo();
-    const newLines = [];
-
-    for (const it of combItems) {
-      if (!it.key || !it.lbs) continue;
-
-      const code = it.key.trim().toUpperCase();
-      const r = await resolveKey(code);
-
-      newLines.push({
-        box_no: boxNo,
-        code,
-        description_en: r.species.name_en,
-        form: r.form.name,
-        size: r.size.name,
-        pounds: Number(it.lbs),
-        scientific_name: r.species.scientific_name ?? "",
+        description_en: description,
+        form,
+        size,
+        pounds,
+        scientific_name: scientific,
       });
     }
 
-    if (newLines.length > 0) addLines(newLines);
+    // limpiar formulario
+    setCode("");
+    setQty(1);
+    setDescription("");
+    setForm("");
+    setSize("");
+    setPounds(0);
+    setScientific("");
 
-    setCombItems([{ key: "", lbs: 0 }]);
-  };
-
-  const addRow = () => setCombItems([...combItems, { key: "", lbs: 0 }]);
-  const delRow = (i: number) => setCombItems(combItems.filter((_, ix) => ix !== i));
-
-  /* ================= RENDER ================= */
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 z-[999] bg-black/50 flex items-center justify-center">
-      <div className="bg-white rounded-xl w-full max-w-3xl p-5">
-        {/* Header, tabs y UI EXACTAMENTE IGUAL que el tuyo */}
-        {/* (no lo repetí aquí para no alargar, pero NO cambia lógica visual) */}
+      <div
+        className="bg-white rounded-lg w-[520px] p-4 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-semibold mb-3">
+          Agregar cajas
+        </h2>
+
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            placeholder="Clave"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className="border p-2 rounded"
+          />
+
+          <input
+            placeholder="Cantidad cajas"
+            type="number"
+            min={1}
+            value={qty}
+            onChange={(e) => setQty(Number(e.target.value))}
+            className="border p-2 rounded"
+          />
+
+          <input
+            placeholder="Descripción EN"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="border p-2 rounded col-span-2"
+          />
+
+          <input
+            placeholder="Forma (W&G, Fillet...)"
+            value={form}
+            onChange={(e) => setForm(e.target.value)}
+            className="border p-2 rounded"
+          />
+
+          <input
+            placeholder="Size"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            className="border p-2 rounded"
+          />
+
+          <input
+            placeholder="Lbs por caja"
+            type="number"
+            min={0}
+            value={pounds}
+            onChange={(e) => setPounds(Number(e.target.value))}
+            className="border p-2 rounded"
+          />
+
+          <input
+            placeholder="Scientific name"
+            value={scientific}
+            onChange={(e) => setScientific(e.target.value)}
+            className="border p-2 rounded col-span-2"
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={save}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Agregar
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
-
-
