@@ -151,7 +151,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   /* ================= RENDER ================= */
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-60">
       <div className="bg-white rounded-xl w-full max-w-3xl p-5">
         {/* Header, tabs y UI EXACTAMENTE IGUAL que el tuyo */}
         {/* (no lo repetí aquí para no alargar, pero NO cambia lógica visual) */}

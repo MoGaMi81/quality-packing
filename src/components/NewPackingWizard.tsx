@@ -102,7 +102,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= UI ================= */
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+  <>
+    {/* ================= WIZARD OVERLAY ================= */}
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
       <div className="bg-white p-8 rounded-xl w-full max-w-3xl">
         <h1 className="text-3xl font-bold mb-6">
           Paso {step} de 3
@@ -200,11 +202,13 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           </>
         )}
       </div>
-
-      <BoxesWizardModal
-        open={openBoxes}
-        onClose={() => setOpenBoxes(false)}
-      />
     </div>
-  );
+
+    {/* ================= BOXES MODAL (FUERA DEL WIZARD) ================= */}
+    <BoxesWizardModal
+      open={openBoxes}
+      onClose={() => setOpenBoxes(false)}
+    />
+  </>
+);
 }
