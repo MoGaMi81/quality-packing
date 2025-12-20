@@ -14,6 +14,7 @@ export type PackingLine = {
   size: string;
   pounds: number;
   scientific_name: string;
+  is_combined?: boolean;
 };
 
 export type PackingHeader = {
