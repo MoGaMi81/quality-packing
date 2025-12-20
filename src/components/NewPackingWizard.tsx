@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePackingStore } from "@/store/packingStore";
+import { PackingLine, usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 
@@ -100,6 +100,15 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     }
   }, [step, header]);
 
+  const boxes = lines.reduce<Record<number, PackingLine[]>>(
+  (acc, line) => {
+    if (!acc[line.box_no]) acc[line.box_no] = [];
+    acc[line.box_no].push(line);
+    return acc;
+  },
+  {}
+);
+
   /* ================= UI ================= */
   return (
   <>
@@ -164,11 +173,27 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 </div>
               )}
 
-              {lines.map((l, i) => (
-                <div key={i}>
-                  Caja #{l.box_no} — {l.code} — {l.pounds} lbs
-                </div>
-              ))}
+              {Object.entries(boxes).map(([boxNo, items]) => {
+  const isCombined = items.some(
+    (i) => i.is_combined
+  );
+
+  return (
+    <div key={boxNo} className="mb-2">
+      <div className="font-semibold">
+        Caja #{boxNo}
+        {isCombined && " — COMBINADA"}
+      </div>
+
+      {items.map((l, idx) => (
+        <div key={idx} className="ml-4">
+          {l.code} — {l.pounds} lbs
+        </div>
+      ))}
+    </div>
+  );
+})}
+
             </div>
 
             <button
@@ -190,6 +215,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
         {step === 3 && (
           <>
             <p className="font-bold">Resumen</p>
+            <p>Total cajas: {Object.keys(boxes).length}</p>
             <p>Total líneas: {lines.length}</p>
 
             {lines.length > 0 && (
