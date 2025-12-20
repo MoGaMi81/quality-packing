@@ -25,12 +25,15 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   /* ================= TABS ================= */
   const [tab, setTab] = useState<Tab>("simple");
 
-  /* ================= SIMPLE / RANGO STATE ================= */
+  /* ================= SIMPLE / RANGO ================= */
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
   const [pounds, setPounds] = useState(0);
 
-  /* ================= COMBINADA STATE ================= */
+  const [specie, setSpecie] = useState<any | null>(null);
+  const [loadingSpecie, setLoadingSpecie] = useState(false);
+
+  /* ================= COMBINADA ================= */
   const [combinedLines, setCombinedLines] = useState<CombinedLine[]>([
     { code: "", lbs: 0 },
   ]);
@@ -47,24 +50,37 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
       `/api/species/by-code/${encodeURIComponent(code.toUpperCase())}`
     );
     const data = await r.json();
+
     if (!data.ok) {
-      throw new Error(`La clave ${code} no existe en el catálogo.`);
+      throw new Error(`La clave ${code} no existe`);
     }
+
     return data.species;
+  }
+
+  /* ================= EFFECT: BUSCAR ESPECIE ================= */
+  async function onChangeCode(value: string) {
+    const v = value.toUpperCase();
+    setCode(v);
+    setSpecie(null);
+
+    if (!v) return;
+
+    setLoadingSpecie(true);
+    try {
+      const s = await resolveSpecies(v);
+      setSpecie(s);
+    } catch {
+      setSpecie(null);
+    } finally {
+      setLoadingSpecie(false);
+    }
   }
 
   /* ================= ACTIONS ================= */
   async function addSimpleOrRange() {
-    if (!code.trim() || pounds <= 0 || qty <= 0) {
-      alert("Clave y lbs son obligatorios.");
-      return;
-    }
-
-    let species;
-    try {
-      species = await resolveSpecies(code.trim());
-    } catch (e: any) {
-      alert(e.message);
+    if (!specie || pounds <= 0 || qty <= 0) {
+      alert("Clave válida, lbs y cantidad son obligatorios.");
       return;
     }
 
@@ -73,19 +89,19 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     for (let i = 0; i < qty; i++) {
       addLine({
         box_no: boxNo++,
-        code: species.code,
-        description_en: species.description_en,
-        form: species.form,
-        size: species.size,
+        code: specie.code,
+        description_en: specie.description_en,
+        form: specie.form,
+        size: specie.size,
         pounds,
-        scientific_name: species.scientific_name,
+        scientific_name: specie.scientific_name,
       });
     }
 
-    // reset
     setCode("");
     setQty(1);
     setPounds(0);
+    setSpecie(null);
     onClose();
   }
 
@@ -100,20 +116,19 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     try {
       for (const l of combinedLines) {
         if (!l.code || l.lbs <= 0) {
-          throw new Error("Clave y lbs son obligatorios en combinada.");
+          throw new Error("Clave y lbs son obligatorios.");
         }
 
-        const species = await resolveSpecies(l.code);
+        const s = await resolveSpecies(l.code);
 
         addLine({
           box_no: boxNo,
-          code: species.code,
-          description_en: species.description_en,
-          form: species.form,
-          size: species.size,
+          code: s.code,
+          description_en: s.description_en,
+          form: s.form,
+          size: s.size,
           pounds: l.lbs,
-          scientific_name: species.scientific_name,
-          is_combined: true,
+          scientific_name: s.scientific_name,
         });
       }
 
@@ -135,9 +150,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
           <button
             onClick={() => setTab("simple")}
             className={`px-3 py-1 rounded ${
-              tab === "simple"
-                ? "bg-black text-white"
-                : "border"
+              tab === "simple" ? "bg-black text-white" : "border"
             }`}
           >
             Simple / Rango
@@ -145,9 +158,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
           <button
             onClick={() => setTab("combined")}
             className={`px-3 py-1 rounded ${
-              tab === "combined"
-                ? "bg-black text-white"
-                : "border"
+              tab === "combined" ? "bg-black text-white" : "border"
             }`}
           >
             Combinada
@@ -159,10 +170,10 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
           <>
             <div className="grid grid-cols-2 gap-3">
               <input
-                placeholder="Clave especie"
+                placeholder="Clave"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="border p-2 rounded col-span-2"
+                onChange={(e) => onChangeCode(e.target.value)}
+                className="border p-2 rounded"
               />
 
               <input
@@ -180,15 +191,28 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
                 placeholder="Lbs por caja"
                 value={pounds}
                 onChange={(e) => setPounds(Number(e.target.value))}
-                className="border p-2 rounded"
+                className="border p-2 rounded col-span-2"
               />
             </div>
 
+            {loadingSpecie && (
+              <div className="text-sm text-gray-400 mt-2">
+                Buscando especie…
+              </div>
+            )}
+
+            {specie && (
+              <div className="mt-3 p-2 border rounded bg-gray-50 text-sm">
+                <div className="font-semibold">{specie.description_en}</div>
+                <div>
+                  {specie.form} {specie.size}
+                </div>
+                <div className="italic">{specie.scientific_name}</div>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 mt-6">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 border rounded"
-              >
+              <button onClick={onClose} className="px-4 py-2 border rounded">
                 Cancelar
               </button>
               <button
@@ -204,22 +228,16 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
         {/* ===== COMBINADA ===== */}
         {tab === "combined" && (
           <>
-            <h3 className="font-semibold mb-2">
-              Caja combinada
-            </h3>
+            <h3 className="font-semibold mb-2">Caja combinada</h3>
 
             {combinedLines.map((l, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-3 gap-2 mb-2"
-              >
+              <div key={i} className="grid grid-cols-3 gap-2 mb-2">
                 <input
                   placeholder="Clave"
                   value={l.code}
                   onChange={(e) => {
                     const copy = [...combinedLines];
-                    copy[i].code =
-                      e.target.value.toUpperCase();
+                    copy[i].code = e.target.value.toUpperCase();
                     setCombinedLines(copy);
                   }}
                   className="border p-2 rounded"
@@ -232,9 +250,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
                   value={l.lbs}
                   onChange={(e) => {
                     const copy = [...combinedLines];
-                    copy[i].lbs = Number(
-                      e.target.value
-                    );
+                    copy[i].lbs = Number(e.target.value);
                     setCombinedLines(copy);
                   }}
                   className="border p-2 rounded"
@@ -243,9 +259,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
                 <button
                   onClick={() =>
                     setCombinedLines(
-                      combinedLines.filter(
-                        (_, idx) => idx !== i
-                      )
+                      combinedLines.filter((_, idx) => idx !== i)
                     )
                   }
                   className="text-red-600"
@@ -257,10 +271,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
 
             <button
               onClick={() =>
-                setCombinedLines([
-                  ...combinedLines,
-                  { code: "", lbs: 0 },
-                ])
+                setCombinedLines([...combinedLines, { code: "", lbs: 0 }])
               }
               className="text-blue-600 underline"
             >
@@ -268,10 +279,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
             </button>
 
             <div className="flex justify-end gap-2 mt-6">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 border rounded"
-              >
+              <button onClick={onClose} className="px-4 py-2 border rounded">
                 Cancelar
               </button>
               <button
