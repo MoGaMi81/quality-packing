@@ -218,68 +218,88 @@ export default function NewPackingWizard({ open, onClose }: Props) {
             </>
           )}
 
-          {/* ===== PASO 3 ===== */}
-          {step === 3 && (
-            <>
-              <h2 className="text-xl font-bold mb-4">Resumen</h2>
+          {/* ================= PASO 3 ================= */}
+{step === 3 && (() => {
+  // 🔹 Agrupar líneas por especie (code)
+  const byCode = Object.values(
+    lines.reduce((acc: any, l: any) => {
+      if (!acc[l.code]) {
+        acc[l.code] = {
+          code: l.code,
+          description_en: l.description_en,
+          form: l.form,
+          size: l.size,
+          scientific_name: l.scientific_name,
+          boxes: new Set<number>(),
+          total_lbs: 0,
+        };
+      }
+      acc[l.code].boxes.add(l.box_no);
+      acc[l.code].total_lbs += l.pounds;
+      return acc;
+    }, {})
+  );
 
-              <div className="border rounded p-4 max-h-64 overflow-auto text-sm">
-                {Object.values(
-                  lines.reduce((acc: any, l) => {
-                    if (!acc[l.code]) {
-                      acc[l.code] = {
-                        code: l.code,
-                        description_en: l.description_en,
-                        form: l.form,
-                        size: l.size,
-                        scientific_name: l.scientific_name,
-                        boxes: 0,
-                        lbs: 0,
-                      };
-                    }
-                    acc[l.code].boxes += 1;
-                    acc[l.code].lbs += l.pounds;
-                    return acc;
-                  }, {})
-                ).map((s: any) => (
-                  <div key={s.code} className="mb-3">
-                    <div className="font-semibold">
-                      {s.code} — {s.description_en}
-                    </div>
-                    <div>{s.form} {s.size}</div>
-                    <div className="italic">{s.scientific_name}</div>
-                    <div>
-                      Cajas: <b>{s.boxes}</b> · Total lbs: <b>{s.lbs}</b>
-                    </div>
-                  </div>
-                ))}
-              </div>
+  // 🔹 TOTAL CAJAS FÍSICAS (CLAVE DEL FIX)
+  const totalCajas = new Set(lines.map((l: any) => l.box_no)).size;
 
-              <div className="mt-4 text-sm">
-                <div>Total cajas: <b>{lines.length}</b></div>
-                <div>
-                  Total lbs:{" "}
-                  <b>{lines.reduce((s, l) => s + l.pounds, 0)}</b>
-                </div>
-              </div>
+  // 🔹 TOTAL LBS
+  const totalLbs = lines.reduce(
+    (s: number, l: any) => s + l.pounds,
+    0
+  );
 
-              <div className="flex gap-2 mt-6">
-                <button
-                  onClick={() => setStep(2)}
-                  className="px-4 py-2 border rounded w-full"
-                >
-                  Regresar
-                </button>
+  return (
+    <>
+      <p className="text-xl font-bold mb-3">Resumen</p>
 
-                <button
-                  onClick={finalizePacking}
-                  className="px-4 py-2 bg-green-700 text-white rounded w-full"
-                >
-                  Finalizar Packing
-                </button>
-              </div>
-            </>
-          )}
+      <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
+        {byCode.map((g: any, i: number) => (
+          <div key={i}>
+            <div className="font-semibold">
+              {g.code} — {g.description_en}
+            </div>
+            <div className="text-sm">
+              {g.form} {g.size}
+            </div>
+            <div className="italic text-sm">
+              {g.scientific_name}
+            </div>
+            <div className="mt-1">
+              Cajas: {g.boxes.size} · Total lbs:{" "}
+              <b>{g.total_lbs}</b>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 space-y-1">
+        <div>
+          <b>Total cajas:</b> {totalCajas}
+        </div>
+        <div>
+          <b>Total lbs:</b> {totalLbs}
+        </div>
+      </div>
+
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={() => setStep(2)}
+          className="flex-1 border rounded px-4 py-2"
+        >
+          Regresar
+        </button>
+
+        <button
+          className="flex-1 bg-green-700 text-white rounded px-4 py-2"
+        >
+          Finalizar Packing
+        </button>
+      </div>
+    </>
+  );
+})()}
+
         </div>
       </div>
 
