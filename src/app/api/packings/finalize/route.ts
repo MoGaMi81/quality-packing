@@ -65,6 +65,7 @@ export async function POST(req: Request) {
         date: header.date,
         guide: header.guide,
         status: "final",
+        finalized_at: new Date().toISOString(),
       })
       .eq("id", packing_id);
 
@@ -73,10 +74,12 @@ export async function POST(req: Request) {
     /* =====================
        3️⃣ Replace lines
     ===================== */
-    await supabase
+    const { error: eDel } = await supabase
       .from("packing_lines")
       .delete()
       .eq("packing_id", packing_id);
+
+    if (eDel) throw eDel;
 
     if (lines.length > 0) {
       const rows = lines.map((l) => ({
@@ -97,7 +100,11 @@ export async function POST(req: Request) {
       if (e3) throw e3;
     }
 
+    /* =====================
+       4️⃣ Done
+    ===================== */
     return NextResponse.json({ ok: true });
+
   } catch (e: any) {
     return NextResponse.json(
       { ok: false, error: e.message || "Unexpected error" },
