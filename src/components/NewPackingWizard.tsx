@@ -115,6 +115,14 @@ const [guide, setGuide] = useState("");
 
   /* ================= FINALIZAR ================= */
   const finalize = async () => {
+  console.log("FINALIZE CLICK");
+  console.log("packing_id:", packing_id);
+
+  if (!packing_id) {
+    alert("Packing inválido");
+    return;
+  }
+
   const res = await fetch("/api/packing/finalize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -131,13 +139,13 @@ const [guide, setGuide] = useState("");
   });
 
   const data = await res.json();
+  console.log("FINALIZE RESPONSE:", data);
 
   if (!data.ok) {
     alert(data.error);
     return;
   }
 
-  alert("Packing finalizado correctamente");
   router.push("/packing");
 };  
 
@@ -272,7 +280,7 @@ const [guide, setGuide] = useState("");
 
                  <button
   onClick={finalize}
-  className="bg-green-700 text-white px-4 py-2 rounded"
+  className="bg-green-700 text-white px-4 py-2 rounded w-full"
 >
   Finalizar Packing
 </button>
