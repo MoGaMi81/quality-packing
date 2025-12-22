@@ -123,7 +123,7 @@ const [guide, setGuide] = useState("");
     return;
   }
 
-  const res = await fetch("/api/packing/finalize", {
+  const res = await fetch("/api/packings/finalize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -146,7 +146,7 @@ const [guide, setGuide] = useState("");
     return;
   }
 
-  router.push("/packing");
+  router.push("/packings");
 };  
 
   /* ================= UI ================= */
