@@ -1,24 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PackingLine, usePackingStore } from "@/store/packingStore";
+import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
 
-
 type Props = {
   open: boolean;
   onClose: () => void;
 };
-const [lines, setLines] = useState<PackingLine[]>([]);
-
-const boxes = groupBoxes(lines);
-
-const simpleBoxes = boxes.filter(b => !b.isCombined);
-const combinedBoxes = boxes.filter(b => b.isCombined);
-
 
 export default function NewPackingWizard({ open, onClose }: Props) {
   const router = useRouter();
@@ -32,26 +24,11 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     reset,
   } = usePackingStore();
 
-  const groupedBoxes = groupBoxes(lines);
-
-  const totalCajas = groupedBoxes.length;
-  const totalLbs = groupedBoxes.reduce(
-    (s, b) => s + b.total_lbs,
-    0
-  );
-
-  
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [invoice, setInvoice] = useState("");
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
-  const [client_code] = useState("");
-  const [date] = useState(
-  new Date().toISOString().slice(0, 10)
-);
-const [guide, setGuide] = useState("");
-
 
   /* ================= RESET ================= */
   useEffect(() => {
@@ -106,67 +83,42 @@ const [guide, setGuide] = useState("");
     }
   }
 
-  /* ================= AUTOSAVE DRAFT ================= */
-  useEffect(() => {
-    if (step === 2 && header) {
-      fetchJSON("/api/packings/save-draft", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packing_id: packing_id ?? null,
-          header,
-          lines,
-        }),
-      }).then((r) => {
-        if (r?.packing_id && !packing_id) {
-          usePackingStore.setState({ packing_id: r.packing_id });
-        }
-      });
-    }
-  }, [step, header, lines, packing_id]);
-
-  /* ================= AGRUPAR POR CAJA ================= */
-  const boxes = lines.reduce<Record<number, PackingLine[]>>((acc, l) => {
-    if (!acc[l.box_no]) acc[l.box_no] = [];
-    acc[l.box_no].push(l);
-    return acc;
-  }, {});
-
   /* ================= FINALIZAR ================= */
-  const finalize = async () => {
-  console.log("FINALIZE CLICK");
-  console.log("packing_id:", packing_id);
+  async function finalize() {
+    if (!packing_id) {
+      alert("Packing inválido");
+      return;
+    }
 
-  if (!packing_id) {
-    alert("Packing inválido");
-    return;
+    if (!header?.client_code || !header?.date) {
+      alert("Header incompleto");
+      return;
+    }
+
+    const res = await fetch("/api/packings/finalize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        packing_id,
+        header,
+        lines,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.error);
+      return;
+    }
+
+    router.push("/packings");
   }
 
-  const res = await fetch("/api/packings/finalize", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      packing_id,
-      header: {
-        invoice_no: invoice,
-        client_code,
-        date,
-        guide,
-      },
-      lines,
-    }),
-  });
-
-  const data = await res.json();
-  console.log("FINALIZE RESPONSE:", data);
-
-  if (!data.ok) {
-    alert(data.error);
-    return;
-  }
-
-  router.push("/packings");
-};  
+  /* ================= DATOS DERIVADOS ================= */
+  const grouped = groupBoxes(lines);
+  const totalCajas = grouped.length;
+  const totalLbs = grouped.reduce((s, b) => s + b.total_lbs, 0);
 
   /* ================= UI ================= */
   return (
@@ -197,13 +149,6 @@ const [guide, setGuide] = useState("");
               >
                 {validating ? "Validando..." : "Continuar"}
               </button>
-
-              <button
-                onClick={onClose}
-                className="mt-4 text-red-600 underline w-full"
-              >
-                Cancelar
-              </button>
             </>
           )}
 
@@ -222,21 +167,21 @@ const [guide, setGuide] = useState("");
               </button>
 
               <div className="mt-4 border rounded p-3 max-h-56 overflow-auto">
-            {groupedBoxes.map((box) => (
-              <div key={box.box_no} className="mb-3">
-               <div className="font-semibold">
-                  Caja #{box.box_no}
-                  {box.isCombined && " (Combinada)"}
-                </div>
+                {grouped.map((box) => (
+                  <div key={box.box_no} className="mb-3">
+                    <div className="font-semibold">
+                      Caja #{box.box_no}
+                      {box.isCombined && " (Combinada)"}
+                    </div>
 
-                {box.lines.map((l, i) => (
-                  <div key={i} className="ml-4">
-                   {l.code} — {l.pounds} lbs
+                    {box.lines.map((l, i) => (
+                      <div key={i} className="ml-4">
+                        {l.code} — {l.pounds} lbs
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
 
               <button
                 onClick={() => setStep(3)}
@@ -247,63 +192,54 @@ const [guide, setGuide] = useState("");
             </>
           )}
 
-          {step === 3 && (() => {
-  const grouped = groupBoxes(lines);
+          {/* ===== PASO 3 ===== */}
+          {step === 3 && (
+            <>
+              <p className="text-xl font-bold mb-3">Resumen</p>
 
-  const totalCajas = grouped.length;
-  const totalLbs = grouped.reduce(
-    (s, b) => s + b.total_lbs,
-    0
-  );
+              <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
+                {grouped.map((box) => (
+                  <div key={box.box_no}>
+                    <div className="font-semibold">
+                      Caja #{box.box_no}
+                      {box.isCombined && " (Combinada)"}
+                    </div>
 
-  return (
-    <>
-      <p className="text-xl font-bold mb-3">Resumen</p>
+                    {box.lines.map((l, i) => (
+                      <div key={i} className="ml-4 text-sm">
+                        {l.code} — {l.pounds} lbs
+                      </div>
+                    ))}
 
-      <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
-        {grouped.map((box) => (
-          <div key={box.box_no}>
-            <div className="font-semibold">
-              Caja #{box.box_no}
-              {box.isCombined && " (Combinada)"}
-            </div>
-
-            {box.lines.map((l, i) => (
-              <div key={i} className="ml-4 text-sm">
-                {l.code} — {l.pounds} lbs
+                    <div className="ml-4 font-semibold">
+                      Total caja: {box.total_lbs} lbs
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
 
-            <div className="ml-4 font-semibold">
-              Total caja: {box.total_lbs} lbs
-            </div>
-          </div>
-        ))}
-      </div>
+              <div className="mt-4">
+                <b>Total cajas:</b> {totalCajas}<br />
+                <b>Total lbs:</b> {totalLbs}
+              </div>
 
-      <div className="mt-4">
-        <b>Total cajas:</b> {totalCajas}<br />
-        <b>Total lbs:</b> {totalLbs}
-      </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setStep(2)}
+                  className="flex-1 border rounded px-4 py-2"
+                >
+                  Regresar
+                </button>
 
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={() => setStep(2)}
-          className="flex-1 border rounded px-4 py-2"
-        >
-          Regresar
-        </button>
-
-        <button
-          onClick={finalize}
-          className="bg-green-700 text-white px-4 py-2 rounded flex-1"
-        >
-          Finalizar Packing
-        </button>
-      </div>
-    </>
-  );
-})()}
+                <button
+                  onClick={finalize}
+                  className="bg-green-700 text-white px-4 py-2 rounded flex-1"
+                >
+                  Finalizar Packing
+                </button>
+              </div>
+            </>
+          )}
 
         </div>
       </div>
@@ -315,5 +251,6 @@ const [guide, setGuide] = useState("");
     </>
   );
 }
+
 
 
