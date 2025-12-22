@@ -5,6 +5,7 @@ import { PackingLine, usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
+import router from "next/router";
 
 type Props = {
   open: boolean;
@@ -17,7 +18,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     header,
     lines,
     setHeader,
-    setLines,
     loadFromDB,
     reset,
   } = usePackingStore();
@@ -27,6 +27,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
+  const [client_code] = useState("");
+const [date] = useState(
+  new Date().toISOString().slice(0, 10)
+);
+const [guide, setGuide] = useState("");
+
 
   /* ================= RESET ================= */
   useEffect(() => {
@@ -108,30 +114,32 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   }, {});
 
   /* ================= FINALIZAR ================= */
-  async function finalizarPacking() {
-  const res = await fetch("/api/packings/finalize", {
+  const finalize = async () => {
+  const res = await fetch("/api/packing/finalize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       packing_id,
-      header,
+      header: {
+        invoice_no: invoice,
+        client_code,
+        date,
+        guide,
+      },
       lines,
     }),
   });
 
-  const router = useRouter();
   const data = await res.json();
 
-  if (!res.ok || !data.ok) {
-    alert(data.error || "Error al finalizar packing");
+  if (!data.ok) {
+    alert(data.error);
     return;
   }
 
   alert("Packing finalizado correctamente");
-  router.push("/packings"); // o dashboard
-};
-
-  
+  router.push("/packing");
+};  
 
   /* ================= UI ================= */
   return (
@@ -262,12 +270,13 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                     Regresar
                   </button>
 
-                  <button
-                    onClick={finalizarPacking}
-                    className="flex-1 bg-green-700 text-white rounded px-4 py-2"
-                  >
-                    Finalizar Packing
-                  </button>
+                 <button
+  onClick={finalize}
+  className="bg-green-700 text-white px-4 py-2 rounded"
+>
+  Finalizar Packing
+</button>
+
                 </div>
               </>
             );
