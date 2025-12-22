@@ -129,7 +129,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   alert("Packing finalizado correctamente");
   router.push("/packings"); // o dashboard
-}
+};
 
   
 
