@@ -41,6 +41,7 @@ type State = {
   setHeader: (h: PackingHeader) => void;
 
   /* lines */
+  setLines: (lines: PackingLine[]) => void;
   addLine: (ln: PackingLine) => void;
   addLines: (arr: PackingLine[]) => void;
   removeLine: (index: number) => void;
@@ -104,6 +105,8 @@ export const usePackingStore = create<State>((set) => ({
       header: data.header,
       lines: data.lines,
     })),
+
+    setLines: (lines) => set({ lines }),
 
   markDraft: () =>
     set(() => ({

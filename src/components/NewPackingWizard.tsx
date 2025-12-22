@@ -15,8 +15,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     packing_id,
     header,
     lines,
-    loadFromDB,
     setHeader,
+    setLines,
+    loadFromDB,
     reset,
   } = usePackingStore();
 
@@ -79,46 +80,39 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     }
   }
 
-  /* ================= AUTO SAVE DRAFT ================= */
+  /* ================= AUTOSAVE DRAFT ================= */
   useEffect(() => {
-    if (step === 2 && header && !packing_id) {
+    if (step === 2 && header) {
       fetchJSON("/api/packings/save-draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          packing_id: null,
+          packing_id: packing_id ?? null,
           header,
-          lines: [],
+          lines,
         }),
       }).then((r) => {
-        if (r?.packing_id) {
+        if (r?.packing_id && !packing_id) {
           usePackingStore.setState({ packing_id: r.packing_id });
         }
       });
     }
-  }, [step, header, packing_id]);
+  }, [step, header, lines, packing_id]);
 
   /* ================= AGRUPAR POR CAJA ================= */
-  const boxes = lines.reduce<Record<number, PackingLine[]>>((acc, line) => {
-    if (!acc[line.box_no]) acc[line.box_no] = [];
-    acc[line.box_no].push(line);
+  const boxes = lines.reduce<Record<number, PackingLine[]>>((acc, l) => {
+    if (!acc[l.box_no]) acc[l.box_no] = [];
+    acc[l.box_no].push(l);
     return acc;
   }, {});
 
   /* ================= FINALIZAR ================= */
   async function finalizePacking() {
     try {
-      const r = await fetch("/api/packings/save-draft", {
+      const r = await fetch("/api/packings/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packing_id,
-          header: {
-            ...header,
-            status: "finalized",
-          },
-          lines,
-        }),
+        body: JSON.stringify({ packing_id }),
       });
 
       const data = await r.json();
@@ -134,9 +128,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   /* ================= UI ================= */
   return (
     <>
-      {/* ===== OVERLAY ===== */}
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
         <div className="bg-white p-8 rounded-xl w-full max-w-3xl">
+
           <h1 className="text-3xl font-bold mb-6">
             Paso {step} de 3
           </h1>
@@ -151,9 +145,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 onChange={(e) => setInvoice(e.target.value)}
               />
 
-              {error && (
-                <div className="text-red-600 mt-2">{error}</div>
-              )}
+              {error && <div className="text-red-600 mt-2">{error}</div>}
 
               <button
                 disabled={validating}
@@ -186,14 +178,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 Agregar cajas
               </button>
 
-              <div className="mt-4 text-sm max-h-48 overflow-auto border p-2 rounded">
-                {lines.length === 0 && (
-                  <div className="text-gray-400">No hay cajas aún</div>
-                )}
-
+              <div className="mt-4 text-sm max-h-56 overflow-auto border p-3 rounded">
                 {Object.entries(boxes).map(([boxNo, items]) => (
-                  <div key={boxNo} className="mb-2">
-                    <div className="font-semibold">Caja #{boxNo}</div>
+                  <div key={boxNo} className="mb-3">
+                    <div className="font-semibold">
+                      Caja #{boxNo}
+                    </div>
                     {items.map((l, i) => (
                       <div key={i} className="ml-4">
                         {l.code} — {l.pounds} lbs
@@ -204,13 +194,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </div>
 
               <button
-                onClick={() => {
-                  if (lines.length === 0) {
-                    alert("Debes agregar al menos una caja.");
-                    return;
-                  }
-                  setStep(3);
-                }}
+                onClick={() => setStep(3)}
                 className="mt-4 bg-blue-700 text-white px-4 py-2 rounded w-full"
               >
                 Continuar
@@ -218,92 +202,72 @@ export default function NewPackingWizard({ open, onClose }: Props) {
             </>
           )}
 
-          {/* ================= PASO 3 ================= */}
-{step === 3 && (() => {
-  // 🔹 Agrupar líneas por especie (code)
-  const byCode = Object.values(
-    lines.reduce((acc: any, l: any) => {
-      if (!acc[l.code]) {
-        acc[l.code] = {
-          code: l.code,
-          description_en: l.description_en,
-          form: l.form,
-          size: l.size,
-          scientific_name: l.scientific_name,
-          boxes: new Set<number>(),
-          total_lbs: 0,
-        };
-      }
-      acc[l.code].boxes.add(l.box_no);
-      acc[l.code].total_lbs += l.pounds;
-      return acc;
-    }, {})
-  );
+          {/* ===== PASO 3 ===== */}
+          {step === 3 && (() => {
+            const byCode = Object.values(
+              lines.reduce((acc: any, l) => {
+                if (!acc[l.code]) {
+                  acc[l.code] = {
+                    ...l,
+                    boxes: new Set<number>(),
+                    total_lbs: 0,
+                  };
+                }
+                acc[l.code].boxes.add(l.box_no);
+                acc[l.code].total_lbs += l.pounds;
+                return acc;
+              }, {})
+            );
 
-  // 🔹 TOTAL CAJAS FÍSICAS (CLAVE DEL FIX)
-  const totalCajas = new Set(lines.map((l: any) => l.box_no)).size;
+            const totalCajas = new Set(lines.map(l => l.box_no)).size;
+            const totalLbs = lines.reduce((s, l) => s + l.pounds, 0);
 
-  // 🔹 TOTAL LBS
-  const totalLbs = lines.reduce(
-    (s: number, l: any) => s + l.pounds,
-    0
-  );
+            return (
+              <>
+                <p className="text-xl font-bold mb-3">Resumen</p>
 
-  return (
-    <>
-      <p className="text-xl font-bold mb-3">Resumen</p>
+                <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
+                  {byCode.map((g: any, i) => (
+                    <div key={i}>
+                      <div className="font-semibold">
+                        {g.code} — {g.description_en}
+                      </div>
+                      <div className="text-sm">{g.form} {g.size}</div>
+                      <div className="italic text-sm">{g.scientific_name}</div>
+                      <div>
+                        Cajas: {g.boxes.size} · Total lbs: <b>{g.total_lbs}</b>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-      <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
-        {byCode.map((g: any, i: number) => (
-          <div key={i}>
-            <div className="font-semibold">
-              {g.code} — {g.description_en}
-            </div>
-            <div className="text-sm">
-              {g.form} {g.size}
-            </div>
-            <div className="italic text-sm">
-              {g.scientific_name}
-            </div>
-            <div className="mt-1">
-              Cajas: {g.boxes.size} · Total lbs:{" "}
-              <b>{g.total_lbs}</b>
-            </div>
-          </div>
-        ))}
-      </div>
+                <div className="mt-4">
+                  <b>Total cajas:</b> {totalCajas}<br />
+                  <b>Total lbs:</b> {totalLbs}
+                </div>
 
-      <div className="mt-4 space-y-1">
-        <div>
-          <b>Total cajas:</b> {totalCajas}
-        </div>
-        <div>
-          <b>Total lbs:</b> {totalLbs}
-        </div>
-      </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="flex-1 border rounded px-4 py-2"
+                  >
+                    Regresar
+                  </button>
 
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={() => setStep(2)}
-          className="flex-1 border rounded px-4 py-2"
-        >
-          Regresar
-        </button>
-
-        <button
-          className="flex-1 bg-green-700 text-white rounded px-4 py-2"
-        >
-          Finalizar Packing
-        </button>
-      </div>
-    </>
-  );
-})()}
+                  <button
+                    onClick={finalizePacking}
+                    className="flex-1 bg-green-700 text-white rounded px-4 py-2"
+                  >
+                    Finalizar Packing
+                  </button>
+                </div>
+              </>
+            );
+          })()}
 
         </div>
       </div>
 
-      {/* ===== MODAL CAJAS ===== */}
       <BoxesWizardModal
         open={openBoxes}
         onClose={() => setOpenBoxes(false)}
@@ -311,3 +275,5 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     </>
   );
 }
+
+
