@@ -10,26 +10,18 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      packing_id,
-      mode, // "draft" | "final"
-      header,
-      lines,
-    } = body as {
-      packing_id: string;
-      mode: "draft" | "final";
-      header?: {
-        invoice_no: string;
-        client_code: string;
-        date: string;
-        guide: string;
-      };
-      lines: any[];
-    };
+    const { packing_id, header, lines } = body;
 
     if (!packing_id) {
       return NextResponse.json(
         { ok: false, error: "Missing packing_id" },
+        { status: 400 }
+      );
+    }
+
+    if (!header?.client_code || !header?.date) {
+      return NextResponse.json(
+        { ok: false, error: "Header incompleto" },
         { status: 400 }
       );
     }
@@ -58,57 +50,38 @@ export async function POST(req: Request) {
     }
 
     /* =====================
-       2️⃣ Validaciones FINAL
+       2️⃣ Update header + status
     ===================== */
-    if (mode === "final") {
-      if (!header?.client_code || !header?.date) {
-        return NextResponse.json(
-          { ok: false, error: "Header incomplete for finalization" },
-          { status: 400 }
-        );
-      }
-    }
-
-    /* =====================
-       3️⃣ Update packing
-    ===================== */
-    const updateData: any = {
-      status: mode === "final" ? "final" : "draft",
-    };
-
-    if (mode === "final") {
-      updateData.client_code = header!.client_code;
-      updateData.date = header!.date;
-      updateData.guide = header!.guide;
-      updateData.finalized_at = new Date().toISOString();
-    }
-
     const { error: e2 } = await supabase
       .from("packings")
-      .update(updateData)
+      .update({
+        client_code: header.client_code,
+        date: header.date,
+        guide: header.guide || null,
+        status: "final",
+        finalized_at: new Date().toISOString(),
+      })
       .eq("id", packing_id);
 
     if (e2) throw e2;
 
     /* =====================
-       4️⃣ Replace lines
+       3️⃣ Replace lines
     ===================== */
-    const { error: eDel } = await supabase
+    await supabase
       .from("packing_lines")
       .delete()
       .eq("packing_id", packing_id);
 
-    if (eDel) throw eDel;
-
-    if (lines?.length > 0) {
+    if (Array.isArray(lines) && lines.length > 0) {
       const rows = lines.map((l) => ({
         packing_id,
-        box_no: l.box_no,
+        box_no: String(l.box_no),
         code: l.code,
         description_en: l.description_en,
         form: l.form,
         size: l.size,
-        pounds: l.pounds,
+        pounds: Number(l.pounds),
         scientific_name: l.scientific_name,
       }));
 
@@ -119,9 +92,6 @@ export async function POST(req: Request) {
       if (e3) throw e3;
     }
 
-    /* =====================
-       5️⃣ Done
-    ===================== */
     return NextResponse.json({ ok: true });
 
   } catch (e: any) {

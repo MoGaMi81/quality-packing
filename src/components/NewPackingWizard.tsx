@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PackingLine, usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
+import { useRouter } from "next/navigation";
 
 type Props = {
   open: boolean;
@@ -107,23 +108,30 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   }, {});
 
   /* ================= FINALIZAR ================= */
-  async function finalizePacking() {
-    try {
-      const r = await fetch("/api/packings/finalize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packing_id }),
-      });
+  async function finalizarPacking() {
+  const res = await fetch("/api/packings/finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      packing_id,
+      header,
+      lines,
+    }),
+  });
 
-      const data = await r.json();
-      if (!data.ok) throw new Error(data.error);
+  const router = useRouter();
+  const data = await res.json();
 
-      alert("Packing finalizado correctamente");
-      onClose();
-    } catch (e: any) {
-      alert(e.message || "Error al finalizar");
-    }
+  if (!res.ok || !data.ok) {
+    alert(data.error || "Error al finalizar packing");
+    return;
   }
+
+  alert("Packing finalizado correctamente");
+  router.push("/packings"); // o dashboard
+}
+
+  
 
   /* ================= UI ================= */
   return (
@@ -255,7 +263,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                   </button>
 
                   <button
-                    onClick={finalizePacking}
+                    onClick={finalizarPacking}
                     className="flex-1 bg-green-700 text-white rounded px-4 py-2"
                   >
                     Finalizar Packing
