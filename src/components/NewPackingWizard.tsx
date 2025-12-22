@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { PackingLine, usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
+
 
 type Props = {
   open: boolean;
@@ -20,6 +21,8 @@ const combinedBoxes = boxes.filter(b => b.isCombined);
 
 
 export default function NewPackingWizard({ open, onClose }: Props) {
+  const router = useRouter();
+
   const {
     packing_id,
     header,
@@ -28,7 +31,15 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     loadFromDB,
     reset,
   } = usePackingStore();
-  
+
+  const groupedBoxes = groupBoxes(lines);
+
+  const totalCajas = groupedBoxes.length;
+  const totalLbs = groupedBoxes.reduce(
+    (s, b) => s + b.total_lbs,
+    0
+  );
+
   
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [invoice, setInvoice] = useState("");
@@ -210,20 +221,23 @@ const [guide, setGuide] = useState("");
                 Agregar cajas
               </button>
 
-              <div className="mt-4 text-sm max-h-56 overflow-auto border p-3 rounded">
-                {Object.entries(boxes).map(([boxNo, items]) => (
-                  <div key={boxNo} className="mb-3">
-                    <div className="font-semibold">
-                      Caja #{boxNo}
-                    </div>
-                    {items.map((l, i) => (
-                      <div key={i} className="ml-4">
-                        {l.code} — {l.pounds} lbs
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              <div className="mt-4 border rounded p-3 max-h-56 overflow-auto">
+  {groupedBoxes.map((box) => (
+    <div key={box.box_no} className="mb-3">
+      <div className="font-semibold">
+        Caja #{box.box_no}
+        {box.isCombined && " (Combinada)"}
+      </div>
+
+      {box.lines.map((l, i) => (
+        <div key={i} className="ml-4">
+          {l.code} — {l.pounds} lbs
+        </div>
+      ))}
+    </div>
+  ))}
+</div>
+
 
               <button
                 onClick={() => setStep(3)}
@@ -248,31 +262,32 @@ const [guide, setGuide] = useState("");
     <>
       <p className="text-xl font-bold mb-3">Resumen</p>
 
-      <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
-        {grouped.map((box) => (
-          <div key={box.box_no}>
-            <div className="font-semibold">
-              Caja #{box.box_no}
-              {box.isCombined && " (Combinada)"}
-            </div>
-
-            {box.lines.map((l, i) => (
-              <div key={i} className="ml-4 text-sm">
-                {l.code} — {l.pounds} lbs
-              </div>
-            ))}
-
-            <div className="ml-4 font-semibold">
-              Total caja: {box.total_lbs} lbs
-            </div>
-          </div>
-        ))}
+      <div className="border rounded p-3 space-y-4">
+  {groupedBoxes.map((box) => (
+    <div key={box.box_no}>
+      <div className="font-semibold">
+        Caja #{box.box_no}
+        {box.isCombined && " (Combinada)"}
       </div>
 
-      <div className="mt-4">
-        <b>Total cajas:</b> {totalCajas}<br />
-        <b>Total lbs:</b> {totalLbs}
+      {box.lines.map((l, i) => (
+        <div key={i} className="ml-4 text-sm">
+          {l.code} — {l.pounds} lbs
+        </div>
+      ))}
+
+      <div className="ml-4 font-semibold">
+        Total caja: {box.total_lbs} lbs
       </div>
+    </div>
+  ))}
+</div>
+
+<p className="mt-4">
+  <b>Total cajas:</b> {totalCajas}<br />
+  <b>Total lbs:</b> {totalLbs}
+</p>
+
 
       <div className="flex gap-3 mt-6">
         <button
