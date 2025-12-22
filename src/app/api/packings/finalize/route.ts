@@ -12,11 +12,13 @@ export async function POST(req: Request) {
 
     const {
       packing_id,
+      mode, // "draft" | "final"
       header,
       lines,
     } = body as {
       packing_id: string;
-      header: {
+      mode: "draft" | "final";
+      header?: {
         invoice_no: string;
         client_code: string;
         date: string;
@@ -56,23 +58,40 @@ export async function POST(req: Request) {
     }
 
     /* =====================
-       2️⃣ Update header + status
+       2️⃣ Validaciones FINAL
     ===================== */
+    if (mode === "final") {
+      if (!header?.client_code || !header?.date) {
+        return NextResponse.json(
+          { ok: false, error: "Header incomplete for finalization" },
+          { status: 400 }
+        );
+      }
+    }
+
+    /* =====================
+       3️⃣ Update packing
+    ===================== */
+    const updateData: any = {
+      status: mode === "final" ? "final" : "draft",
+    };
+
+    if (mode === "final") {
+      updateData.client_code = header!.client_code;
+      updateData.date = header!.date;
+      updateData.guide = header!.guide;
+      updateData.finalized_at = new Date().toISOString();
+    }
+
     const { error: e2 } = await supabase
       .from("packings")
-      .update({
-        client_code: header.client_code,
-        date: header.date,
-        guide: header.guide,
-        status: "final",
-        finalized_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", packing_id);
 
     if (e2) throw e2;
 
     /* =====================
-       3️⃣ Replace lines
+       4️⃣ Replace lines
     ===================== */
     const { error: eDel } = await supabase
       .from("packing_lines")
@@ -81,7 +100,7 @@ export async function POST(req: Request) {
 
     if (eDel) throw eDel;
 
-    if (lines.length > 0) {
+    if (lines?.length > 0) {
       const rows = lines.map((l) => ({
         packing_id,
         box_no: l.box_no,
@@ -101,7 +120,7 @@ export async function POST(req: Request) {
     }
 
     /* =====================
-       4️⃣ Done
+       5️⃣ Done
     ===================== */
     return NextResponse.json({ ok: true });
 

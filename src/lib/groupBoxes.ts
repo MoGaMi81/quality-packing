@@ -1,27 +1,36 @@
 import type { PackingLine } from "@/domain/packing/types";
 
-export function groupBoxes(lines: PackingLine[]) {
-  // 🔒 Solo cajas numéricas (evita errores TS)
-  const map = new Map<number, PackingLine[]>();
+export type GroupedBox = {
+  box_no: string | number;
+  isCombined: boolean;
+  lines: PackingLine[];
+  total_lbs: number;
+  box_count: number; // siempre 1
+};
 
-  for (const l of lines) {
-    if (typeof l.box_no !== "number") continue;
+export function groupBoxes(lines: PackingLine[]): GroupedBox[] {
+  const boxes = new Map<string | number, PackingLine[]>();
 
-    if (!map.has(l.box_no)) {
-      map.set(l.box_no, []);
+  for (const line of lines) {
+    const key = line.box_no;
+
+    if (!boxes.has(key)) {
+      boxes.set(key, []);
     }
 
-    map.get(l.box_no)!.push(l);
+    boxes.get(key)!.push(line);
   }
 
-  return Array.from(map.entries()).map(([box_no, boxLines]) => ({
-    box_no,                          // 👉 Caja #X
-    lines: boxLines,                 // 👉 1 o varias especies
-    is_combined: boxLines.length > 1,// 👉 combinada si >1 línea
+  return Array.from(boxes.entries()).map(([box_no, boxLines]) => ({
+    box_no,
+    isCombined: boxLines.length > 1,
+    lines: boxLines,
     total_lbs: boxLines.reduce(
-      (sum, l) => sum + (l.pounds || 0),
+      (sum, l) => sum + Number(l.pounds || 0),
       0
     ),
+    box_count: 1,
   }));
 }
+
 
