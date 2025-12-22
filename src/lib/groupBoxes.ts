@@ -1,24 +1,22 @@
 import type { PackingLine } from "@/domain/packing/types";
 
 export type GroupedBox = {
-  box_no: string | number;
+  box_no: string;
   isCombined: boolean;
   lines: PackingLine[];
   total_lbs: number;
-  box_count: number; // siempre 1
 };
 
 export function groupBoxes(lines: PackingLine[]): GroupedBox[] {
-  const boxes = new Map<string | number, PackingLine[]>();
+  const boxes = new Map<string, PackingLine[]>();
 
-  for (const line of lines) {
-    const key = line.box_no;
+  for (const l of lines) {
+    const boxKey = String(l.box_no); // 👈 CLAVE
 
-    if (!boxes.has(key)) {
-      boxes.set(key, []);
+    if (!boxes.has(boxKey)) {
+      boxes.set(boxKey, []);
     }
-
-    boxes.get(key)!.push(line);
+    boxes.get(boxKey)!.push(l);
   }
 
   return Array.from(boxes.entries()).map(([box_no, boxLines]) => ({
@@ -29,8 +27,5 @@ export function groupBoxes(lines: PackingLine[]): GroupedBox[] {
       (sum, l) => sum + Number(l.pounds || 0),
       0
     ),
-    box_count: 1,
   }));
 }
-
-
