@@ -4,13 +4,20 @@ import { useEffect, useState } from "react";
 import { PackingLine, usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { useRouter } from "next/navigation";
 import router from "next/router";
+import { groupBoxes } from "@/lib/groupBoxes";
 
 type Props = {
   open: boolean;
   onClose: () => void;
 };
+const [lines, setLines] = useState<PackingLine[]>([]);
+
+const boxes = groupBoxes(lines);
+
+const simpleBoxes = boxes.filter(b => !b.isCombined);
+const combinedBoxes = boxes.filter(b => b.isCombined);
+
 
 export default function NewPackingWizard({ open, onClose }: Props) {
   const {
@@ -21,14 +28,15 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     loadFromDB,
     reset,
   } = usePackingStore();
-
+  
+  
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [invoice, setInvoice] = useState("");
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
   const [client_code] = useState("");
-const [date] = useState(
+  const [date] = useState(
   new Date().toISOString().slice(0, 10)
 );
 const [guide, setGuide] = useState("");
@@ -228,67 +236,62 @@ const [guide, setGuide] = useState("");
 
           {/* ===== PASO 3 ===== */}
           {step === 3 && (() => {
-            const byCode = Object.values(
-              lines.reduce((acc: any, l) => {
-                if (!acc[l.code]) {
-                  acc[l.code] = {
-                    ...l,
-                    boxes: new Set<number>(),
-                    total_lbs: 0,
-                  };
-                }
-                acc[l.code].boxes.add(l.box_no);
-                acc[l.code].total_lbs += l.pounds;
-                return acc;
-              }, {})
-            );
+  const grouped = groupBoxes(lines);
 
-            const totalCajas = new Set(lines.map(l => l.box_no)).size;
-            const totalLbs = lines.reduce((s, l) => s + l.pounds, 0);
+  const totalCajas = grouped.length;
+  const totalLbs = grouped.reduce(
+    (s, b) => s + b.total_lbs,
+    0
+  );
 
-            return (
-              <>
-                <p className="text-xl font-bold mb-3">Resumen</p>
+  return (
+    <>
+      <p className="text-xl font-bold mb-3">Resumen</p>
 
-                <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
-                  {byCode.map((g: any, i) => (
-                    <div key={i}>
-                      <div className="font-semibold">
-                        {g.code} — {g.description_en}
-                      </div>
-                      <div className="text-sm">{g.form} {g.size}</div>
-                      <div className="italic text-sm">{g.scientific_name}</div>
-                      <div>
-                        Cajas: {g.boxes.size} · Total lbs: <b>{g.total_lbs}</b>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+      <div className="border rounded p-3 space-y-4 max-h-[320px] overflow-auto">
+        {grouped.map((box) => (
+          <div key={box.box_no}>
+            <div className="font-semibold">
+              Caja #{box.box_no}
+              {box.isCombined && " (Combinada)"}
+            </div>
 
-                <div className="mt-4">
-                  <b>Total cajas:</b> {totalCajas}<br />
-                  <b>Total lbs:</b> {totalLbs}
-                </div>
+            {box.lines.map((l, i) => (
+              <div key={i} className="ml-4 text-sm">
+                {l.code} — {l.pounds} lbs
+              </div>
+            ))}
 
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => setStep(2)}
-                    className="flex-1 border rounded px-4 py-2"
-                  >
-                    Regresar
-                  </button>
+            <div className="ml-4 font-semibold">
+              Total caja: {box.total_lbs} lbs
+            </div>
+          </div>
+        ))}
+      </div>
 
-                 <button
-  onClick={finalize}
-  className="bg-green-700 text-white px-4 py-2 rounded w-full"
->
-  Finalizar Packing
-</button>
+      <div className="mt-4">
+        <b>Total cajas:</b> {totalCajas}<br />
+        <b>Total lbs:</b> {totalLbs}
+      </div>
 
-                </div>
-              </>
-            );
-          })()}
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={() => setStep(2)}
+          className="flex-1 border rounded px-4 py-2"
+        >
+          Regresar
+        </button>
+
+        <button
+          onClick={finalize}
+          className="bg-green-700 text-white px-4 py-2 rounded flex-1"
+        >
+          Finalizar Packing
+        </button>
+      </div>
+    </>
+  );
+})()}
 
         </div>
       </div>

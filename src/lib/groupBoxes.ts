@@ -8,26 +8,23 @@ export type GroupedBox = {
 };
 
 export function groupBoxes(lines: PackingLine[]): GroupedBox[] {
-  const boxes = new Map<number, PackingLine[]>();
+  const map = new Map<number, PackingLine[]>();
 
-  for (const line of lines) {
-    const boxNo = Number(line.box_no);
-    if (!boxes.has(boxNo)) {
-      boxes.set(boxNo, []);
-    }
-    boxes.get(boxNo)!.push(line);
+  for (const l of lines) {
+    const boxNo = Number(l.box_no);
+    if (!map.has(boxNo)) map.set(boxNo, []);
+    map.get(boxNo)!.push(l);
   }
 
-  return Array.from(boxes.entries()).map(([box_no, boxLines]) => {
-    const isCombined = boxLines.length > 1;
-
-    return {
-      box_no,
-      isCombined,
-      lines: boxLines,
-      total_lbs: isCombined
-        ? 0 // 🔴 no sumar si está combinada
-        : boxLines.reduce((sum, l) => sum + Number(l.pounds), 0),
-    };
-  });
+  return Array.from(map.entries()).map(([box_no, boxLines]) => ({
+    box_no,
+    isCombined: boxLines.length > 1,
+    lines: boxLines,
+    total_lbs: boxLines.reduce(
+      (sum, l) => sum + Number(l.pounds),
+      0
+    ),
+  }));
 }
+
+
