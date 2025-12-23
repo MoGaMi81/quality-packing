@@ -23,7 +23,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     loadFromDB,
     reset,
   } = usePackingStore();
-
+  
+  const [openBoxModal, setOpenBoxModal] = useState(false);
+  const [editingBoxNo, setEditingBoxNo] = useState<number | undefined>(undefined);
+  const [editingBox, setEditingBox] = useState<number | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [invoice, setInvoice] = useState("");
   const [validating, setValidating] = useState(false);
@@ -160,7 +163,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </p>
 
               <button
-                onClick={() => setOpenBoxes(true)}
+                onClick={() => {
+                setEditingBoxNo(undefined); // 👈 nueva caja
+                setOpenBoxModal(true);
+                }}
                 className="bg-black text-white px-4 py-2 rounded w-full"
               >
                 Agregar cajas
@@ -168,7 +174,14 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
               <div className="mt-4 border rounded p-3 max-h-56 overflow-auto">
                 {grouped.map((box) => (
-                  <div key={box.box_no} className="mb-3">
+              <div
+                key={box.box_no}
+                className="mb-3 border rounded p-2 cursor-pointer hover:bg-gray-50"
+                onClick={() => {
+                  setEditingBox(box.box_no);
+                  setOpenBoxes(true);
+                }}
+              >
                     <div className="font-semibold">
                       Caja #{box.box_no}
                       {box.isCombined && " (Combinada)"}
@@ -245,9 +258,14 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       </div>
 
       <BoxesWizardModal
-        open={openBoxes}
-        onClose={() => setOpenBoxes(false)}
-      />
+  open={openBoxModal}
+  boxNo={editingBoxNo}
+  onClose={() => {
+    setOpenBoxModal(false);
+    setEditingBoxNo(undefined);
+  }}
+/>
+
     </>
   );
 }

@@ -11,25 +11,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
-    ],
     "/packings/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/packings/page.js"
     ],
-    "/packings/[invoice]/pricing/page": [
+    "/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/packings/[invoice]/pricing/page.js"
-    ],
-    "/packings/[invoice]/view/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/packings/[invoice]/view/page.js"
+      "static/chunks/app/login/page.js"
     ]
   }
 }

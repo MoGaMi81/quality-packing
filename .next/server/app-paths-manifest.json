@@ -1,11 +1,7 @@
 {
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
   "/packings/page": "app/packings/page.js",
   "/api/packings/by-invoice/[invoice]/route": "app/api/packings/by-invoice/[invoice]/route.js",
-  "/api/catalogs/client/[code]/route": "app/api/catalogs/client/[code]/route.js",
-  "/packings/[invoice]/pricing/page": "app/packings/[invoice]/pricing/page.js",
-  "/api/packings/pricing/save/route": "app/api/packings/pricing/save/route.js",
-  "/packings/[invoice]/view/page": "app/packings/[invoice]/view/page.js",
-  "/api/packings/by-invoice/route": "app/api/packings/by-invoice/route.js"
+  "/login/page": "app/login/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js"
 }
