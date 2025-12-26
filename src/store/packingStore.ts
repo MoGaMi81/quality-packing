@@ -1,7 +1,7 @@
 "use client";
 
-import type { PackingLine } from "@/domain/packing/types";
 import { create } from "zustand";
+import type { PackingLine } from "@/domain/packing/types";
 
 /* =======================
    TYPES
@@ -27,17 +27,21 @@ type State = {
   header: PackingHeader | null;
   lines: PackingLine[];
 
-  /* header */
+  /* ---------- header ---------- */
   setHeader: (h: PackingHeader) => void;
 
-  /* lines */
+  /* ---------- lines ---------- */
   setLines: (lines: PackingLine[]) => void;
   addLine: (ln: PackingLine) => void;
   addLines: (arr: PackingLine[]) => void;
   removeLine: (index: number) => void;
+  removeBox: (boxNo: number) => void;
   reorder: (arr: PackingLine[]) => void;
 
-  /* lifecycle */
+  /* ---------- helpers ---------- */
+  getNextBoxNo: () => number;
+
+  /* ---------- lifecycle ---------- */
   loadFromDB: (data: {
     packing_id: string;
     status: PackingStatus;
@@ -54,7 +58,7 @@ type State = {
    STORE
 ======================= */
 
-export const usePackingStore = create<State>((set) => ({
+export const usePackingStore = create<State>((set, get) => ({
   packing_id: null,
   status: "draft",
 
@@ -68,6 +72,8 @@ export const usePackingStore = create<State>((set) => ({
     })),
 
   /* ---------- lines ---------- */
+  setLines: (lines) => set({ lines }),
+
   addLine: (ln) =>
     set((state) => ({
       lines: [...state.lines, ln],
@@ -80,28 +86,46 @@ export const usePackingStore = create<State>((set) => ({
 
   removeLine: (index) =>
     set((state) => {
-      const newLines = [...state.lines];
-      newLines.splice(index, 1);
-      return { lines: newLines };
+      const copy = [...state.lines];
+      copy.splice(index, 1);
+      return { lines: copy };
     }),
+
+  removeBox: (boxNo) =>
+    set((state) => ({
+      lines: state.lines.filter(
+        (l) => Number(l.box_no) !== boxNo
+      ),
+    })),
 
   reorder: (arr) => set({ lines: arr }),
 
+  /* ---------- helpers ---------- */
+  getNextBoxNo: () => {
+    const lines = get().lines;
+    if (lines.length === 0) return 1;
+    return (
+      Math.max(
+        ...lines
+          .map((l) => Number(l.box_no))
+          .filter((n) => !isNaN(n))
+      ) + 1
+    );
+  },
+
   /* ---------- lifecycle ---------- */
-loadFromDB: (data) =>
-  set(() => ({
-    packing_id: data.packing_id,
-    status: data.status,
-    header: data.header,
-    lines: data.lines,
-  })),
+  loadFromDB: (data) =>
+    set(() => ({
+      packing_id: data.packing_id,
+      status: data.status,
+      header: data.header,
+      lines: data.lines,
+    })),
 
-setLines: (lines) => set({ lines }),
-
-markDraft: () =>
-  set(() => ({
-    status: "draft",
-  })),
+  markDraft: () =>
+    set(() => ({
+      status: "draft",
+    })),
 
   clear: () =>
     set(() => ({
