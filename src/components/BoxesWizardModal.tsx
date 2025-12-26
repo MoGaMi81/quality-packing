@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 import { usePackingStore } from "@/store/packingStore";
 import type { PackingLine } from "@/domain/packing/types";
-import { sanitizeLine } from "@/lib/sanitizePackingLine";
 
 type Props = {
   open: boolean;
