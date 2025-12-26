@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 import { usePackingStore } from "@/store/packingStore";
 import { useCatalogStore } from "@/store/catalogStore";
 import type { PackingLine } from "@/domain/packing/types";
@@ -28,11 +29,11 @@ export default function BoxesWizardModal({
   /* =====================
      Resolver catálogo
   ===================== */
-  const catalogItem = useMemo(() => {
-    const c = code.trim().toUpperCase();
-    if (!c) return null;
-    return getByCode(c);
-  }, [code, getByCode]);
+
+const catalogItem = useMemo(() => {
+  if (!code) return null;
+  return getByCode(code.trim());
+}, [code, getByCode]);
 
   /* =====================
      Cargar caja existente
@@ -56,35 +57,29 @@ export default function BoxesWizardModal({
   /* =====================
      Agregar líneas
   ===================== */
-  function add() {
-    if (!catalogItem) {
-      alert("Clave no encontrada en catálogo");
-      return;
-    }
-    if (qty <= 0 || pounds <= 0) return;
+  function addLine() {
+  if (!catalogItem || pounds <= 0 || qty <= 0) return;
 
-    const nextBoxNo =
-      boxNo ??
-      (lines.length
-        ? Math.max(...lines.map(l => Number(l.box_no))) + 1
-        : 1);
+  const nextBoxNo =
+    boxNo ??
+    (lines.length > 0
+      ? Math.max(...lines.map((l) => Number(l.box_no))) + 1
+      : 1);
 
-    const newLines: PackingLine[] = Array.from({ length: qty }).map(() =>
-      sanitizeLine({
-        box_no: nextBoxNo,
-        code: catalogItem.code,
-        description_en: catalogItem.description_en,
-        form: catalogItem.form,
-        size: catalogItem.size,
-        pounds,
-      })
-    );
+  const newLines: PackingLine[] = Array.from({ length: qty }).map(() => ({
+    box_no: nextBoxNo,
+    code: catalogItem.code,
+    description_en: catalogItem.description_en,
+    form: catalogItem.form,
+    size: catalogItem.size,
+    pounds,
+  }));
 
-    setLocalLines(prev => [...prev, ...newLines]);
-    setCode("");
-    setQty(1);
-    setPounds(0);
-  }
+  setLocalLines((prev) => [...prev, ...newLines]);
+  setCode("");
+  setPounds(0);
+  setQty(1);
+}
 
   /* =====================
      Guardar
@@ -125,12 +120,12 @@ export default function BoxesWizardModal({
           className="border p-2 rounded w-full"
         />
 
-        {catalogItem && (
-          <div className="bg-gray-100 p-2 rounded text-sm mt-2">
-            <div className="font-semibold">{catalogItem.description_en}</div>
-            <div>{catalogItem.form} — {catalogItem.size}</div>
-          </div>
-        )}
+        {code && !catalogItem && (
+  <div className="text-red-600 text-sm">
+    Clave no encontrada en catálogo
+  </div>
+)}
+
 
         <div className="grid grid-cols-2 gap-2 mt-3">
           <input
@@ -153,7 +148,7 @@ export default function BoxesWizardModal({
         </div>
 
         <button
-          onClick={add}
+          onClick={addLine}
           className="mt-3 w-full bg-black text-white py-2 rounded"
         >
           Agregar
