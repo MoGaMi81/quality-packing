@@ -60,12 +60,12 @@ const catalogItem = useMemo(() => {
 
   const nextBoxNo =
     boxNo ??
-    (lines.length > 0
-      ? Math.max(...lines.map((l) => Number(l.box_no))) + 1
+    (lines.length
+      ? Math.max(...lines.map(l => Number(l.box_no))) + 1
       : 1);
 
-  const newLines: PackingLine[] = Array.from({ length: qty }).map(() => ({
-    box_no: nextBoxNo,
+  const newLines: PackingLine[] = Array.from({ length: qty }).map((_, i) => ({
+    box_no: nextBoxNo + i,
     code: catalogItem.code,
     description_en: catalogItem.description_en,
     form: catalogItem.form,
@@ -73,27 +73,31 @@ const catalogItem = useMemo(() => {
     pounds,
   }));
 
-  setLocalLines((prev) => [...prev, ...newLines]);
+  setLocalLines(prev => [...prev, ...newLines]);
   setCode("");
-  setPounds(0);
   setQty(1);
+  setPounds(0);
 }
+
 
   /* =====================
      Guardar
   ===================== */
   function save() {
-    if (!localLines.length) return;
+       if (!localLines.length) return;
 
-    if (boxNo != null) {
-      const others = lines.filter(l => Number(l.box_no) !== boxNo);
-      setLines([...others, ...localLines]);
-    } else {
-      addLines(localLines);
-    }
+       if (localLines.some(l => !l.code || l.pounds <= 0)) return;
 
-    onClose();
-  }
+       if (boxNo != null) {
+         const others = lines.filter(l => Number(l.box_no) !== boxNo);
+         setLines([...others, ...localLines]);
+       } else {
+         addLines(localLines);
+       }
+
+       onClose();
+     }
+
 
   /* =====================
      Eliminar caja
@@ -118,12 +122,11 @@ const catalogItem = useMemo(() => {
           className="border p-2 rounded w-full"
         />
 
-        {code && !catalogItem && (
-  <div className="text-red-600 text-sm">
-    Clave no encontrada en catálogo
-  </div>
-)}
-
+           {code && !loading && !catalogItem && (
+             <div className="text-red-600 text-sm">
+               Clave no encontrada en catálogo
+            </div>
+          )}
 
         <div className="grid grid-cols-2 gap-2 mt-3">
           <input
