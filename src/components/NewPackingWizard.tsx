@@ -6,6 +6,7 @@ import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
+import SimpleRangeWizardModal from "@/components/SimpleRangeWizardModal";
 
 type Props = {
   open: boolean;
@@ -30,6 +31,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
+  const [openSimpleRange, setOpenSimpleRange] = useState(false);
 
   /* ================= RESET ================= */
   useEffect(() => {
@@ -161,11 +163,11 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </p>
 
               <button
-                onClick={() => setOpenBoxes(true)}
-                className="bg-black text-white px-4 py-2 rounded w-full"
-              >
-                Agregar cajas
-              </button>
+              onClick={() => setOpenSimpleRange(true)}
+               className="bg-black text-white px-4 py-2 rounded w-full"
+>
+              + Agregar Simple / Rango
+               </button>
 
               <div className="mt-4 border rounded p-3 max-h-56 overflow-auto">
                 {grouped.map((box) => (
@@ -251,6 +253,11 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
         </div>
       </div>
+
+      <SimpleRangeWizardModal
+  open={openSimpleRange}
+  onClose={() => setOpenSimpleRange(false)}
+/>
            <BoxesWizardModal
          open={openBoxes}
          boxNo={editingBox}   // 🔴 ESTE ERA EL FALTANTE
