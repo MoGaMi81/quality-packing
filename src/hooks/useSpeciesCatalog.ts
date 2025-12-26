@@ -17,7 +17,11 @@ export function useSpeciesCatalog() {
       .from("species")
       .select("code, description_en, form, size")
       .then(({ data, error }) => {
-        if (!error && data) setItems(data);
+        if (error) {
+          console.error("Species error:", error);
+        } else {
+          setItems(data ?? []);
+        }
         setLoading(false);
       });
   }, []);

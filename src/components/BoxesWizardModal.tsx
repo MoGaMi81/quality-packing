@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 import { usePackingStore } from "@/store/packingStore";
-import { useCatalogStore } from "@/store/catalogStore";
 import type { PackingLine } from "@/domain/packing/types";
 import { sanitizeLine } from "@/lib/sanitizePackingLine";
 
@@ -19,7 +18,7 @@ export default function BoxesWizardModal({
   boxNo,
 }: Props) {
   const { lines, setLines, addLines } = usePackingStore();
-  const { getByCode } = useCatalogStore();
+  const { getByCode, loading } = useSpeciesCatalog();
 
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
