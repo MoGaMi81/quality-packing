@@ -24,8 +24,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     reset,
   } = usePackingStore();
   
-  const [openBoxModal, setOpenBoxModal] = useState(false);
-  const [editingBoxNo, setEditingBoxNo] = useState<number | undefined>(undefined);
   const [editingBox, setEditingBox] = useState<number | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [invoice, setInvoice] = useState("");
@@ -163,10 +161,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </p>
 
               <button
-                onClick={() => {
-                setEditingBoxNo(undefined); // 👈 nueva caja
-                setOpenBoxModal(true);
-                }}
+                onClick={() => setOpenBoxes(true)}
                 className="bg-black text-white px-4 py-2 rounded w-full"
               >
                 Agregar cajas
@@ -256,16 +251,14 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
         </div>
       </div>
-
-      <BoxesWizardModal
-  open={openBoxModal}
-  boxNo={editingBoxNo}
-  onClose={() => {
-    setOpenBoxModal(false);
-    setEditingBoxNo(undefined);
-  }}
-/>
-
+           <BoxesWizardModal
+         open={openBoxes}
+         boxNo={editingBox}   // 🔴 ESTE ERA EL FALTANTE
+        onClose={() => {
+          setOpenBoxes(false);
+          setEditingBox(null);
+        }}
+      />
     </>
   );
 }

@@ -1,21 +1,11 @@
 "use client";
 
+import type { PackingLine } from "@/domain/packing/types";
 import { create } from "zustand";
 
 /* =======================
    TYPES
 ======================= */
-
-export type PackingLine = {
-  box_no: number;
-  code: string;
-  description_en: string;
-  form: string;
-  size: string;
-  pounds: number;
-  scientific_name: string;
-  is_combined?: boolean;
-};
 
 export type PackingHeader = {
   invoice_no: string;
@@ -98,20 +88,20 @@ export const usePackingStore = create<State>((set) => ({
   reorder: (arr) => set({ lines: arr }),
 
   /* ---------- lifecycle ---------- */
-  loadFromDB: (data) =>
-    set(() => ({
-      packing_id: data.packing_id,
-      status: data.status,
-      header: data.header,
-      lines: data.lines,
-    })),
+loadFromDB: (data) =>
+  set(() => ({
+    packing_id: data.packing_id,
+    status: data.status,
+    header: data.header,
+    lines: data.lines,
+  })),
 
-    setLines: (lines) => set({ lines }),
+setLines: (lines) => set({ lines }),
 
-  markDraft: () =>
-    set(() => ({
-      status: "draft",
-    })),
+markDraft: () =>
+  set(() => ({
+    status: "draft",
+  })),
 
   clear: () =>
     set(() => ({

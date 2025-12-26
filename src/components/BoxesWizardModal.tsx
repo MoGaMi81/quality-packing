@@ -1,5 +1,5 @@
 "use client";
-
+import { sanitizeLine } from "@/lib/sanitizePackingLine";
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import type { PackingLine } from "@/domain/packing/types";
@@ -63,7 +63,7 @@ export default function BoxesWizardModal({
         description_en: "",
         form: "",
         size: "",
-        scientific_name: "", // 🔴 OBLIGATORIO
+        scientific_name: "",
       })
     );
 
@@ -77,25 +77,27 @@ export default function BoxesWizardModal({
      Guardar caja
   ===================== */
   function save() {
-    if (localLines.length === 0) return;
+  if (localLines.length === 0) return;
 
-    if (boxNo != null) {
-      // eliminar caja anterior y meter la nueva
-      const others = lines.filter(
-        (l) => Number(l.box_no) !== boxNo
-      );
-      setLines([...others, ...localLines]);
-    } else {
-      addLines(localLines);
-    }
-
-    onClose();
+  const sanitized: PackingLine[] = localLines.map((l) =>
+  sanitizeLine(l)
+);
+  if (boxNo != null) {
+    const others = lines.filter(
+      (l) => Number(l.box_no) !== boxNo
+    );
+    setLines([...others, ...sanitized]);
+  } else {
+    addLines(sanitized);
   }
 
+  onClose();
+}
+
   /* =====================
-     Eliminar caja completa
+     Eliminar caja
   ===================== */
-  function remove() {
+  function removeBox() {
     if (boxNo == null) return;
 
     setLines(
@@ -150,7 +152,7 @@ export default function BoxesWizardModal({
         <div className="mt-3 border rounded p-2 max-h-40 overflow-auto text-sm">
           {localLines.map((l, i) => (
             <div key={i}>
-              Caja #{l.box_no} — {l.code} — {l.pounds} lbs
+              {l.code} — {l.pounds} lbs
             </div>
           ))}
         </div>
@@ -158,7 +160,7 @@ export default function BoxesWizardModal({
         <div className="flex justify-between mt-4">
           {boxNo != null && (
             <button
-              onClick={remove}
+              onClick={removeBox}
               className="text-red-600 underline"
             >
               Eliminar caja
@@ -184,3 +186,5 @@ export default function BoxesWizardModal({
     </div>
   );
 }
+
+
