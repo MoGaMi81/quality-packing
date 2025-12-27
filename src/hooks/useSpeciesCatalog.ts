@@ -15,20 +15,25 @@ export function useSpeciesCatalog() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      const { data, error } = await supabase
-        .from("species")
-        .select("code, description_en, form, size");
+  async function load() {
+    console.log("📡 Cargando catálogo species...");
 
-      if (!error && data) {
-        setItems(data);
-      }
+    const { data, error } = await supabase
+      .from("species")
+      .select("code, description_en, form, size");
 
-      setLoading(false);
+    console.log("📦 data:", data);
+    console.log("❌ error:", error);
+
+    if (!error && data) {
+      setItems(data);
     }
 
-    load();
-  }, []);
+    setLoading(false);
+  }
+
+  load();
+}, []);
 
   const getByCode = useCallback(
     (code: string) => {
