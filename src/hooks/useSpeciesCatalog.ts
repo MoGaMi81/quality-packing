@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 export type SpeciesItem = {
@@ -15,33 +13,37 @@ export function useSpeciesCatalog() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  async function load() {
-    console.log("📡 Cargando catálogo species...");
+    let mounted = true;
 
-    const { data, error } = await supabase
-      .from("species")
-      .select("code, description_en, form, size");
+    (async () => {
+      console.log("♟️ Cargando catálogo species...");
+      const { data, error } = await supabase
+        .from("species")
+        .select("code, description_en, form, size");
 
-    console.log("📦 data:", data);
-    console.log("❌ error:", error);
+      console.log("📦 data:", data);
+      console.log("❌ error:", error);
 
-    if (!error && data) {
-      setItems(data);
-    }
+      if (!mounted) return;
 
-    setLoading(false);
-  }
+      if (!error && data) {
+        setItems(data);
+      }
 
-  load();
-}, []);
+      setLoading(false);
+    })();
 
-  const getByCode = useCallback(
-    (code: string) => {
-      const c = code.trim().toUpperCase();
-      return items.find(i => i.code === c) ?? null;
-    },
-    [items]
-  );
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  return { getByCode, loading };
+  const getByCode = useMemo(() => {
+    const map = new Map<string, SpeciesItem>();
+    items.forEach(i => map.set(i.code.toUpperCase(), i));
+    return (code: string) => map.get(code.toUpperCase()) ?? null;
+  }, [items]);
+
+  return { items, getByCode, loading };
 }
+

@@ -17,8 +17,6 @@ export default function BoxesWizardModal({
   boxNo,
 }: Props) {
   const { lines, setLines, addLines } = usePackingStore();
-  const { getByCode, loading } = useSpeciesCatalog();
-
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
   const [pounds, setPounds] = useState(0);
@@ -27,6 +25,8 @@ export default function BoxesWizardModal({
   /* =====================
      Resolver catálogo
   ===================== */
+
+const { getByCode, loading } = useSpeciesCatalog();
 
 const catalogItem = useMemo(() => {
   if (!code) return null;
@@ -76,8 +76,8 @@ const catalogItem = useMemo(() => {
 
   setLocalLines(prev => [...prev, ...newLines]);
   setCode("");
-  setQty(1);
   setPounds(0);
+  setQty(1);
 }
 
 

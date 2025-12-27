@@ -269,6 +269,3 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     </>
   );
 }
-
-
-
