@@ -64,14 +64,15 @@ const catalogItem = useMemo(() => {
       ? Math.max(...lines.map(l => Number(l.box_no))) + 1
       : 1);
 
-  const newLines: PackingLine[] = Array.from({ length: qty }).map((_, i) => ({
-    box_no: nextBoxNo + i,
-    code: catalogItem.code,
-    description_en: catalogItem.description_en,
-    form: catalogItem.form,
-    size: catalogItem.size,
-    pounds,
-  }));
+  const newLines: PackingLine[] = Array.from({ length: qty }).map(() => ({
+  box_no: nextBoxNo,
+  code: catalogItem.code,
+  description_en: catalogItem.description_en,
+  form: catalogItem.form,
+  size: catalogItem.size,
+  pounds,
+}));
+
 
   setLocalLines(prev => [...prev, ...newLines]);
   setCode("");

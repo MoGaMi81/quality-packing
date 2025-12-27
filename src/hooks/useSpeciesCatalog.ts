@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 export type SpeciesItem = {
@@ -13,24 +15,28 @@ export function useSpeciesCatalog() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("species")
-      .select("code, description_en, form, size")
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Species error:", error);
-        } else {
-          setItems(data ?? []);
-        }
-        setLoading(false);
-      });
+    async function load() {
+      const { data, error } = await supabase
+        .from("species")
+        .select("code, description_en, form, size");
+
+      if (!error && data) {
+        setItems(data);
+      }
+
+      setLoading(false);
+    }
+
+    load();
   }, []);
 
-  function getByCode(code: string) {
-    return items.find(
-      (i) => i.code.toUpperCase() === code.toUpperCase()
-    ) ?? null;
-  }
+  const getByCode = useCallback(
+    (code: string) => {
+      const c = code.trim().toUpperCase();
+      return items.find(i => i.code === c) ?? null;
+    },
+    [items]
+  );
 
-  return { items, getByCode, loading };
+  return { getByCode, loading };
 }
