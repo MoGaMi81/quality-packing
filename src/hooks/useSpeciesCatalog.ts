@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { normalizeCode } from "@/lib/normalizeCode";
 
 export type SpeciesItem = {
   code: string;
@@ -40,12 +41,23 @@ export function useSpeciesCatalog() {
     };
   }, []);
 
-  const getByCode = useMemo(() => {
-    const map = new Map<string, SpeciesItem>();
-    items.forEach(i => map.set(i.code.toUpperCase(), i));
-    return (code: string) => map.get(code.toUpperCase()) ?? null;
-  }, [items]);
+  const getByCode = useCallback(
+  (rawCode: string) => {
+    const c = normalizeCode(rawCode);
 
-  return { items, getByCode, loading };
+    return (
+      items.find(
+        (i) => normalizeCode(i.code) === c
+      ) ?? null
+    );
+  },
+  [items]
+);
+
+
+  return {
+    loading,
+    getByCode,
+    items,
+  };
 }
-
