@@ -41,6 +41,30 @@ export function useSpeciesCatalog() {
     };
   }, []);
 
+  useEffect(() => {
+  let mounted = true;
+
+  (async () => {
+    const { data, error } = await supabase
+      .from("species")
+      .select("code, description_en, form, size");
+
+    console.log("🧪 RAW SPECIES DATA:", data);
+
+    if (!mounted) return;
+
+    if (!error && data) {
+      setItems(data);
+    }
+
+    setLoading(false);
+  })();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
+
   const getByCode = useCallback(
   (rawCode: string) => {
     const c = normalizeCode(rawCode);

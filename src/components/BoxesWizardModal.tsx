@@ -25,6 +25,9 @@ export default function BoxesWizardModal({
   /* =====================
      Resolver catálogo
   ===================== */
+useEffect(() => {
+  console.log("⌨️ code input:", code);
+}, [code]);
 
 const { getByCode, loading } = useSpeciesCatalog();
 
@@ -37,18 +40,15 @@ const catalogItem = useMemo(() => {
      Cargar caja existente
   ===================== */
   useEffect(() => {
-    if (!open) return;
+  if (!open) return;
 
-    if (boxNo != null) {
-      setLocalLines(lines.filter(l => Number(l.box_no) === boxNo));
-    } else {
-      setLocalLines([]);
-    }
+  if (boxNo != null) {
+    setLocalLines(lines.filter(l => Number(l.box_no) === boxNo));
+  } else {
+    setLocalLines([]);
+  }
 
-    setCode("");
-    setQty(1);
-    setPounds(0);
-  }, [open, boxNo, lines]);
+}, [open, boxNo]); 
 
   if (!open) return null;
 
@@ -56,7 +56,14 @@ const catalogItem = useMemo(() => {
      Agregar líneas
   ===================== */
   function addLine() {
-  if (!catalogItem || pounds <= 0 || qty <= 0) return;
+  const resolved = getByCode(code);
+
+  console.log("🔍 resolved:", resolved);
+
+  if (!resolved || pounds <= 0 || qty <= 0) {
+    alert("Clave no encontrada en catálogo");
+    return;
+  }
 
   const nextBoxNo =
     boxNo ??
@@ -66,10 +73,10 @@ const catalogItem = useMemo(() => {
 
   const newLines: PackingLine[] = Array.from({ length: qty }).map((_, i) => ({
     box_no: nextBoxNo + i,
-    code: catalogItem.code,
-    description_en: catalogItem.description_en,
-    form: catalogItem.form,
-    size: catalogItem.size,
+    code: resolved.code,
+    description_en: resolved.description_en,
+    form: resolved.form,
+    size: resolved.size,
     pounds,
   }));
 
@@ -78,6 +85,17 @@ const catalogItem = useMemo(() => {
   setQty(1);
   setPounds(0);
 }
+
+useEffect(() => {
+  if (open) {
+    setCode("");
+    setQty(1);
+    setPounds(0);
+    if (boxNo == null) {
+      setLocalLines([]);
+    }
+  }
+}, [open, boxNo]);
 
   /* =====================
      Guardar
