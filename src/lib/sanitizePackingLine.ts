@@ -1,7 +1,7 @@
 // src/lib/sanitizePackingLine.ts
 import type { PackingLine } from "@/domain/packing/types";
 
-export function sanitizeLine(
+export function sanitizePackingLine(
   line: Partial<PackingLine>
 ): PackingLine {
   return {
@@ -11,6 +11,10 @@ export function sanitizeLine(
     form: line.form ?? "",
     size: line.size ?? "",
     pounds: line.pounds ?? 0,
-    combined_with: line.combined_with,
+    scientific_name: line.scientific_name ?? null,
+    combined_with: line.combined_with ?? null,
+
+    // ✅ ESTE ERA EL FALTANTE
+    is_combined: line.is_combined ?? false,
   };
 }
