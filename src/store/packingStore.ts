@@ -14,7 +14,7 @@ export type PackingHeader = {
   guide: string;
 };
 
-type PackingStatus = "draft" | "final";
+type PackingStatus = "DRAFT" | "FINAL";
 
 /* =======================
    STATE
@@ -60,7 +60,7 @@ type State = {
 
 export const usePackingStore = create<State>((set, get) => ({
   packing_id: null,
-  status: "draft",
+  status: "DRAFT",
 
   header: null,
   lines: [],
@@ -124,7 +124,7 @@ export const usePackingStore = create<State>((set, get) => ({
 
   markDraft: () =>
     set(() => ({
-      status: "draft",
+      status: "DRAFT",
     })),
 
   clear: () =>
@@ -135,7 +135,7 @@ export const usePackingStore = create<State>((set, get) => ({
   reset: () =>
     set(() => ({
       packing_id: null,
-      status: "draft",
+      status: "DRAFT",
       header: null,
       lines: [],
     })),

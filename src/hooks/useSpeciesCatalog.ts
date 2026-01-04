@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { normalizeCode } from "@/lib/normalizeCode";
 
 export type SpeciesItem = {
   code: string;
@@ -19,18 +18,22 @@ export function useSpeciesCatalog() {
     let mounted = true;
 
     (async () => {
-      console.log("♟️ Cargando catálogo species...");
+      console.log("🧍 Cargando catálogo species...");
       const { data, error } = await supabase
         .from("species")
         .select("code, description_en, form, size");
 
-      console.log("📦 data:", data);
-      console.log("❌ error:", error);
-
       if (!mounted) return;
 
-      if (!error && data) {
+      if (error) {
+        console.error("❌ Error al cargar species:", error);
+        setItems([]);
+      } else if (data && data.length > 0) {
+        console.log("✅ Catálogo cargado correctamente");
         setItems(data);
+      } else {
+        console.warn("⚠️ Catálogo vacío");
+        setItems([]);
       }
 
       setLoading(false);
@@ -41,47 +44,21 @@ export function useSpeciesCatalog() {
     };
   }, []);
 
-  useEffect(() => {
-  let mounted = true;
-
-  (async () => {
-    const { data, error } = await supabase
-      .from("species")
-      .select("code, description_en, form, size");
-
-    console.log("🧪 RAW SPECIES DATA:", data);
-
-    if (!mounted) return;
-
-    if (!error && data) {
-      setItems(data);
-    }
-
-    setLoading(false);
-  })();
-
-  return () => {
-    mounted = false;
-  };
-}, []);
+  const normalize = (v: string) =>
+    v.toUpperCase().trim().replace(/\s+/g, "").replace(/–|—/g, "-");
 
   const getByCode = useCallback(
-  (rawCode: string) => {
-    const c = normalizeCode(rawCode);
+    (code: string) => {
+      if (!code) return null;
+      const c = normalize(code);
+      const match = items.find((i) => normalize(i.code) === c);
+      console.log("🔍 buscando:", c);
+      console.log("📦 catálogo normalizado:", items.map(i => normalize(i.code)));
+      console.log("✅ match encontrado:", match);
+      return match ?? null;
+    },
+    [items]
+  );
 
-    return (
-      items.find(
-        (i) => normalizeCode(i.code) === c
-      ) ?? null
-    );
-  },
-  [items]
-);
-
-
-  return {
-    loading,
-    getByCode,
-    items,
-  };
+  return { loading, getByCode, items };
 }

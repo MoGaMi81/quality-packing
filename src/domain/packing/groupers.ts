@@ -151,6 +151,7 @@ export function groupPackingForClient(
         form: l.form,
         size: l.size,
         pounds: l.pounds,
+        is_combined: false
       });
       i += r.items.length;
       continue;

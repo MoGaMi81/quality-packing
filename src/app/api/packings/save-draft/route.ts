@@ -3,18 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // SERVICE ROLE (server only)
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      packing_id,
-      header,
-      lines,
-    } = body as {
+    const { packing_id, header, lines } = body as {
       packing_id?: string | null;
       header: {
         invoice_no: string;
@@ -32,6 +28,7 @@ export async function POST(req: Request) {
       );
     }
 
+    const invoiceNo = header.invoice_no.trim().toUpperCase();
     let packingId: string | null = packing_id ?? null;
 
     /* =====================
@@ -41,11 +38,10 @@ export async function POST(req: Request) {
       const { data: existing, error } = await supabase
         .from("packings")
         .select("id")
-        .eq("invoice_no", header.invoice_no.toUpperCase())
+        .eq("invoice_no", invoiceNo)
         .single();
 
       if (error && error.code !== "PGRST116") {
-        // PGRST116 = no rows found (OK)
         throw error;
       }
 
@@ -61,11 +57,11 @@ export async function POST(req: Request) {
       const { data, error } = await supabase
         .from("packings")
         .insert({
-          invoice_no: header.invoice_no.toUpperCase(),
+          invoice_no: invoiceNo,
           client_code: header.client_code || null,
           date: header.date,
           guide: header.guide || null,
-          status: "draft",
+          status: "DRAFT",
         })
         .select("id")
         .single();
@@ -79,7 +75,7 @@ export async function POST(req: Request) {
           client_code: header.client_code || null,
           date: header.date,
           guide: header.guide || null,
-          status: "draft",
+          status: "DRAFT",
         })
         .eq("id", packingId);
 

@@ -5,13 +5,18 @@
 // =====================================
 
 export type PackingLine = {
+  [x: string]: any;
+  box_no: number | "MX";
   code?: string | null;
-  box_no: number | "MX";            // número de caja
-  description_en: string;    // nombre comercial EN
-  form: string;              // presentación (W&G, Fillet…)
-  size: string;              // calibre (1-2, 3/4-1…)
-  pounds: number;            // peso en libras
-  combined_with?: number;    // si es combinada, ID de la caja
+
+  description_en: string;
+  form: string;
+  size: string;
+  pounds: number;
+
+  /* === COMBINADOS (PASO 1) === */
+  is_combined: boolean;
+  combined_group?: string; // uuid que agrupa especies de la misma caja
 };
 
 export type PackingHeader = {
