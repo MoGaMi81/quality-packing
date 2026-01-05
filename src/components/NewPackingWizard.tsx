@@ -54,9 +54,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     setError(null);
 
     try {
-      const r = await fetchJSON<any>(
-        `/api/packings/by-invoice/${encodeURIComponent(invoice.trim())}`
-      );
+      const r = await fetchJSON(`/api/packings/draft/by-invoice/${invoice}`);
 
       if (r?.packing) {
         loadFromDB({
