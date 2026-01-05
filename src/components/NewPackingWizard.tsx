@@ -133,33 +133,32 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           {/* ===== PASO 1 ===== */}
           {step === 1 && (
             <>
-              <label className="block font-semibold">Cliente</label>
+              <label className="block font-semibold">Cliente (código)</label>
               <input
                 className="border rounded px-3 py-2 w-full"
+                placeholder="Ej: ESTAFETA"
                 value={header?.client_code ?? ""}
                 onChange={(e) =>
-                  setHeader({
-  ...header!,
-  client_code: e.target.value,
-})
-
-                }
-              />
-
+                 setHeader({
+                  ...header!,
+                  client_code: e.target.value.toUpperCase(),
+                })
+              }
+           />
+           
               <label className="block font-semibold mt-3">
                 Identificador interno
               </label>
               <input
-  className="border rounded px-3 py-2 w-full"
-  value={header?.client_code ?? ""}
-  onChange={(e) =>
-    setHeader({
-      ...header!,
-      client_code: e.target.value,
-    })
-  }
-/>
-
+               className="border rounded px-3 py-2 w-full"
+               value={header?.client_code ?? ""}
+               onChange={(e) =>
+                 setHeader({
+                 ...header!,
+                 client_code: e.target.value,
+              })
+              }
+            />
 
               {error && <div className="text-red-600 mt-2">{error}</div>}
 
