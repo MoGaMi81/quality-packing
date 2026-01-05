@@ -22,6 +22,7 @@ export type PackingLine = {
 export type PackingHeader = {
   client_code: string;
   client_name: string;
+  internal_ref?: string;
   address?: string;
   tax_id?: string;
   guide?: string;

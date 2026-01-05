@@ -8,11 +8,13 @@ import type { PackingLine } from "@/domain/packing/types";
 ======================= */
 
 export type PackingHeader = {
-  invoice_no: string;
-  date: string;
-  client_code: string;
-  guide: string;
+  invoice_no?: string;     // se usará después (facturación)
+  client_code?: string;    // PROCESO
+  internal_ref?: string;   // 👈 NUEVO (PROCESO)
+  date?: string;
+  guide?: string;          // facturación
 };
+
 
 type PackingStatus = "DRAFT" | "FINAL";
 

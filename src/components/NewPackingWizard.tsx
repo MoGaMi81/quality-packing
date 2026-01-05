@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
-import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
-import PricingModal from "@/components/PricingModal";
 
 type Props = {
   open: boolean;
@@ -21,16 +19,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     header,
     lines,
     setHeader,
-    loadFromDB,
     reset,
   } = usePackingStore();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [invoice, setInvoice] = useState("");
-  const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openPricing, setOpenPricing] = useState(false);
-  const [prices, setPrices] = useState<Record<string, number>>({});
+
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
 
@@ -39,7 +33,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     if (open) {
       reset();
       setStep(1);
-      setInvoice("");
       setError(null);
     }
   }, [open, reset]);
@@ -47,120 +40,80 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   if (!open) return null;
 
   /* ================= PASO 1 ================= */
-  async function goStep1() {
-    if (!invoice.trim()) return;
-
-    setValidating(true);
-    setError(null);
-
-    try {
-      const r = await fetchJSON(`/api/packings/draft/by-invoice/${invoice}`);
-
-      if (r?.packing) {
-        loadFromDB({
-          packing_id: r.packing.id,
-          status: r.packing.status,
-          header: {
-            invoice_no: r.packing.invoice_no,
-            client_code: r.packing.client_code,
-            date: r.packing.date,
-            guide: r.packing.guide,
-          },
-          lines: r.lines ?? [],
-        });
-      } else {
-        setHeader({
-          invoice_no: invoice.trim().toUpperCase(),
-          client_code: "",
-          date: new Date().toISOString().slice(0, 10),
-          guide: "",
-        });
-      }
-
-      setStep(2);
-    } catch {
-      setError("No se pudo validar la factura.");
-    } finally {
-      setValidating(false);
+  function goStep1() {
+    if (!header?.client_code || !header?.internal_ref) {
+      setError("Cliente e identificador son obligatorios");
+      return;
     }
-  }
 
-  <button
-  onClick={() => setOpenPricing(true)}
-  className="mb-3 bg-black text-white px-4 py-2 rounded w-full"
->
-  Asignar precios
-</button>
+    setError(null);
+    setStep(2);
+  }
 
   /* ================= GUARDAR BORRADOR ================= */
   async function saveDraftAndExit() {
-  if (!header?.invoice_no) {
-    alert("Header incompleto");
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/packings/save-draft", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        packing_id,
-        header,
-        lines,
-        status: "DRAFT",
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data?.ok) {
-      console.error(data);
-      alert(data?.error || "Error al guardar borrador");
-      return; // ⛔ NO salir
+    if (!header?.client_code || !header?.internal_ref) {
+      alert("Cliente e identificador incompletos");
+      return;
     }
 
-    alert("Borrador guardado correctamente"); // ← IMPORTANTE
-    reset();
-    onClose();
-    router.push("/");
+    try {
+      const res = await fetch("/api/packings/save-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packing_id,
+          header: {
+            client_code: header.client_code,
+            internal_ref: header.internal_ref,
+            date: header.date,
+          },
+          lines,
+          status: "DRAFT",
+        }),
+      });
 
-  } catch (e) {
-    console.error(e);
-    alert("Error de red al guardar borrador");
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        alert(data?.error || "Error al guardar borrador");
+        return;
+      }
+
+      alert("Borrador guardado correctamente");
+      reset();
+      onClose();
+      router.push("/");
+    } catch (e) {
+      console.error(e);
+      alert("Error de red al guardar borrador");
+    }
   }
-}
 
-
-  /* ================= FINALIZAR ================= */
-  async function finalize() {
+  /* ================= FINALIZAR PROCESO ================= */
+  async function finishProcess() {
     if (!packing_id) {
       alert("Packing inválido");
       return;
     }
 
-    if (!header?.client_code || !header?.date) {
-      alert("Header incompleto");
-      return;
-    }
+    if (!confirm("¿Confirmas que el proceso está completo?")) return;
 
-    const res = await fetch("/api/packings/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        packing_id,
-        header,
-        lines,
-      }),
+    const res = await fetch(`/api/packings/${packing_id}/finish-process`, {
+      method: "PATCH",
     });
 
     const data = await res.json();
 
-    if (!data.ok) {
-      alert(data.error);
+    if (!res.ok || !data.ok) {
+      alert(data?.error || "No se pudo finalizar el proceso");
       return;
     }
 
-    router.push("/packings");
+    alert("Proceso finalizado. Enviado a facturación.");
+    reset();
+    onClose();
+    router.push("/");
   }
 
   /* ================= DATOS DERIVADOS ================= */
@@ -174,27 +127,47 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
         <div className="bg-white p-8 rounded-xl w-full max-w-3xl">
           <h1 className="text-3xl font-bold mb-6">
-            Paso {step} de 3
+            Proceso · Paso {step} de 3
           </h1>
 
           {/* ===== PASO 1 ===== */}
           {step === 1 && (
             <>
-              <label>Factura</label>
+              <label className="block font-semibold">Cliente</label>
               <input
                 className="border rounded px-3 py-2 w-full"
-                value={invoice}
-                onChange={(e) => setInvoice(e.target.value)}
+                value={header?.client_code ?? ""}
+                onChange={(e) =>
+                  setHeader({
+  ...header!,
+  client_code: e.target.value,
+})
+
+                }
               />
+
+              <label className="block font-semibold mt-3">
+                Identificador interno
+              </label>
+              <input
+  className="border rounded px-3 py-2 w-full"
+  value={header?.client_code ?? ""}
+  onChange={(e) =>
+    setHeader({
+      ...header!,
+      client_code: e.target.value,
+    })
+  }
+/>
+
 
               {error && <div className="text-red-600 mt-2">{error}</div>}
 
               <button
-                disabled={validating}
                 onClick={goStep1}
                 className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
               >
-                {validating ? "Validando..." : "Continuar"}
+                Continuar
               </button>
             </>
           )}
@@ -203,7 +176,8 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           {step === 2 && (
             <>
               <p className="mb-2">
-                Factura: <b>{header?.invoice_no}</b>
+                <b>Cliente:</b> {header?.client_code} <br />
+                <b>Referencia:</b> {header?.internal_ref}
               </p>
 
               <button
@@ -228,14 +202,17 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                       }
                     }}
                   >
-                     <div className="font-semibold">
-                        Caja #{box.box_no}
-                       {box.isCombined && " (Combinada)"}
+                    <div className="font-semibold">
+                      Caja #{box.box_no}
+                      {box.isCombined && " (Combinada)"}
                     </div>
 
                     {box.lines.map((l, i) => (
-                      <div key={i} className="text-sm ml-4 leading-tight text-gray-800">
-                        🐟 {l.description_en} {l.form} {l.size} - {l.pounds} lbs
+                      <div
+                        key={i}
+                        className="text-sm ml-4 leading-tight text-gray-800"
+                      >
+                        🐟 {l.description_en} {l.form} {l.size} – {l.pounds} lbs
                       </div>
                     ))}
 
@@ -269,53 +246,28 @@ export default function NewPackingWizard({ open, onClose }: Props) {
             <>
               <p className="text-xl font-bold mb-3">Resumen</p>
 
-              {/* Totales siempre visibles arriba */}
               <div className="text-sm mb-2">
                 <b>Total cajas:</b> {totalCajas} &nbsp;&nbsp;
                 <b>Total lbs:</b> {totalLbs}
               </div>
 
-              {/* Contenedor con scroll interno */}
               <div className="border rounded p-2 max-h-[400px] overflow-y-auto mb-4">
-                {/* Encabezado tipo tabla */}
-                <div className="grid grid-cols-[90px_1fr_60px_70px_70px_70px] font-semibold text-[13px] border-b pb-1 mb-1">
-                  <div className="pr-1">Cajas</div>
-                  <div className="pr-2">Descripción</div>
-                  <div className="text-center">Form</div>
-                  <div className="text-center">Size</div>
-                  <div className="text-center">Lbs</div>
-                  <div className="text-center">Total</div>
-                </div>
-
-                {/* Cajas */}
                 {grouped.map((box) => (
-                  <div key={box.box_no} className="mb-1">
+                  <div key={box.box_no} className="mb-2">
+                    <div className="font-semibold">
+                      Caja #{box.box_no}
+                      {box.isCombined && " (MX)"}
+                    </div>
+
                     {box.lines.map((l, i) => (
-                      <div
-                        key={i}
-                        className="grid grid-cols-[90px_1fr_60px_70px_70px_70px] text-[13px] text-gray-800 items-center"
-                      >
-                        <div className="pr-1">
-                         {i === 0 && (
-                          <> {box.box_no}{box.isCombined ? " (MX)" : ""}</>
-                         )}
-                        </div>
-                        <div className="pr-2 whitespace-nowrap">{l.description_en}</div>
-                        <div className="text-center">{l.form}</div>
-                        <div className="text-center">{l.size}</div>
-                        <div className="text-center">{l.pounds} lbs</div>
-                        <div className="text-center">
-                          {i === 0 && (
-                            <span className="font-semibold">{box.total_lbs} lbs</span>
-                          )}
-                        </div>
+                      <div key={i} className="text-sm ml-4">
+                        {l.description_en} {l.form} {l.size} – {l.pounds} lbs
                       </div>
                     ))}
                   </div>
                 ))}
               </div>
 
-              {/* Botones siempre visibles */}
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(2)}
@@ -325,10 +277,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 </button>
 
                 <button
-                  onClick={finalize}
-                  className="bg-green-700 text-white px-4 py-2 rounded flex-1"
+                  onClick={finishProcess}
+                  className="bg-blue-700 text-white px-4 py-2 rounded flex-1"
                 >
-                  Finalizar Packing
+                  Finalizar Proceso
                 </button>
               </div>
             </>
@@ -337,22 +289,13 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       </div>
 
       <BoxesWizardModal
-  open={openBoxes}
-  boxNo={editingBox}
-  onClose={() => {
-    setOpenBoxes(false);
-    setEditingBox(null);
-  }}
-/>
-<PricingModal
-  open={openPricing}
-  lines={lines}
-  onClose={() => setOpenPricing(false)}
-  onSave={(p) => {
-    setPrices(p);
-    setOpenPricing(false);
-  }}
-/>
+        open={openBoxes}
+        boxNo={editingBox}
+        onClose={() => {
+          setOpenBoxes(false);
+          setEditingBox(null);
+        }}
+      />
     </>
   );
 }
