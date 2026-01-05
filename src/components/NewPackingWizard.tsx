@@ -146,19 +146,17 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               }
            />
            
-              <label className="block font-semibold mt-3">
-                Identificador interno
-              </label>
               <input
-               className="border rounded px-3 py-2 w-full"
-               value={header?.client_code ?? ""}
-               onChange={(e) =>
-                 setHeader({
-                 ...header!,
-                 client_code: e.target.value,
-              })
-              }
-            />
+                 className="border rounded px-3 py-2 w-full"
+                 placeholder="Ej: ESTAFETA, AEROUNION"
+                 value={header?.internal_ref ?? ""}
+                 onChange={(e) =>
+                   setHeader({
+                    ...header!,
+                    internal_ref: e.target.value.toUpperCase(),
+                    })
+                 }
+              />
 
               {error && <div className="text-red-600 mt-2">{error}</div>}
 
