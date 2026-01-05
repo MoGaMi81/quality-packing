@@ -38,10 +38,10 @@ export default function PackingPage() {
 
   useEffect(() => {
     if (!header) return;
-    setClientCode(header.client_code);
-    setGuide(header.guide);
-    setInvoiceNo(header.invoice_no);
-    setDate(header.date);
+    setClientCode(header.client_code ?? "");
+    setGuide(header.guide ?? "");
+    setInvoiceNo(header.invoice_no ?? "");
+    setDate(header.date ?? "");
   }, [header]);
 
   const totalBoxes = new Set(lines.map((l) => l.box_no)).size;
