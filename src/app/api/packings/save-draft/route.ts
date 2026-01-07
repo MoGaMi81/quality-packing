@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       lines: any[];
     };
 
-    const invoiceNo = header.invoice_no?.trim().toUpperCase();
+    const invoiceNo = header.invoice_no.trim().toUpperCase();
     let packingId: string | null = packing_id ?? null;
 
     /* =====================

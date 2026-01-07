@@ -4,7 +4,7 @@ import ExcelJS from "exceljs";
 
 // -------------------- Helpers --------------------
 function isSeaLion(code: string) {
-  return code?.trim().toUpperCase() === "SL";
+  return code.trim().toUpperCase() === "SL";
 }
 
 // -------------------------------------------------

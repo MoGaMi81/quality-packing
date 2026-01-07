@@ -10,11 +10,11 @@ export default function NewDraftPage() {
   const router = useRouter();
 
   const submit = async () => {
-    if (!client.trim()) {
+    if (!client?.trim()) {
       alert("Debes seleccionar un cliente.");
       return;
     }
-    if (!name.trim()) {
+    if (!name?.trim()) {
       alert("Debes escribir un nombre para el draft.");
       return;
     }

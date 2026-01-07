@@ -118,7 +118,7 @@ export function groupPackingForClient(
   client_name: string
 ) {
   const isSeaLion =
-    client_name?.trim().toUpperCase() === "SEA LION INTERNATIONAL";
+    client_name.trim().toUpperCase() === "SEA LION INTERNATIONAL";
 
   if (isSeaLion) {
     // Sea Lion NO agrupa rangos
