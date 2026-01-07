@@ -51,9 +51,9 @@ async function run() {
       const formsSet = new Set<string>();
 
       for (const r of rows) {
-        speciesSet.set(r.name_en.trim(), r.scientific_name.trim());
-        sizesSet.add(r.size.trim());
-        formsSet.add(r.form.trim());
+        speciesSet.set(r.name_en?.trim(), r.scientific_name?.trim());
+        sizesSet.add(r.size?.trim());
+        formsSet.add(r.form?.trim());
       }
 
       // ----------------------------------------------
