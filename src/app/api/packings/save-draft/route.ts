@@ -21,13 +21,6 @@ export async function POST(req: Request) {
       lines: any[];
     };
 
-    if (!header?.invoice_no) {
-      return NextResponse.json(
-        { ok: false, error: "Missing invoice_no" },
-        { status: 400 }
-      );
-    }
-
     const invoiceNo = header.invoice_no.trim().toUpperCase();
     let packingId: string | null = packing_id ?? null;
 
