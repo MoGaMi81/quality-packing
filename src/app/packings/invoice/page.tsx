@@ -13,8 +13,8 @@ export default function InvoiceFinder() {
   }
 
   const go = () => {
-    if (!inv.trim()) return;
-    window.location.href = `/packings/${inv.trim().toUpperCase()}/invoice`;
+    if (!inv?.trim()) return;
+    window.location.href = `/packings/${inv?.trim().toUpperCase()}/invoice`;
   };
 
   return (

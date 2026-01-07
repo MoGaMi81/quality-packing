@@ -30,7 +30,7 @@ export async function GET(
   _req: Request,
   ctx: { params: { code: string } }
 ) {
-  const code = (ctx.params.code ?? "").toUpperCase().trim();
+  const code = (ctx.params.code ?? "").toUpperCase()?.trim();
   if (!code) {
     return NextResponse.json(
       { error: "Missing code" },

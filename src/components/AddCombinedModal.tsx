@@ -35,7 +35,7 @@ export default function AddCombinedModal({
       try {
         const x = await fetchJSON(
           `/api/catalogs/species-by-code/${encodeURIComponent(
-            r.code.trim().toUpperCase()
+            r.code?.trim().toUpperCase()
           )}`
         );
 

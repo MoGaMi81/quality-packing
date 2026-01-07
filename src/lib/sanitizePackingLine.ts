@@ -13,8 +13,6 @@ export function sanitizePackingLine(
     pounds: line.pounds ?? 0,
     scientific_name: line.scientific_name ?? null,
     combined_with: line.combined_with ?? null,
-
-    // ✅ ESTE ERA EL FALTANTE
     is_combined: line.is_combined ?? false,
   };
 }

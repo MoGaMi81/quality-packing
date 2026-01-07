@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const invoice = (searchParams.get("no") ?? "").trim().toUpperCase();
+  const invoice = (searchParams.get("no") ?? "")?.trim().toUpperCase();
 
   if (!invoice) {
     return NextResponse.json({ error: "Missing invoice" }, { status: 400 });

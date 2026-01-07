@@ -16,7 +16,7 @@ function uniqPush(map, key, makeObj) {
 }
 
 function norm(s) {
-  return (s ?? "").toString().trim();
+  return (s ?? "").toString()?.trim();
 }
 
 async function run() {

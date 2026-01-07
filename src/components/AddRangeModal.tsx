@@ -32,7 +32,7 @@ export default function AddRangeModal({
     try {
       const r = await fetchJSON(
         `/api/catalogs/species-by-code/${encodeURIComponent(
-          code.trim().toUpperCase()
+          code?.trim().toUpperCase()
         )}`
       );
 

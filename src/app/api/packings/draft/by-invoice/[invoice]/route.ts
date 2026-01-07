@@ -13,7 +13,7 @@ export async function GET(
   req: Request,
   { params }: { params: { invoice: string } }
 ) {
-  const invoice = params.invoice.trim().toUpperCase();
+  const invoice = params.invoice?.trim().toUpperCase();
 
   const { data, error } = await supabase
     .from("packings")

@@ -6,7 +6,7 @@ import { loadCatalogs } from "@/lib/loadCatalogs";
 //  ENCONTRAR CLIENTE POR CÓDIGO
 // -----------------------------------------------------------
 export function findClientByCode(code: string) {
-  const c = code.trim().toUpperCase();
+  const c = code?.trim().toUpperCase();
   const { clients } = loadCatalogs();
 
   return clients.find(client => client.code.toUpperCase() === c) ?? null;
@@ -17,7 +17,7 @@ export function findClientByCode(code: string) {
 //  ENCONTRAR ESPECIE / TALLA / FORMATO POR CLAVE (ARS1, BO2…)
 // -----------------------------------------------------------
 export function findSpeciesByCode(code: string) {
-  const c = code.trim().toUpperCase();
+  const c = code?.trim().toUpperCase();
   const { speciesCodes, species, sizes, forms } = loadCatalogs();
 
   // 1) Buscar mapping

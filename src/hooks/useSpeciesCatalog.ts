@@ -45,7 +45,7 @@ export function useSpeciesCatalog() {
   }, []);
 
   const normalize = (v: string) =>
-    v.toUpperCase().trim().replace(/\s+/g, "").replace(/–|—/g, "-");
+    v.toUpperCase()?.trim().replace(/\s+/g, "").replace(/–|—/g, "-");
 
   const getByCode = useCallback(
     (code: string) => {

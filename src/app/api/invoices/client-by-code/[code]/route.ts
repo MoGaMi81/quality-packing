@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readJson } from "@/lib/json-db";
 
-const up = (s?: string) => (s ?? "").trim().toUpperCase();
+const up = (s?: string) => (s ?? "")?.trim().toUpperCase();
 
 export async function GET(_req: Request, { params }: { params: { code: string } }) {
   const code = up(params.code);

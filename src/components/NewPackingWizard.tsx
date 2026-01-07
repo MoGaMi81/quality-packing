@@ -105,7 +105,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
     const data = await res.json();
 
-    if (!res.ok || !data.ok) {
+    if (!res.ok || !data?.ok) {
       alert(data?.error || "No se pudo finalizar el proceso");
       return;
     }

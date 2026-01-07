@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { readJson, writeJson } from "@/lib/json-db";
 import type { NewSpeciesBundleInput } from "@/domain/models/newInputs";
 
-const norm = (s?: string) => (s ?? "").trim();
+const norm = (s?: string) => (s ?? "")?.trim();
 const up = (s?: string) => norm(s).toUpperCase();
 
 // ======================================================
