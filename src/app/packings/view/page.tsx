@@ -16,7 +16,7 @@ export default function PackingViewPage() {
   const buscar = async () => {
     setErr("");
     setData(null);
-    if (!invoice.trim()) return;
+    if (!invoice?.trim()) return;
 
     try {
       const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);

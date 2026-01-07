@@ -22,7 +22,7 @@ export default function NewSpeciesBundleModal({ open, presetCode = "", onClose, 
 
   const submit = async () => {
     setErr(null);
-    if (!form.code.trim() || !form.name_en.trim() || !form.size.trim()) {
+    if (!form.code?.trim() || !form.name_en?.trim() || !form.size?.trim()) {
       setErr("Code, Name EN and Size are required"); return;
     }
     setLoading(true);

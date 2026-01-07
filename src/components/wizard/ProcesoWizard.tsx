@@ -15,7 +15,7 @@ export default function ProcesoWizard() {
   const role = getRole() ?? "proceso"; // proceso | facturacion | admin
 
   const continueOrRoute = async () => {
-    const inv = invoice.trim().toUpperCase();
+    const inv = invoice?.trim().toUpperCase();
     if (!inv) return;
 
     // --- NUEVA API EN SUPABASE ---

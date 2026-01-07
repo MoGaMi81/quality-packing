@@ -22,7 +22,7 @@ export default function NewClientModal({ open, presetCode = "", onClose, onCreat
 
   const submit = async () => {
     setErr(null);
-    if (!form.code.trim() || !form.name.trim()) { setErr("Code and Name are required"); return; }
+    if (!form.code?.trim() || !form.name?.trim()) { setErr("Code and Name are required"); return; }
     setLoading(true);
     try {
       const res = await fetchJSON<{ ok: true; client: any }>("/api/catalogs/client", {
