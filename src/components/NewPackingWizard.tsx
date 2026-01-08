@@ -15,17 +15,20 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const router = useRouter();
 
   const {
-    packing_id,
     header,
     lines,
     setHeader,
+    setLines,
     reset,
   } = usePackingStore();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState<string | null>(null);
+
+  // 👇 DRAFT
   const [draft_id, setDraftId] = useState<string | null>(null);
 
+  // Boxes
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
 
@@ -33,6 +36,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   useEffect(() => {
     if (open) {
       reset();
+      setDraftId(null);
       setStep(1);
       setError(null);
     }
@@ -51,74 +55,105 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     setStep(2);
   }
 
- /* ================= GUARDAR BORRADOR ================= */
-async function saveDraftAndExit() {
-  if (!header?.client_code || !header?.internal_ref) {
-    alert("Cliente e identificador incompletos");
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/packing-drafts/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        draft_id: draft_id ?? null, // 👈 CLAVE
-        header: {
-          client_code: header.client_code,
-          internal_ref: header.internal_ref,
-        },
-        lines,
-        status: "PROCESS",
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data?.ok) {
-      alert(data?.error || "Error al guardar borrador");
+  /* ================= GUARDAR BORRADOR ================= */
+  async function saveDraftAndExit() {
+    if (!header?.client_code || !header?.internal_ref) {
+      alert("Cliente e identificador incompletos");
       return;
     }
 
-    // 👇 Guardar draft_id para siguientes guardados
-    if (!draft_id && data.draft_id) {
-      setDraftId(data.draft_id);
+    try {
+      const res = await fetch("/api/packing-drafts/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draft_id: draft_id ?? null,
+          header: {
+            client_code: header.client_code,
+            internal_ref: header.internal_ref,
+          },
+          lines,
+          status: "PROCESS",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        alert(data?.error || "Error al guardar borrador");
+        return;
+      }
+
+      if (!draft_id && data.draft_id) {
+        setDraftId(data.draft_id);
+      }
+
+      alert("Borrador guardado correctamente");
+      reset();
+      onClose();
+      router.push("/");
+    } catch (e) {
+      console.error(e);
+      alert("Error inesperado al guardar borrador");
     }
-
-    alert("Borrador guardado correctamente");
-    reset();
-    onClose();
-    router.push("/");
-  } catch (e) {
-    console.error(e);
-    alert("Error de red al guardar borrador");
   }
-}
 
-/* ================= FINALIZAR PROCESO ================= */
+  /* ================= CARGAR DRAFT ================= */
+  async function loadDraft(draftId: string) {
+    try {
+      const r = await fetch(`/api/packing-drafts/${draftId}`);
+      const data = await r.json();
+
+      if (!data.ok) {
+        alert("No se pudo cargar el borrador");
+        return;
+      }
+
+      setDraftId(data.draft.id);
+
+      setHeader({
+        client_code: data.draft.client_code,
+        internal_ref: data.draft.internal_ref,
+      });
+
+      setLines(data.lines ?? []);
+      setStep(2);
+    } catch (e) {
+      console.error(e);
+      alert("Error al cargar borrador");
+    }
+  }
+
+  /* ================= FINALIZAR PROCESO ================= */
   async function finishProcess() {
-    if (!packing_id) {
-      alert("Packing inválido");
+    if (!draft_id) {
+      alert("Draft inválido");
       return;
     }
 
     if (!confirm("¿Confirmas que el proceso está completo?")) return;
 
-    const res = await fetch(`/api/packings/${packing_id}/finish-process`, {
-      method: "PATCH",
-    });
+    try {
+      const res = await fetch(
+        `/api/packing-drafts/${draft_id}/finish-process`,
+        { method: "PATCH" }
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok || !data?.ok) {
-      alert(data?.error || "No se pudo finalizar el proceso");
-      return;
+      if (!res.ok || !data?.ok) {
+        alert(data?.error || "No se pudo finalizar el proceso");
+        return;
+      }
+
+      alert("Proceso finalizado. Enviado a facturación.");
+      reset();
+      onClose();
+      router.push("/");
+    } catch (e) {
+      console.error(e);
+      alert("Error al finalizar proceso");
     }
-
-    alert("Proceso finalizado. Enviado a facturación.");
-    reset();
-    onClose();
-    router.push("/");
   }
 
   /* ================= DATOS DERIVADOS ================= */
@@ -138,29 +173,34 @@ async function saveDraftAndExit() {
           {/* ===== PASO 1 ===== */}
           {step === 1 && (
             <>
-              <label className="block font-semibold">Cliente (código)</label>
+              <label className="block font-semibold mb-1">
+                Cliente (código)
+              </label>
               <input
-                className="border rounded px-3 py-2 w-full"
-                placeholder="Ej: ESTAFETA"
+                className="border rounded px-3 py-2 w-full mb-3"
+                placeholder="Ej: SL, GM, HE"
                 value={header?.client_code ?? ""}
                 onChange={(e) =>
-                 setHeader({
-                  ...header!,
-                  client_code: e.target.value.toUpperCase(),
-                })
-              }
-           />
-           
+                  setHeader({
+                    ...header!,
+                    client_code: e.target.value.toUpperCase(),
+                  })
+                }
+              />
+
+              <label className="block font-semibold mb-1">
+                Identificador interno
+              </label>
               <input
-                 className="border rounded px-3 py-2 w-full"
-                 placeholder="Ej: ESTAFETA, AEROUNION"
-                 value={header?.internal_ref ?? ""}
-                 onChange={(e) =>
-                   setHeader({
+                className="border rounded px-3 py-2 w-full"
+                placeholder="Ej: ESTAFETA, AEROUNION"
+                value={header?.internal_ref ?? ""}
+                onChange={(e) =>
+                  setHeader({
                     ...header!,
                     internal_ref: e.target.value.toUpperCase(),
-                    })
-                 }
+                  })
+                }
               />
 
               {error && <div className="text-red-600 mt-2">{error}</div>}
@@ -177,7 +217,7 @@ async function saveDraftAndExit() {
           {/* ===== PASO 2 ===== */}
           {step === 2 && (
             <>
-              <p className="mb-2">
+              <p className="mb-3 text-sm">
                 <b>Cliente:</b> {header?.client_code} <br />
                 <b>Referencia:</b> {header?.internal_ref}
               </p>
@@ -196,7 +236,7 @@ async function saveDraftAndExit() {
                 {grouped.map((box) => (
                   <div
                     key={box.box_no}
-                    className="mb-1 border rounded p-1 cursor-pointer hover:bg-gray-50"
+                    className="mb-2 border rounded p-2 cursor-pointer hover:bg-gray-50"
                     onClick={() => {
                       if (typeof box.box_no === "number") {
                         setEditingBox(box.box_no);
@@ -248,7 +288,7 @@ async function saveDraftAndExit() {
             <>
               <p className="text-xl font-bold mb-3">Resumen</p>
 
-              <div className="text-sm mb-2">
+              <div className="text-sm mb-3">
                 <b>Total cajas:</b> {totalCajas} &nbsp;&nbsp;
                 <b>Total lbs:</b> {totalLbs}
               </div>
@@ -280,7 +320,7 @@ async function saveDraftAndExit() {
 
                 <button
                   onClick={finishProcess}
-                  className="bg-blue-700 text-white px-4 py-2 rounded flex-1"
+                  className="flex-1 bg-blue-700 text-white px-4 py-2 rounded"
                 >
                   Finalizar Proceso
                 </button>
@@ -301,3 +341,4 @@ async function saveDraftAndExit() {
     </>
   );
 }
+
