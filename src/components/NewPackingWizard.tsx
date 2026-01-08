@@ -24,6 +24,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState<string | null>(null);
+  const [draft_id, setDraftId] = useState<string | null>(null);
 
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
@@ -50,47 +51,51 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     setStep(2);
   }
 
-  /* ================= GUARDAR BORRADOR ================= */
-  async function saveDraftAndExit() {
-    if (!header?.client_code || !header?.internal_ref) {
-      alert("Cliente e identificador incompletos");
+ /* ================= GUARDAR BORRADOR ================= */
+async function saveDraftAndExit() {
+  if (!header?.client_code || !header?.internal_ref) {
+    alert("Cliente e identificador incompletos");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/packing-drafts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        draft_id: draft_id ?? null, // 👈 CLAVE
+        header: {
+          client_code: header.client_code,
+          internal_ref: header.internal_ref,
+        },
+        lines,
+        status: "PROCESS",
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data?.ok) {
+      alert(data?.error || "Error al guardar borrador");
       return;
     }
 
-    try {
-      const res = await fetch("/api/packings/save-draft", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packing_id,
-          header: {
-            client_code: header.client_code,
-            internal_ref: header.internal_ref,
-            date: header.date,
-          },
-          lines,
-          status: "DRAFT",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data?.ok) {
-        alert(data?.error || "Error al guardar borrador");
-        return;
-      }
-
-      alert("Borrador guardado correctamente");
-      reset();
-      onClose();
-      router.push("/");
-    } catch (e) {
-      console.error(e);
-      alert("Error de red al guardar borrador");
+    // 👇 Guardar draft_id para siguientes guardados
+    if (!draft_id && data.draft_id) {
+      setDraftId(data.draft_id);
     }
-  }
 
-  /* ================= FINALIZAR PROCESO ================= */
+    alert("Borrador guardado correctamente");
+    reset();
+    onClose();
+    router.push("/");
+  } catch (e) {
+    console.error(e);
+    alert("Error de red al guardar borrador");
+  }
+}
+
+/* ================= FINALIZAR PROCESO ================= */
   async function finishProcess() {
     if (!packing_id) {
       alert("Packing inválido");
