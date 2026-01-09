@@ -10,20 +10,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      draft_id,
-      header,
-      lines,
-      status = "PROCESS",
-    } = body as {
-      draft_id?: string | null;
-      header: {
-        client_code: string;
-        internal_ref: string;
-      };
-      lines: any[];
-      status?: string;
-    };
+    const { draft_id, header, lines, status = "PROCESS" } = body;
 
     if (!header?.client_code || !header?.internal_ref) {
       return NextResponse.json(
@@ -32,9 +19,13 @@ export async function POST(req: Request) {
       );
     }
 
-    let draftId = draft_id ?? null;
+    const isUUID = (v: any) =>
+      typeof v === "string" &&
+      /^[0-9a-f-]{36}$/i.test(v);
 
-    /* ================= CREAR / ACTUALIZAR DRAFT ================= */
+    let draftId: string | null = isUUID(draft_id) ? draft_id : null;
+
+    // === INSERT / UPDATE DRAFT ===
     if (!draftId) {
       const { data, error } = await supabase
         .from("packing_drafts")
@@ -60,15 +51,14 @@ export async function POST(req: Request) {
 
       if (error) throw error;
 
-      // limpiar líneas anteriores
       await supabase
         .from("draft_lines")
         .delete()
         .eq("draft_id", draftId);
     }
 
-    /* ================= GUARDAR LÍNEAS ================= */
-    if (Array.isArray(lines) && lines.length > 0) {
+    // === LÍNEAS ===
+    if (Array.isArray(lines)) {
       const rows = lines.map((l) => ({
         draft_id: draftId,
         box_no: l.box_no,
@@ -78,7 +68,7 @@ export async function POST(req: Request) {
         size: l.size,
         pounds: l.pounds,
         scientific_name: l.scientific_name ?? null,
-        is_combined: l.is_combined ?? false,
+        is_combined: !!l.is_combined,
         combined_with: l.combined_with ?? null,
       }));
 
@@ -89,15 +79,11 @@ export async function POST(req: Request) {
       if (error) throw error;
     }
 
-    return NextResponse.json({
-      ok: true,
-      draft_id: draftId,
-    });
+    return NextResponse.json({ ok: true, draft_id: draftId });
   } catch (e: any) {
     console.error("SAVE DRAFT ERROR:", e);
-
     return NextResponse.json(
-      { ok: false, error: e.message || "Unexpected error" },
+      { ok: false, error: e.message },
       { status: 500 }
     );
   }

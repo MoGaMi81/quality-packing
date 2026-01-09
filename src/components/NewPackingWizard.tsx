@@ -61,6 +61,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       alert("Cliente e identificador incompletos");
       return;
     }
+    console.log("SENDING draft_id:", draft_id, typeof draft_id);
 
     try {
       const res = await fetch("/api/packing-drafts/save", {
@@ -84,9 +85,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
         return;
       }
 
-      if (!draft_id && data.draft_id) {
-        setDraftId(data.draft_id);
-      }
+      if (data.draft_id && typeof data.draft_id === "string") {
+  setDraftId(data.draft_id);
+}
 
       alert("Borrador guardado correctamente");
       reset();
