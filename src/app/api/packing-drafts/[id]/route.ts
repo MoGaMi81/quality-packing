@@ -7,15 +7,15 @@ const supabase = createClient(
 );
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params;
+  const draftId = params.id;
 
   const { data: draft, error } = await supabase
     .from("packing_drafts")
     .select("*")
-    .eq("id", id)
+    .eq("id", draftId)
     .single();
 
   if (error || !draft) {
@@ -28,7 +28,7 @@ export async function GET(
   const { data: lines } = await supabase
     .from("draft_lines")
     .select("*")
-    .eq("draft_id", id)
+    .eq("draft_id", draftId)
     .order("box_no");
 
   return NextResponse.json({
@@ -37,4 +37,5 @@ export async function GET(
     lines: lines ?? [],
   });
 }
+
 
