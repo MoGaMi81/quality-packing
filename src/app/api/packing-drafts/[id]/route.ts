@@ -25,11 +25,18 @@ export async function GET(
     );
   }
 
-  const { data: lines } = await supabase
+  const { data: lines, error: err2 } = await supabase
     .from("draft_lines")
     .select("*")
     .eq("draft_id", draftId)
     .order("box_no");
+
+  if (err2) {
+    return NextResponse.json(
+      { ok: false, error: err2.message },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     ok: true,
@@ -37,5 +44,6 @@ export async function GET(
     lines: lines ?? [],
   });
 }
+
 
 
