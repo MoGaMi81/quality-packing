@@ -12,6 +12,13 @@ export async function GET(
 ) {
   const draftId = params.id;
 
+  if (!draftId) {
+    return NextResponse.json(
+      { ok: false, error: "Missing draft id" },
+      { status: 400 }
+    );
+  }
+
   const { data: draft, error } = await supabase
     .from("packing_drafts")
     .select("*")
@@ -20,23 +27,16 @@ export async function GET(
 
   if (error || !draft) {
     return NextResponse.json(
-      { ok: false, error: "Draft no encontrado" },
+      { ok: false, error: "Draft not found" },
       { status: 404 }
     );
   }
 
-  const { data: lines, error: err2 } = await supabase
+  const { data: lines } = await supabase
     .from("draft_lines")
     .select("*")
     .eq("draft_id", draftId)
     .order("box_no");
-
-  if (err2) {
-    return NextResponse.json(
-      { ok: false, error: err2.message },
-      { status: 500 }
-    );
-  }
 
   return NextResponse.json({
     ok: true,
@@ -44,6 +44,7 @@ export async function GET(
     lines: lines ?? [],
   });
 }
+
 
 
 
