@@ -61,8 +61,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       alert("Cliente e identificador incompletos");
       return;
     }
-    console.log("LINES BEFORE SAVE", JSON.stringify(lines, null, 2));
-
 
     try {
       const res = await fetch("/api/packing-drafts/save", {
