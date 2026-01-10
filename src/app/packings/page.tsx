@@ -134,7 +134,7 @@ export default function PackingPage() {
     if (!ok) return;
 
     try {
-      await fetchJSON("/api/packing/finalize", {
+      await fetchJSON("/api/packings/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
