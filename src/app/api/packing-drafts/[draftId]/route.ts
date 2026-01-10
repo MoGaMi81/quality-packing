@@ -8,16 +8,9 @@ const supabase = createClient(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { draftId: string } }
 ) {
-  const draftId = params.id;
-
-  if (!draftId) {
-    return NextResponse.json(
-      { ok: false, error: "Missing draft id" },
-      { status: 400 }
-    );
-  }
+  const draftId = params.draftId;
 
   const { data: draft, error } = await supabase
     .from("packing_drafts")
@@ -27,7 +20,7 @@ export async function GET(
 
   if (error || !draft) {
     return NextResponse.json(
-      { ok: false, error: "Draft not found" },
+      { ok: false, error: "Draft no encontrado" },
       { status: 404 }
     );
   }
@@ -44,7 +37,3 @@ export async function GET(
     lines: lines ?? [],
   });
 }
-
-
-
-
