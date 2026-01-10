@@ -89,6 +89,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   setDraftId(data.draft_id);
 }
 
+
       alert("Borrador guardado correctamente");
       reset();
       onClose();

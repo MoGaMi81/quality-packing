@@ -4,17 +4,30 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getRole } from "@/lib/role";
 
+type Draft = {
+  id: string;
+  client_code: string;
+  internal_ref: string;
+  status: string;
+  created_at: string;
+};
+
 export default function DraftsPage() {
-  const [drafts, setDrafts] = useState<any[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const role = getRole() ?? "proceso";
 
   useEffect(() => {
     async function load() {
       try {
-        const r = await fetch("/api/drafts/list");
+        const r = await fetch("/api/packing-drafts/list");
         const data = await r.json();
-        setDrafts(data.drafts || []);
+
+        if (data.ok) {
+          setDrafts(data.drafts || []);
+        } else {
+          console.error(data.error);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -46,15 +59,15 @@ export default function DraftsPage() {
           >
             <div>
               <div className="text-lg font-semibold text-gray-800">
-                {d.draft_name}
+                {d.client_code} · {d.internal_ref}
               </div>
               <div className="text-sm text-gray-500">
-                Cliente: {d.client_code} · creado {new Date(d.created_at).toLocaleString()}
+                Estado: {d.status} ·{" "}
+                {new Date(d.created_at).toLocaleString()}
               </div>
             </div>
 
             <div className="flex gap-2">
-              {/* Editar: proceso + admin */}
               {(role === "proceso" || role === "admin") && (
                 <Link
                   href={`/drafts/${d.id}`}
@@ -64,7 +77,6 @@ export default function DraftsPage() {
                 </Link>
               )}
 
-              {/* Exportar: solo admin */}
               {role === "admin" && (
                 <Link
                   href={`/api/export/draft?id=${d.id}`}
@@ -74,7 +86,6 @@ export default function DraftsPage() {
                 </Link>
               )}
 
-              {/* Finalizar: admin + facturacion */}
               {(role === "admin" || role === "facturacion") && (
                 <Link
                   href={`/drafts/${d.id}/finalize`}
