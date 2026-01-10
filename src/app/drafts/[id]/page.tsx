@@ -2,198 +2,149 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { catalogs } from "@/lib/loadCatalogs";
-import { getRole } from "@/lib/role";
 import { fetchJSON } from "@/lib/fetchJSON";
+import { getRole } from "@/lib/role";
 
-type DraftData = {
+type Draft = {
   id: string;
   client_code: string;
-  draft_name: string;
-  header: any;
+  internal_ref: string;
+  status: string;
+};
+
+type DraftResponse = {
+  ok: boolean;
+  draft: Draft;
   lines: any[];
 };
 
-export default function DraftEditorPage({ params }: { params: { id: string } }) {
+export default function DraftEditorPage({
+  params,
+}: {
+  params: { draftId: string };
+}) {
   const router = useRouter();
   const role = getRole() ?? "proceso";
 
   const [loading, setLoading] = useState(true);
-  const [draft, setDraft] = useState<DraftData | null>(null);
-
-  // Campos editables
-  const [clientCode, setClientCode] = useState("");
-  const [draftName, setDraftName] = useState("");
-
-  // datos de packing
-  const [header, setHeader] = useState<any>({
-    guide: "",
-    date: "",
-  });
-
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [lines, setLines] = useState<any[]>([]);
 
-  // ============ CARGAR DRAFT ============
+  /* ================= CARGAR DRAFT ================= */
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await fetchJSON<DraftData>(`/api/drafts/get/${params.id}`);
-        setDraft(data);
-        setClientCode(data.client_code);
-        setDraftName(data.draft_name);
-        setHeader(data.header);
-        setLines(data.lines);
-      } catch (e: any) {
+        const data = await fetchJSON<DraftResponse>(
+          `/api/packing-drafts/${params.draftId}`
+        );
+
+        if (!data.ok) throw new Error("Draft inválido");
+
+        setDraft(data.draft);
+        setLines(data.lines ?? []);
+      } catch (e) {
+        console.error(e);
         alert("No se pudo cargar el draft");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     load();
-  }, [params.id]);
+  }, [params.draftId]);
 
-  // ============ GUARDAR DRAFT ============
-  const saveDraft = async () => {
+  /* ================= GUARDAR ================= */
+  async function saveDraft() {
+    if (!draft) return;
+
     try {
-      const body = {
-        id: draft?.id,
-        client_code: clientCode,
-        draft_name: draftName,
-        header,
-        lines,
-      };
-
-      const r = await fetch("/api/drafts/save", {
+      const res = await fetch("/api/packing-drafts/save", {
         method: "POST",
-        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draft_id: draft.id,
+          header: {
+            client_code: draft.client_code,
+            internal_ref: draft.internal_ref,
+          },
+          lines,
+          status: draft.status ?? "PROCESS",
+        }),
       });
 
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Error al guardar draft");
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error || "Error al guardar");
+      }
 
       alert("Draft guardado correctamente");
     } catch (e: any) {
       alert(e.message);
     }
-  };
+  }
 
-  // ============ FINALIZAR (FACTURAR) ============
-  const finalizeDraft = async () => {
-    const invoice_no = prompt("Ingrese número de factura (ej. 123A):");
-    if (!invoice_no) return;
+  /* ================= CONTINUAR EN WIZARD ================= */
+  function continuar() {
+    router.push(`/packings/new?draft=${draft?.id}`);
+  }
 
-    try {
-      const body = { id: draft?.id, invoice_no };
-      const r = await fetch("/api/drafts/finalize", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Error al finalizar");
-
-      alert("Factura creada. Redirigiendo…");
-      router.push(`/packing/${invoice_no}/edit`);
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
-  // ============ EXPORTAR DRAFT (SOLO ADMIN) ============
-  const exportDraft = () => {
-    window.location.href = `/api/export/draft?id=${draft?.id}`;
-  };
-
-  if (loading) return <div className="p-4">Cargando…</div>;
-  if (!draft) return <div className="p-4">No encontrado.</div>;
+  if (loading) return <div className="p-6">Cargando draft…</div>;
+  if (!draft) return <div className="p-6">No encontrado</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Editar Draft</h1>
+    <main className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-3xl font-bold">Editar Draft</h1>
 
-      {/* Selección de cliente */}
-      <div>
-        <label className="block font-semibold mb-1">Cliente</label>
-        <select
-          className="border rounded px-3 py-2"
-          value={clientCode}
-          onChange={(e) => setClientCode(e.target.value)}
-        >
-          <option value="">Seleccione…</option>
-          {catalogs.clients.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.code} — {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Nombre Draft */}
-      <div>
-        <label className="block font-semibold mb-1">Nombre del Draft</label>
-        <input
-          className="border rounded px-3 py-2 w-full"
-          value={draftName}
-          onChange={(e) => setDraftName(e.target.value)}
-          placeholder="Ej. Pedido Pulpo"
-        />
-      </div>
-
-      {/* Header básico */}
-      <div className="border p-3 rounded-lg">
-        <h2 className="font-bold mb-2">Datos (provisorios)</h2>
-
-        <label className="block mb-1 font-semibold">Guía</label>
-        <input
-          className="border rounded px-2 py-1 mb-2 w-full"
-          value={header.guide || ""}
-          onChange={(e) => setHeader({ ...header, guide: e.target.value })}
-        />
-
-        <label className="block mb-1 font-semibold">Fecha</label>
-        <input
-          type="date"
-          className="border rounded px-2 py-1 w-full"
-          value={header.date || ""}
-          onChange={(e) => setHeader({ ...header, date: e.target.value })}
-        />
+      <div className="border rounded p-4 bg-white space-y-2">
+        <div>
+          <b>Cliente:</b> {draft.client_code}
+        </div>
+        <div>
+          <b>Referencia:</b> {draft.internal_ref}
+        </div>
+        <div>
+          <b>Status:</b> {draft.status}
+        </div>
       </div>
 
       {/* LÍNEAS */}
       <div>
-        <h2 className="font-bold mb-2">Líneas del Draft</h2>
+        <h2 className="font-bold mb-2">Líneas</h2>
 
-        {lines.map((ln, idx) => (
-          <div key={idx} className="border p-2 rounded mb-2">
+        {lines.map((l, i) => (
+          <div
+            key={i}
+            className="border rounded p-2 mb-2 flex gap-2 items-center"
+          >
             <input
-              className="border px-2 py-1 rounded mr-2"
+              className="border rounded px-2 py-1 flex-1"
+              value={l.description_en ?? ""}
               placeholder="Especie"
-              value={ln.description_en || ""}
               onChange={(e) => {
                 const copy = [...lines];
-                copy[idx].description_en = e.target.value;
+                copy[i].description_en = e.target.value;
                 setLines(copy);
               }}
             />
 
             <input
-              className="border px-2 py-1 rounded mr-2"
-              placeholder="Tamaño"
-              value={ln.size || ""}
+              className="border rounded px-2 py-1 w-24"
+              value={l.size ?? ""}
+              placeholder="Size"
               onChange={(e) => {
                 const copy = [...lines];
-                copy[idx].size = e.target.value;
+                copy[i].size = e.target.value;
                 setLines(copy);
               }}
             />
 
             <input
-              className="border px-2 py-1 rounded mr-2"
-              placeholder="Libras"
               type="number"
-              value={ln.pounds}
+              className="border rounded px-2 py-1 w-24"
+              value={l.pounds ?? 0}
               onChange={(e) => {
                 const copy = [...lines];
-                copy[idx].pounds = Number(e.target.value);
+                copy[i].pounds = Number(e.target.value);
                 setLines(copy);
               }}
             />
@@ -201,40 +152,36 @@ export default function DraftEditorPage({ params }: { params: { id: string } }) 
         ))}
 
         <button
-          className="mt-2 px-3 py-1 border rounded"
+          className="border px-3 py-1 rounded"
           onClick={() =>
-            setLines([...lines, { description_en: "", size: "", pounds: 0 }])
+            setLines([
+              ...lines,
+              { description_en: "", size: "", pounds: 0 },
+            ])
           }
         >
-          + Agregar Línea
+          + Agregar línea
         </button>
       </div>
 
       {/* BOTONES */}
       <div className="flex gap-3 pt-4">
         <button
-          className="px-4 py-2 rounded bg-blue-600 text-white"
+          className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={saveDraft}
         >
-          Guardar Draft
+          Guardar
         </button>
 
-        <button
-          className="px-4 py-2 rounded bg-green-600 text-white"
-          onClick={finalizeDraft}
-        >
-          Finalizar y Facturar
-        </button>
-
-        {role === "admin" && (
+        {(role === "proceso" || role === "admin") && (
           <button
-            className="px-4 py-2 rounded bg-purple-600 text-white"
-            onClick={exportDraft}
+            className="px-4 py-2 bg-green-600 text-white rounded"
+            onClick={continuar}
           >
-            Descargar Draft (Excel)
+            Continuar en Packing
           </button>
         )}
       </div>
-    </div>
+    </main>
   );
 }
