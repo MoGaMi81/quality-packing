@@ -41,7 +41,7 @@ export default function Home() {
         <li><a href="/packings">➤ Capturar packing</a></li>
         <li><a href="/packings/view">➤ Ver packings</a></li>
         <li><a href="/catalogs">➤ Catálogos</a></li>
-        <li><a href="/drafts/list">➤ Drafts</a></li>   {/* NUEVO */}
+        <li><a href="/drafts">➤ Drafts</a></li>   {/* NUEVO */}
       </ul>
     </main>
   );
