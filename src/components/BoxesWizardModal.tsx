@@ -10,14 +10,13 @@ type Mode = "SIMPLE" | "COMBINADA";
 type Props = {
   open: boolean;
   onClose: () => void;
-  boxNo?: number | null;
 };
 
 
 export default function BoxesWizardModal({ open, onClose }: Props) {
   const { lines, addLines } = usePackingStore();
   const { getByCode, loading } = useSpeciesCatalog();
-  const [editingBox, setEditingBox] = useState<number | null>(null);
+  
   const [mode, setMode] = useState<Mode>("SIMPLE");
 
   // inputs

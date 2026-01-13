@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getRole } from "@/lib/role";
+import { resolveClientName } from "@/lib/resolveClient";
 
 type Draft = {
   id: string;
@@ -16,6 +18,7 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const role = getRole() ?? "proceso";
+  const router = useRouter();
 
   useEffect(() => {
     async function load() {
@@ -40,9 +43,18 @@ export default function DraftsPage() {
 
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-4">
-      <h1 className="text-3xl font-bold text-center">Drafts</h1>
 
-      <div className="text-right">
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.push("/")}
+          className="px-3 py-1 border rounded"
+        >
+          ← Inicio
+        </button>
+
+        <h1 className="text-3xl font-bold">Drafts</h1>
+
         <Link
           className="px-4 py-2 bg-blue-600 text-white rounded"
           href="/drafts/new"
@@ -51,6 +63,7 @@ export default function DraftsPage() {
         </Link>
       </div>
 
+      {/* LISTA */}
       <div className="space-y-3">
         {drafts.map((d) => (
           <div
@@ -59,8 +72,11 @@ export default function DraftsPage() {
           >
             <div>
               <div className="text-lg font-semibold text-gray-800">
-                {d.client_code} · {d.internal_ref}
-              </div>
+                {d.client_code} – {resolveClientName(d.client_code)}
+                {" · "}
+                {d.internal_ref}
+            </div>
+
               <div className="text-sm text-gray-500">
                 Estado: {d.status} ·{" "}
                 {new Date(d.created_at).toLocaleString()}

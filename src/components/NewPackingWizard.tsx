@@ -5,6 +5,7 @@ import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { useRouter } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
+import { useSearchParams } from "next/navigation";
 
 type Props = {
   open: boolean;
@@ -22,6 +23,8 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     reset,
   } = usePackingStore();
 
+  const searchParams = useSearchParams();
+  const draftId = searchParams.get("draft");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,13 +37,16 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= RESET ================= */
   useEffect(() => {
-    if (open) {
-      reset();
+  if (open) {
+    reset();
+    setError(null);
+
+    if (!draftId) {
       setDraftId(null);
       setStep(1);
-      setError(null);
     }
-  }, [open, reset]);
+  }
+}, [open, reset, draftId]);
 
   if (!open) return null;
 
@@ -101,30 +107,38 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   }
 
   /* ================= CARGAR DRAFT ================= */
-  async function loadDraft(draftId: string) {
+  useEffect(() => {
+  if (!open || !draftId) return;
+
+  async function loadDraft() {
     try {
       const r = await fetch(`/api/packing-drafts/${draftId}`);
       const data = await r.json();
 
       if (!data.ok) {
-        alert("No se pudo cargar el borrador");
+        alert("No se pudo cargar el draft");
         return;
       }
 
-      setDraftId(data.draft.id);
-
       setHeader({
-        client_code: data.draft.client_code,
-        internal_ref: data.draft.internal_ref,
-      });
+  client_code: data.draft.client_code,
+  internal_ref: data.draft.internal_ref,
+  date: new Date().toISOString().slice(0, 10),
+});
 
-      setLines(data.lines ?? []);
-      setStep(2);
+setLines(data.lines ?? []);
+setDraftId(draftId); // 👈 CLAVE
+setStep(2);
+
     } catch (e) {
       console.error(e);
-      alert("Error al cargar borrador");
+      alert("Error cargando draft");
     }
   }
+
+  loadDraft();
+}, [open, draftId]);
+
 
   /* ================= FINALIZAR PROCESO ================= */
   async function finishProcess() {
@@ -334,7 +348,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
       <BoxesWizardModal
         open={openBoxes}
-        boxNo={editingBox}
         onClose={() => {
           setOpenBoxes(false);
           setEditingBox(null);
