@@ -79,12 +79,15 @@ export default function DraftEditorPage({
     alert("Draft guardado correctamente");
   }
 
+  function continuar() {
+    router.push(`/packings/new?draft=${draft?.id}`);
+  }
+
   if (loading) return <div className="p-6">Cargando draft…</div>;
   if (!draft) return null;
 
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
-
       {/* HEADER */}
       <div className="flex items-center gap-3">
         <button
@@ -102,12 +105,15 @@ export default function DraftEditorPage({
           <b>Cliente:</b>{" "}
           {draft.client_code} – {resolveClientName(draft.client_code)}
         </div>
-        <div><b>Referencia:</b> {draft.internal_ref}</div>
-        <div><b>Status:</b> {draft.status}</div>
+        <div>
+          <b>Referencia:</b> {draft.internal_ref}
+        </div>
+        <div>
+          <b>Status:</b> {draft.status}
+        </div>
       </div>
 
       {/* LÍNEAS (manual por ahora, OK) */}
-
       <div className="flex gap-3 pt-4">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
@@ -119,7 +125,7 @@ export default function DraftEditorPage({
         {(role === "proceso" || role === "admin") && (
           <button
             className="px-4 py-2 bg-green-600 text-white rounded"
-            onClick={() => router.push(`/packings/new?draft=${draft.id}`)}
+            onClick={continuar}
           >
             Continuar en Packing
           </button>

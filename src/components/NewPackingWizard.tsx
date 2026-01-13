@@ -111,66 +111,48 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   if (!open || !draftId) return;
 
   async function loadDraft() {
-    try {
-      const r = await fetch(`/api/packing-drafts/${draftId}`);
-      const data = await r.json();
+    const r = await fetch(`/api/packing-drafts/${draftId}`);
+    const data = await r.json();
 
-      if (!data.ok) {
-        alert("No se pudo cargar el draft");
-        return;
-      }
+    if (!data.ok) return;
 
-      setHeader({
-  client_code: data.draft.client_code,
-  internal_ref: data.draft.internal_ref,
-  date: new Date().toISOString().slice(0, 10),
-});
+    setHeader({
+      client_code: data.draft.client_code,
+      internal_ref: data.draft.internal_ref,
+      date: new Date().toISOString().slice(0, 10),
+    });
 
-setLines(data.lines ?? []);
-setDraftId(draftId); // 👈 CLAVE
-setStep(2);
-
-    } catch (e) {
-      console.error(e);
-      alert("Error cargando draft");
-    }
+    setLines(data.lines ?? []);
+    setDraftId(draftId);   // 🔑 CLAVE
+    setStep(2);            // 🔑 Salta Paso 1
   }
 
   loadDraft();
 }, [open, draftId]);
 
-
   /* ================= FINALIZAR PROCESO ================= */
   async function finishProcess() {
-    if (!draft_id) {
-      alert("Draft inválido");
-      return;
-    }
+  if (!draft_id) return;
 
-    if (!confirm("¿Confirmas que el proceso está completo?")) return;
+  if (!confirm("¿Confirmas que el proceso está completo?")) return;
 
-    try {
-      const res = await fetch(
-        `/api/packing-drafts/${draft_id}/finish-process`,
-        { method: "PATCH" }
-      );
+  const res = await fetch(
+    `/api/packing-drafts/${draft_id}/finish-process`,
+    { method: "PATCH" }
+  );
 
-      const data = await res.json();
+  const data = await res.json();
 
-      if (!res.ok || !data?.ok) {
-        alert(data?.error || "No se pudo finalizar el proceso");
-        return;
-      }
-
-      alert("Proceso finalizado. Enviado a facturación.");
-      reset();
-      onClose();
-      router.push("/");
-    } catch (e) {
-      console.error(e);
-      alert("Error al finalizar proceso");
-    }
+  if (!res.ok || !data.ok) {
+    alert(data?.error || "No se pudo finalizar");
+    return;
   }
+
+  alert("Proceso finalizado. Enviado a facturación.");
+  reset();
+  onClose();
+  router.push("/drafts");
+}
 
   /* ================= DATOS DERIVADOS ================= */
   const grouped = groupBoxes(lines);
