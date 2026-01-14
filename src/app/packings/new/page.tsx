@@ -1,8 +1,33 @@
-// src/app/packings/new/page.tsx
+"use client";
+
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import NewPackingWizard from "@/components/NewPackingWizard";
+
 export default function NewPackingPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const draftId = searchParams.get("draft");
+
+  const [open, setOpen] = useState(true);
+
+  // Si no viene draft, regresamos
+  useEffect(() => {
+    if (!draftId) {
+      alert("Draft inválido");
+      router.push("/drafts");
+    }
+  }, [draftId, router]);
+
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold">New Packing (en construcción)</h1>
-    </main>
+    <>
+      <NewPackingWizard
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          router.push("/drafts");
+        }}
+      />
+    </>
   );
 }
