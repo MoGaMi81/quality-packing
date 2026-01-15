@@ -1,4 +1,6 @@
 "use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -23,7 +25,10 @@ export default function DraftsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const r = await fetch("/api/packing-drafts/list");
+        const r = await fetch("/api/packing-drafts/list", {
+          cache: "no-store",
+        });
+
         const data = await r.json();
 
         if (data.ok) {
