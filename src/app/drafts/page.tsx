@@ -21,7 +21,7 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const role: Role = "admin"; // ← AQUÍ está la clave
+  const role: Role = "admin";
   const router = useRouter();
 
   useEffect(() => {
@@ -32,11 +32,7 @@ export default function DraftsPage() {
         });
         const data = await r.json();
 
-        if (data.ok) {
-          setDrafts(data.drafts || []);
-        } else {
-          console.error(data.error);
-        }
+        if (data.ok) setDrafts(data.drafts || []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -78,7 +74,6 @@ export default function DraftsPage() {
               <div className="text-lg font-semibold">
                 {d.client_code} · {d.internal_ref}
               </div>
-
               <div className="text-sm text-gray-500">
                 Estado: {d.status} ·{" "}
                 {new Date(d.created_at).toLocaleString()}
