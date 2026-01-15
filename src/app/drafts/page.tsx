@@ -1,12 +1,13 @@
 "use client";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getRole } from "@/lib/role";
-import { resolveClientName } from "@/lib/resolveClient";
+
+type Role = "admin" | "proceso" | "facturacion";
 
 type Draft = {
   id: string;
@@ -19,7 +20,8 @@ type Draft = {
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
-  const role = getRole() ?? "proceso";
+
+  const role: Role = "admin"; // ← AQUÍ está la clave
   const router = useRouter();
 
   useEffect(() => {
@@ -28,7 +30,6 @@ export default function DraftsPage() {
         const r = await fetch("/api/packing-drafts/list", {
           cache: "no-store",
         });
-
         const data = await r.json();
 
         if (data.ok) {
@@ -38,8 +39,9 @@ export default function DraftsPage() {
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, []);
@@ -48,8 +50,6 @@ export default function DraftsPage() {
 
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-4">
-
-      {/* HEADER */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => router.push("/")}
@@ -61,14 +61,13 @@ export default function DraftsPage() {
         <h1 className="text-3xl font-bold">Drafts</h1>
 
         <Link
-          className="px-4 py-2 bg-blue-600 text-white rounded"
           href="/drafts/new"
+          className="px-4 py-2 bg-blue-600 text-white rounded"
         >
           Nuevo Draft
         </Link>
       </div>
 
-      {/* LISTA */}
       <div className="space-y-3">
         {drafts.map((d) => (
           <div
@@ -76,11 +75,9 @@ export default function DraftsPage() {
             className="border bg-white rounded-lg p-4 shadow-sm flex justify-between items-center"
           >
             <div>
-              <div className="text-lg font-semibold text-gray-800">
-                {d.client_code} – {resolveClientName(d.client_code)}
-                {" · "}
-                {d.internal_ref}
-            </div>
+              <div className="text-lg font-semibold">
+                {d.client_code} · {d.internal_ref}
+              </div>
 
               <div className="text-sm text-gray-500">
                 Estado: {d.status} ·{" "}
@@ -89,7 +86,7 @@ export default function DraftsPage() {
             </div>
 
             <div className="flex gap-2">
-              {(role === "proceso" || role === "admin") && (
+              {(role === "admin" || role === "proceso") && (
                 <Link
                   href={`/drafts/${d.id}`}
                   className="px-3 py-1 rounded border"
