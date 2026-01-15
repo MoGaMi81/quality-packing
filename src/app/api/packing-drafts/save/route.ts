@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
       // 🔥 borrar líneas anteriores
       await supabase
-        .from("packing_draft_lines")
+        .from("draft_lines")
         .delete()
         .eq("draft_id", draftId);
     }
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
       }));
 
       const { error } = await supabase
-        .from("packing_draft_lines")
+        .from("draft_lines")
         .insert(rows);
 
       if (error) {
