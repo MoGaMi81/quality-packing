@@ -99,7 +99,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       alert("Borrador guardado correctamente");
       reset();
       onClose();
-      router.push("/");
+      router.replace("/drafts");
     } catch (e) {
       console.error(e);
       alert("Error inesperado al guardar borrador");
@@ -111,7 +111,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   if (!open || !id) return;
 
   async function loadDraft() {
-    const r = await fetch(`/api/packing-drafts/${id}`);
+    const r = await fetch(`/api/packing-drafts/${id}`, {
+  cache: "no-store",
+});
     const data = await r.json();
 
     if (!data.ok) return;
