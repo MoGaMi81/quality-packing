@@ -1,11 +1,12 @@
 "use client";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ⛔️ ELIMINA revalidate COMPLETAMENTE
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -82,13 +83,8 @@ export default function DraftsPage() {
 
             <div className="flex gap-2">
               {(role === "admin" || role === "proceso") && (
-                <Link
-                  href={`/drafts/${d.id}`}
-                  className="px-3 py-1 rounded border"
-                >
-                  Editar
-                </Link>
-              )}
+                <Link href={`/drafts/${d.id}`}>Editar</Link>
+               )}
 
               {role === "admin" && (
                 <Link

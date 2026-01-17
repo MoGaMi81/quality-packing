@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
-    let draftId: string;
+    let id: string;
 
     /* ========= CREAR O ACTUALIZAR DRAFT ========= */
 
@@ -74,10 +74,10 @@ export async function POST(req: Request) {
         );
       }
 
-      draftId = data.id;
+      id = data.id;
     } else {
       // 👉 ACTUALIZAR DRAFT EXISTENTE
-      draftId = draft_id;
+      id = draft_id;
 
       const { error } = await supabase
         .from("packing_drafts")
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
           internal_ref: header.internal_ref,
           status,
         })
-        .eq("id", draftId);
+        .eq("id", id);
 
       if (error) {
         console.error("UPDATE DRAFT ERROR:", error);
@@ -100,14 +100,14 @@ export async function POST(req: Request) {
       await supabase
         .from("draft_lines")
         .delete()
-        .eq("draft_id", draftId);
+        .eq("draft_id", id);
     }
 
     /* ========= INSERTAR LÍNEAS ========= */
 
     if (Array.isArray(lines) && lines.length > 0) {
       const rows = lines.map((l: any) => ({
-        draft_id: draftId,
+        draft_id: id,
         box_no: typeof l.box_no === "number" ? l.box_no : null,
         code: l.code ?? null,
         description_en: l.description_en ?? "",
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      draft_id: draftId,
+      draft_id: id,
     });
   } catch (e: any) {
     console.error("SAVE DRAFT FATAL ERROR:", e);

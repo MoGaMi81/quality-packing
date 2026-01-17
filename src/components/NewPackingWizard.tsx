@@ -24,7 +24,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   } = usePackingStore();
 
   const searchParams = useSearchParams();
-  const draftId = searchParams.get("draft");
+  const id = searchParams.get("draft");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,12 +41,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     reset();
     setError(null);
 
-    if (!draftId) {
+    if (!id) {
       setDraftId(null);
       setStep(1);
     }
   }
-}, [open, reset, draftId]);
+}, [open, reset, id]);
 
   if (!open) return null;
 
@@ -108,10 +108,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= CARGAR DRAFT ================= */
   useEffect(() => {
-  if (!open || !draftId) return;
+  if (!open || !id) return;
 
   async function loadDraft() {
-    const r = await fetch(`/api/packing-drafts/${draftId}`);
+    const r = await fetch(`/api/packing-drafts/${id}`);
     const data = await r.json();
 
     if (!data.ok) return;
@@ -123,12 +123,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     });
 
     setLines(data.lines ?? []);
-    setDraftId(draftId);   // 🔑 CLAVE
+    setDraftId(id);   // 🔑 CLAVE
     setStep(2);            // 🔑 Salta Paso 1
   }
 
   loadDraft();
-}, [open, draftId]);
+}, [open, id]);
 
   /* ================= FINALIZAR PROCESO ================= */
   async function finishProcess() {
@@ -151,7 +151,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   alert("Proceso finalizado. Enviado a facturación.");
   reset();
   onClose();
-  router.push("/drafts");
+  router.replace("/drafts");
 }
 
   /* ================= DATOS DERIVADOS ================= */

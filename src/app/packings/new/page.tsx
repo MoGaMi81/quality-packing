@@ -7,17 +7,17 @@ import NewPackingWizard from "@/components/NewPackingWizard";
 export default function NewPackingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const draftId = searchParams.get("draft");
+  const id = searchParams.get("draft");
 
   const [open, setOpen] = useState(true);
 
   // Si no viene draft, regresamos
   useEffect(() => {
-    if (!draftId) {
+    if (!id) {
       alert("Draft inválido");
-      router.push("/drafts");
+      router.replace("/drafts");
     }
-  }, [draftId, router]);
+  }, [id, router]);
 
   return (
     <>
@@ -25,7 +25,7 @@ export default function NewPackingPage() {
         open={open}
         onClose={() => {
           setOpen(false);
-          router.push("/drafts");
+          router.replace("/drafts");
         }}
       />
     </>
