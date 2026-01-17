@@ -58,7 +58,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
           });
           const data = await r.json();
           if (!data.ok) return alert(data.error || "Error");
-          router.push("/facturacion");
+          router.replace("/facturacion");
         }}
       >
         Confirmar facturación

@@ -80,7 +80,7 @@ export default function DraftEditorPage({
   }
 
   function continuar() {
-    router.push(`/packings/new?draft=${draft?.id}`);
+    router.replace(`/packings/new?draft=${draft?.id}`);
   }
 
   if (loading) return <div className="p-6">Cargando draft…</div>;
@@ -91,11 +91,12 @@ export default function DraftEditorPage({
       {/* HEADER */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push("/drafts")}
-          className="px-3 py-1 border rounded"
-        >
-          ← Drafts
-        </button>
+  onClick={() => router.replace("/drafts")}
+  className="px-3 py-1 border rounded"
+>
+  ← Drafts
+</button>
+
 
         <h1 className="text-3xl font-bold">Editar Draft</h1>
       </div>

@@ -49,11 +49,11 @@ export default function DraftsPage() {
     <main className="max-w-3xl mx-auto p-6 space-y-4">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.replace("/drafts")}
           className="px-3 py-1 border rounded"
         >
-          ← Inicio
-        </button>
+       ← Drafts
+      </button>
 
         <h1 className="text-3xl font-bold">Drafts</h1>
 

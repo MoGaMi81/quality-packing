@@ -39,7 +39,7 @@ export default function NewDraftPage() {
       return;
     }
 
-    router.push(`/drafts/${data.draft_id}`);
+    router.replace(`/drafts/${data.draft_id}`);
   };
 
   return (
@@ -47,7 +47,7 @@ export default function NewDraftPage() {
 
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push("/drafts")}
+          onClick={() => router.replace("/drafts")}
           className="px-3 py-1 border rounded"
         >
           ← Drafts
