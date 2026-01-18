@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
-import { useSearchParams } from "next/navigation";
 
 type Props = {
   open: boolean;
@@ -14,6 +13,8 @@ type Props = {
 
 export default function NewPackingWizard({ open, onClose }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("draft");
 
   const {
     header,
@@ -23,12 +24,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     reset,
   } = usePackingStore();
 
-  const searchParams = useSearchParams();
-  const id = searchParams.get("draft");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState<string | null>(null);
 
-  // 👇 DRAFT
+  // Draft
   const [draft_id, setDraftId] = useState<string | null>(null);
 
   // Boxes
@@ -37,7 +36,8 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= RESET ================= */
   useEffect(() => {
-  if (open) {
+    if (!open) return;
+
     reset();
     setError(null);
 
@@ -45,8 +45,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       setDraftId(null);
       setStep(1);
     }
-  }
-}, [open, reset, id]);
+  }, [open, id, reset]);
 
   if (!open) return null;
 
@@ -67,7 +66,14 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       alert("Cliente e identificador incompletos");
       return;
     }
-    console.log("SENDING draft_id:", draft_id, typeof draft_id);
+
+    // 🔑 CAMBIO CLAVE: leer estado REAL del store
+    const { lines: storeLines } = usePackingStore.getState();
+
+    if (!storeLines || storeLines.length === 0) {
+      alert("No hay líneas para guardar");
+      return;
+    }
 
     try {
       const res = await fetch("/api/packing-drafts/save", {
@@ -79,7 +85,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
             client_code: header.client_code,
             internal_ref: header.internal_ref,
           },
-          lines,
+          lines: storeLines,
           status: "PROCESS",
         }),
       });
@@ -92,9 +98,8 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       }
 
       if (data.draft_id && typeof data.draft_id === "string") {
-  setDraftId(data.draft_id);
-}
-
+        setDraftId(data.draft_id);
+      }
 
       alert("Borrador guardado correctamente");
       router.replace("/drafts");
@@ -106,51 +111,51 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= CARGAR DRAFT ================= */
   useEffect(() => {
-  if (!open || !id) return;
+    if (!open || !id) return;
 
-  async function loadDraft() {
-    const r = await fetch(`/api/packing-drafts/${id}`, {
-  cache: "no-store",
-});
-    const data = await r.json();
+    async function loadDraft() {
+      const r = await fetch(`/api/packing-drafts/${id}`, {
+        cache: "no-store",
+      });
+      const data = await r.json();
 
-    if (!data.ok) return;
+      if (!data.ok) return;
 
-    setHeader({
-      client_code: data.draft.client_code,
-      internal_ref: data.draft.internal_ref,
-      date: new Date().toISOString().slice(0, 10),
-    });
+      setHeader({
+        client_code: data.draft.client_code,
+        internal_ref: data.draft.internal_ref,
+        date: new Date().toISOString().slice(0, 10),
+      });
 
-    setLines(data.lines ?? []);
-    setDraftId(id);   // 🔑 CLAVE
-    setStep(2);            // 🔑 Salta Paso 1
-  }
+      setLines(data.lines ?? []);
+      setDraftId(id);
+      setStep(2);
+    }
 
-  loadDraft();
-}, [open, id]);
+    loadDraft();
+  }, [open, id, setHeader, setLines]);
 
   /* ================= FINALIZAR PROCESO ================= */
   async function finishProcess() {
-  if (!draft_id) return;
+    if (!draft_id) return;
 
-  if (!confirm("¿Confirmas que el proceso está completo?")) return;
+    if (!confirm("¿Confirmas que el proceso está completo?")) return;
 
-  const res = await fetch(
-    `/api/packing-drafts/${draft_id}/finish-process`,
-    { method: "PATCH" }
-  );
+    const res = await fetch(
+      `/api/packing-drafts/${draft_id}/finish-process`,
+      { method: "PATCH" }
+    );
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok || !data.ok) {
-    alert(data?.error || "No se pudo finalizar");
-    return;
+    if (!res.ok || !data.ok) {
+      alert(data?.error || "No se pudo finalizar");
+      return;
+    }
+
+    alert("Proceso finalizado. Enviado a facturación.");
+    router.replace("/drafts");
   }
-
-  alert("Proceso finalizado. Enviado a facturación.");
-  router.replace("/drafts");
-}
 
   /* ================= DATOS DERIVADOS ================= */
   const grouped = groupBoxes(lines);
@@ -174,7 +179,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </label>
               <input
                 className="border rounded px-3 py-2 w-full mb-3"
-                placeholder="Ej: SL, GM, HE"
                 value={header?.client_code ?? ""}
                 onChange={(e) =>
                   setHeader({
@@ -189,7 +193,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </label>
               <input
                 className="border rounded px-3 py-2 w-full"
-                placeholder="Ej: ESTAFETA, AEROUNION"
                 value={header?.internal_ref ?? ""}
                 onChange={(e) =>
                   setHeader({
@@ -246,10 +249,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                     </div>
 
                     {box.lines.map((l, i) => (
-                      <div
-                        key={i}
-                        className="text-sm ml-4 leading-tight text-gray-800"
-                      >
+                      <div key={i} className="text-sm ml-4">
                         🐟 {l.description_en} {l.form} {l.size} – {l.pounds} lbs
                       </div>
                     ))}
@@ -336,4 +336,3 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     </>
   );
 }
-
