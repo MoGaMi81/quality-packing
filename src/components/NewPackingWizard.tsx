@@ -97,8 +97,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
 
       alert("Borrador guardado correctamente");
-      reset();
-      onClose();
       router.replace("/drafts");
     } catch (e) {
       console.error(e);
@@ -151,8 +149,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   }
 
   alert("Proceso finalizado. Enviado a facturación.");
-  reset();
-  onClose();
   router.replace("/drafts");
 }
 
