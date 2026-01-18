@@ -41,8 +41,6 @@ export async function POST(req: Request) {
       status?: string;
     };
 
-    /* ========= VALIDACIONES ========= */
-
     if (!header?.client_code || !header?.internal_ref) {
       return NextResponse.json(
         { ok: false, error: "client_code e internal_ref son obligatorios" },
@@ -55,7 +53,6 @@ export async function POST(req: Request) {
     /* ========= CREAR O ACTUALIZAR DRAFT ========= */
 
     if (!isUUID(draft_id)) {
-      // 👉 CREAR NUEVO DRAFT
       const { data, error } = await supabase
         .from("packing_drafts")
         .insert({
@@ -76,10 +73,9 @@ export async function POST(req: Request) {
 
       id = data.id;
     } else {
-      // 👉 ACTUALIZAR DRAFT EXISTENTE
       id = draft_id;
 
-      const { error } = await supabase
+      const { error: updErr } = await supabase
         .from("packing_drafts")
         .update({
           client_code: header.client_code,
@@ -88,22 +84,32 @@ export async function POST(req: Request) {
         })
         .eq("id", id);
 
-      if (error) {
-        console.error("UPDATE DRAFT ERROR:", error);
+      if (updErr) {
+        console.error("UPDATE DRAFT ERROR:", updErr);
         return NextResponse.json(
           { ok: false, error: "No se pudo actualizar el draft" },
           { status: 500 }
         );
       }
 
-      // 🔥 borrar líneas anteriores
-      await supabase
+      /* 🔥 BORRAR LÍNEAS ANTERIORES (CONTROLADO) */
+      const { error: delErr } = await supabase
         .from("draft_lines")
         .delete()
         .eq("draft_id", id);
+
+      if (delErr) {
+        console.error("DELETE LINES ERROR:", delErr);
+        return NextResponse.json(
+          { ok: false, error: "No se pudieron borrar líneas previas" },
+          { status: 500 }
+        );
+      }
     }
 
     /* ========= INSERTAR LÍNEAS ========= */
+
+    console.log("SAVE DRAFT:", id, "LINES:", lines.length);
 
     if (Array.isArray(lines) && lines.length > 0) {
       const rows = lines.map((l: any) => ({
@@ -122,12 +128,12 @@ export async function POST(req: Request) {
             : null,
       }));
 
-      const { error } = await supabase
+      const { error: insErr } = await supabase
         .from("draft_lines")
         .insert(rows);
 
-      if (error) {
-        console.error("INSERT LINES ERROR:", error);
+      if (insErr) {
+        console.error("INSERT LINES ERROR:", insErr);
         return NextResponse.json(
           { ok: false, error: "Error guardando líneas" },
           { status: 500 }
@@ -135,12 +141,7 @@ export async function POST(req: Request) {
       }
     }
 
-    /* ========= OK ========= */
-
-    return NextResponse.json({
-      ok: true,
-      draft_id: id,
-    });
+    return NextResponse.json({ ok: true, draft_id: id });
   } catch (e: any) {
     console.error("SAVE DRAFT FATAL ERROR:", e);
     return NextResponse.json(

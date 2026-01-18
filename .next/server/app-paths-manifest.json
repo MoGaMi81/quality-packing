@@ -1,11 +1,9 @@
 {
+  "/drafts/page": "app/drafts/page.js",
   "/page": "app/page.js",
   "/login/page": "app/login/page.js",
-  "/drafts/page": "app/drafts/page.js",
   "/api/packing-drafts/list/route": "app/api/packing-drafts/list/route.js",
-  "/packings/new/page": "app/packings/new/page.js",
   "/drafts/[id]/page": "app/drafts/[id]/page.js",
-  "/api/packing-drafts/save/route": "app/api/packing-drafts/save/route.js",
-  "/api/export/draft/route": "app/api/export/draft/route.js",
-  "/api/packing-drafts/[id]/route": "app/api/packing-drafts/[id]/route.js"
+  "/packings/new/page": "app/packings/new/page.js",
+  "/api/packing-drafts/save/route": "app/api/packing-drafts/save/route.js"
 }
