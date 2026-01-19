@@ -11,28 +11,30 @@ const supabase = createClient(
 );
 
 export async function GET() {
+  // 🔑 Obtener rol (opcional, ya no bloquea si es null)
   const role = await getRoleFromRequest();
 
-  if (!role) {
-    return NextResponse.json(
-      { ok: false, error: "No autorizado" },
-      { status: 401 }
-    );
-  }
-
+  // Mapear estados según rol, si existe
   const STATUS_BY_ROLE: Record<string, string[]> = {
-    proceso:     ["PROCESS"],
+    proceso: ["PROCESS"],
     facturacion: ["TO_BILLING"],
-    admin:       ["TO_ADMIN"],
+    admin: ["TO_ADMIN"],
   };
 
-  const statuses = STATUS_BY_ROLE[role] ?? [];
+  // Si no hay rol, devolver todos los drafts
+  const statuses = role ? STATUS_BY_ROLE[role] ?? [] : [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("packing_drafts")
     .select("id, client_code, internal_ref, status, created_at")
-    .in("status", statuses)
     .order("created_at", { ascending: false });
+
+  // Si hay rol válido, filtrar por estados; si no, traer todo
+  if (statuses.length > 0) {
+    query = query.in("status", statuses);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json(
