@@ -72,6 +72,31 @@ export default function DraftsPage() {
     load();
   }
 
+  // ✅ Finalizar draft con confirmación y PATCH
+  async function finalizeDraft(id: string) {
+    if (!confirm("¿Confirmas que deseas finalizar esta etapa?")) return;
+
+    const r = await fetch(`/api/packing-drafts/${id}/finalize`, {
+      method: "PATCH",
+    });
+    const data = await r.json();
+
+    if (!r.ok || !data.ok) {
+      alert(data?.error || "No se pudo finalizar");
+      return;
+    }
+
+    // refrescar lista
+    load();
+  }
+
+  // 🔑 Etiquetas dinámicas para finalizar según rol
+  const finalizeLabelByRole: Record<Role, string> = {
+    proceso: "Finalizar (enviar a facturación)",
+    facturacion: "Finalizar (enviar a admin)",
+    admin: "Cerrar proceso",
+  };
+
   if (loading) return <p className="p-6">Cargando borradores...</p>;
 
   return (
@@ -142,22 +167,29 @@ export default function DraftsPage() {
                 </Link>
               )}
 
-              {(role === "admin" || role === "facturacion") && (
-                <Link
-                  href={`/drafts/${d.id}/finalize`}
-                  className="px-3 py-1 rounded bg-green-600 text-white"
+              {/* Botón Finalizar dinámico según rol */}
+              {(role === "admin" || role === "facturacion" || role === "proceso") && (
+                <button
+                  onClick={() => finalizeDraft(d.id)}
+                  className={`px-3 py-1 rounded text-white ${
+                    role === "proceso"
+                      ? "bg-blue-600"
+                      : role === "facturacion"
+                      ? "bg-orange-500"
+                      : "bg-green-700"
+                  }`}
                 >
-                  Finalizar
-                </Link>
+                  {finalizeLabelByRole[role]}
+                </button>
               )}
 
               {/* Botón Eliminar solo para proceso con status PROCESS */}
               {role === "proceso" && d.status === "PROCESS" && (
                 <button
                   onClick={() => deleteDraft(d.id)}
-                  className="px-3 py-1 rounded bg-red-600 text-white"
+                  className="px-3 py-1 rounded bg-red-600 text-white flex items-center gap-1"
                 >
-                  Eliminar
+                  🗑️ Eliminar
                 </button>
               )}
             </div>
