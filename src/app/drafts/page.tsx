@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getRole } from "@/lib/role";
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -20,8 +21,10 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const role: Role = "admin";
   const router = useRouter();
+
+  // 🔑 Obtener rol dinámico
+  const role = getRole() as Role;
 
   useEffect(() => {
     async function load() {
@@ -61,7 +64,14 @@ export default function DraftsPage() {
           ← Inicio
         </button>
 
-        <h1 className="text-3xl font-bold">Drafts</h1>
+        <div className="flex flex-col items-center">
+          <h1 className="text-3xl font-bold">Drafts</h1>
+          <p className="text-sm text-gray-500">
+            {role === "proceso" && "Borradores en proceso"}
+            {role === "facturacion" && "Pendientes de facturación"}
+            {role === "admin" && "Listos para pricing"}
+          </p>
+        </div>
 
         <div className="flex gap-2">
           <Link

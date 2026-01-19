@@ -9,14 +9,22 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET() {
-  const { data, error } = await supabase
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status"); // PROCESS | TO_BILLING | TO_ADMIN
+
+  let q = supabase
     .from("packing_drafts")
     .select("id, client_code, internal_ref, status, created_at")
     .order("created_at", { ascending: false });
 
+  if (status) {
+    q = q.eq("status", status);
+  }
+
+  const { data, error } = await q;
+
   if (error) {
-    console.error(error);
     return NextResponse.json(
       { ok: false, error: error.message },
       { status: 500 }
