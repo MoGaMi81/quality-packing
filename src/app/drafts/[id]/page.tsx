@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
 import { resolveClientName } from "@/lib/resolveClient";
+import PricingModal from "@/components/PricingModal";
 
 type Draft = {
   id: string;
@@ -30,28 +31,35 @@ export default function DraftEditorPage({
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [lines, setLines] = useState<any[]>([]);
+  const [openPricing, setOpenPricing] = useState(false);
+
+  /* ================= LOAD DRAFT ================= */
+
+  async function loadDraft() {
+    try {
+      const data = await fetchJSON<DraftResponse>(
+        `/api/packing-drafts/${params.id}`,
+        { cache: "no-store" }
+      );
+
+      if (!data.ok) throw new Error("Draft inválido");
+
+      setDraft(data.draft);
+      setLines(data.lines ?? []);
+    } catch (e) {
+      alert("No se pudo cargar el draft");
+      router.replace("/drafts");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await fetchJSON<DraftResponse>(
-          `/api/packing-drafts/${params.id}`
-        );
+    loadDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
 
-        if (!data.ok) throw new Error("Draft inválido");
-
-        setDraft(data.draft);
-        setLines(data.lines ?? []);
-      } catch (e) {
-        alert("No se pudo cargar el draft");
-        router.replace("/drafts"); // 👈 no push
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, [params.id, router]);
+  /* ================= GUARDAR DRAFT ================= */
 
   async function saveDraft() {
     if (!draft) return;
@@ -77,7 +85,35 @@ export default function DraftEditorPage({
     }
 
     alert("Draft guardado correctamente");
+    await loadDraft();
   }
+
+  /* ================= PRICING (ADMIN) ================= */
+
+  async function savePricing(prices: Record<string, number>) {
+    if (!draft) return;
+
+    const res = await fetch(
+      `/api/packing-drafts/${draft.id}/pricing`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prices }),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      alert(data?.error || "Error guardando precios");
+      return;
+    }
+
+    alert("Precios guardados correctamente");
+    setOpenPricing(false);
+    await loadDraft();
+  }
+
+  /* ================= CONTINUAR ================= */
 
   function continuar() {
     router.replace(`/packings/new?draft=${draft?.id}`);
@@ -86,17 +122,19 @@ export default function DraftEditorPage({
   if (loading) return <div className="p-6">Cargando draft…</div>;
   if (!draft) return null;
 
+  const pricingComplete =
+    lines.length > 0 && lines.every((l) => l.price && l.price > 0);
+
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       {/* HEADER */}
       <div className="flex items-center gap-3">
         <button
-  onClick={() => router.replace("/drafts")}
-  className="px-3 py-1 border rounded"
->
-  ← Drafts
-</button>
-
+          onClick={() => router.replace("/drafts")}
+          className="px-3 py-1 border rounded"
+        >
+          ← Drafts
+        </button>
 
         <h1 className="text-3xl font-bold">Editar Draft</h1>
       </div>
@@ -114,8 +152,8 @@ export default function DraftEditorPage({
         </div>
       </div>
 
-      {/* LÍNEAS (manual por ahora, OK) */}
-      <div className="flex gap-3 pt-4">
+      {/* ACCIONES */}
+      <div className="flex gap-3 pt-4 flex-wrap">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={saveDraft}
@@ -131,7 +169,32 @@ export default function DraftEditorPage({
             Continuar en Packing
           </button>
         )}
+
+        {role === "admin" && draft.status === "TO_ADMIN" && (
+          <button
+            className="px-4 py-2 bg-black text-white rounded"
+            onClick={() => setOpenPricing(true)}
+          >
+            Capturar precios
+          </button>
+        )}
       </div>
+
+      {!pricingComplete &&
+        role === "admin" &&
+        draft.status === "TO_ADMIN" && (
+          <div className="text-sm text-orange-600">
+            ⚠️ Faltan precios por capturar antes de exportar
+          </div>
+        )}
+
+      {/* PRICING MODAL */}
+      <PricingModal
+        open={openPricing}
+        lines={lines}
+        onClose={() => setOpenPricing(false)}
+        onSave={savePricing}
+      />
     </main>
   );
 }
