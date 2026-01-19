@@ -17,6 +17,25 @@ type Draft = {
   created_at: string;
 };
 
+/* ================= FILTER ================= */
+function filterDraftsByRole(drafts: Draft[], role: Role) {
+  if (!role) return [];
+
+  if (role === "proceso") {
+    return drafts.filter((d) => d.status === "PROCESS");
+  }
+
+  if (role === "facturacion") {
+    return drafts.filter((d) => d.status === "TO_BILLING");
+  }
+
+  if (role === "admin") {
+    return drafts.filter((d) => d.status === "TO_ADMIN");
+  }
+
+  return [];
+}
+
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +120,12 @@ export default function DraftsPage() {
     admin: "Cerrar proceso",
   };
 
+  const finalizeIconByRole: Record<Role, string> = {
+    proceso: "📦",       // caja → proceso
+    facturacion: "💰",   // dinero → facturación
+    admin: "✅",         // check → admin
+  };
+
   if (loading) {
     return <p className="p-6">Cargando borradores…</p>;
   }
@@ -146,13 +171,13 @@ export default function DraftsPage() {
 
       {/* LISTA */}
       <div className="space-y-3">
-        {drafts.length === 0 && (
+        {filterDraftsByRole(drafts, role).length === 0 && (
           <div className="text-center text-gray-500 py-12">
             No hay drafts pendientes
           </div>
         )}
 
-        {drafts.map((d) => (
+        {filterDraftsByRole(drafts, role).map((d) => (
           <div
             key={d.id}
             className="border bg-white rounded-lg p-4 shadow-sm flex justify-between items-center"
@@ -177,19 +202,31 @@ export default function DraftsPage() {
                 </Link>
               )}
 
-              {/* FINALIZAR */}
-              <button
-                onClick={() => finalizeDraft(d.id)}
-                className={`px-3 py-1 rounded text-white ${
-                  role === "proceso"
-                    ? "bg-blue-600"
-                    : role === "facturacion"
-                    ? "bg-orange-500"
-                    : "bg-green-700"
-                }`}
-              >
-                {finalizeLabelByRole[role]}
-              </button>
+              {/* FINALIZAR con ícono según rol */}
+              {role === "proceso" && d.status === "PROCESS" && (
+                <button
+                  onClick={() => finalizeDraft(d.id)}
+                  className="px-3 py-1 rounded bg-blue-600 text-white flex items-center gap-1"
+                >
+                  {finalizeIconByRole[role]} {finalizeLabelByRole[role]}
+                </button>
+              )}
+              {role === "facturacion" && d.status === "TO_BILLING" && (
+                <button
+                  onClick={() => finalizeDraft(d.id)}
+                  className="px-3 py-1 rounded bg-orange-500 text-white flex items-center gap-1"
+                >
+                  {finalizeIconByRole[role]} {finalizeLabelByRole[role]}
+                </button>
+              )}
+              {role === "admin" && d.status === "TO_ADMIN" && (
+                <button
+                  onClick={() => finalizeDraft(d.id)}
+                  className="px-3 py-1 rounded bg-green-700 text-white flex items-center gap-1"
+                >
+                  {finalizeIconByRole[role]} {finalizeLabelByRole[role]}
+                </button>
+              )}
 
               {/* ELIMINAR */}
               {role === "proceso" && d.status === "PROCESS" && (
