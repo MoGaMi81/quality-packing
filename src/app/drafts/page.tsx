@@ -1,12 +1,10 @@
 "use client";
 
 export const dynamic = "force-dynamic";
-// ⛔️ ELIMINA revalidate COMPLETAMENTE
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -43,28 +41,46 @@ export default function DraftsPage() {
     load();
   }, []);
 
+  async function logout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    window.location.href = "/login";
+  }
+
   if (loading) return <p className="p-6">Cargando borradores...</p>;
 
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-4">
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => router.replace("/")}
           className="px-3 py-1 border rounded"
         >
-       ← Inicio
-      </button>
+          ← Inicio
+        </button>
 
         <h1 className="text-3xl font-bold">Drafts</h1>
 
-        <Link
-          href="/drafts/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Nuevo Draft
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/drafts/new"
+            className="px-4 py-2 bg-blue-600 text-white rounded text-sm"
+          >
+            Nuevo Draft
+          </Link>
+
+          <button
+            onClick={logout}
+            className="px-3 py-2 border rounded text-sm"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
 
+      {/* LISTA DE DRAFTS */}
       <div className="space-y-3">
         {drafts.map((d) => (
           <div
@@ -84,7 +100,7 @@ export default function DraftsPage() {
             <div className="flex gap-2">
               {(role === "admin" || role === "proceso") && (
                 <Link href={`/drafts/${d.id}`}>Editar</Link>
-               )}
+              )}
 
               {role === "admin" && (
                 <Link
