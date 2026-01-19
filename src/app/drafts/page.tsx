@@ -98,20 +98,25 @@ export default function DraftsPage() {
 
   /* ================= FINALIZE ================= */
   async function finalizeDraft(id: string) {
-    if (!confirm("¿Confirmas que deseas finalizar esta etapa?")) return;
+  if (!confirm("¿Confirmas que deseas finalizar esta etapa?")) return;
 
-    const r = await fetch(`/api/packing-drafts/${id}/finalize`, {
-      method: "PATCH",
-    });
-    const data = await r.json();
+  const r = await fetch(`/api/packing-drafts/${id}/finalize`, {
+    method: "PATCH",
+    headers: {
+      "x-role": role, // 🔑 CLAVE
+    },
+  });
 
-    if (!r.ok || !data.ok) {
-      alert(data?.error || "No se pudo finalizar");
-      return;
-    }
+  const data = await r.json();
 
-    load(); // 🔑 desaparece de la lista
+  if (!r.ok || !data.ok) {
+    alert(data?.error || "No se pudo finalizar");
+    return;
   }
+
+  load();
+}
+
 
   /* ================= LABELS ================= */
   const finalizeLabelByRole: Record<Role, string> = {
