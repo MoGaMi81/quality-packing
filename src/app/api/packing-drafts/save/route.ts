@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         .insert({
           client_code: header.client_code,
           internal_ref: header.internal_ref,
-          status,
+          status: "PROCESS",
         })
         .select("id")
         .single();
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         .update({
           client_code: header.client_code,
           internal_ref: header.internal_ref,
-          status,
+          status: status ?? "PROCESS",
         })
         .eq("id", id);
 
