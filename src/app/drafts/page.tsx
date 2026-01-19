@@ -22,33 +22,54 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
-
-  // 🔑 Obtener rol dinámico
   const role = getRole() as Role;
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const r = await fetch("/api/packing-drafts/list", {
-          cache: "no-store",
-        });
-        const data = await r.json();
+  // 🔄 Cargar listado de drafts
+  async function load() {
+    try {
+      const r = await fetch("/api/packing-drafts/list", {
+        cache: "no-store",
+      });
+      const data = await r.json();
 
-        if (data.ok) setDrafts(data.drafts || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+      if (data.ok) setDrafts(data.drafts || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     load();
   }, []);
 
+  // 🔑 Logout
   async function logout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {}
     window.location.href = "/login";
+  }
+
+  // 🗑️ Eliminar draft
+  async function deleteDraft(id: string) {
+    if (!confirm("¿Eliminar este draft? Esta acción no se puede deshacer.")) {
+      return;
+    }
+
+    const r = await fetch(`/api/packing-drafts/${id}/delete`, {
+      method: "DELETE",
+    });
+    const data = await r.json();
+
+    if (!r.ok || !data.ok) {
+      alert(data?.error || "No se pudo eliminar");
+      return;
+    }
+
+    // Recargar listado
+    load();
   }
 
   if (loading) return <p className="p-6">Cargando borradores...</p>;
@@ -128,6 +149,16 @@ export default function DraftsPage() {
                 >
                   Finalizar
                 </Link>
+              )}
+
+              {/* Botón Eliminar solo para proceso con status PROCESS */}
+              {role === "proceso" && d.status === "PROCESS" && (
+                <button
+                  onClick={() => deleteDraft(d.id)}
+                  className="px-3 py-1 rounded bg-red-600 text-white"
+                >
+                  Eliminar
+                </button>
               )}
             </div>
           </div>
