@@ -24,21 +24,21 @@ export default function LoginPage() {
       return;
     }
 
-    const role = String(data.user?.role || "").toLowerCase();
-    console.log("LOGIN OK:", { role, user: data.user });
+    console.log("LOGIN OK:", data.user);
 
-    // 🚀 Redirección CON DELAY para permitir guardar la cookie
+    // ✅ SIEMPRE ir a raíz
+    // app/page.tsx decide a dónde mandarlo
     setTimeout(() => {
-      if (role === "proceso") window.location.href = "/packings";
-      else if (role === "facturacion") window.location.href = "/packings/view";
-      else if (role === "admin") window.location.href = "/";
-      else window.location.href = "/";
-    }, 200);  // 👈 delay crítico
+      window.location.href = "/";
+    }, 200);
   };
 
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 48, fontWeight: 700, marginBottom: 24 }}>Sign in</h1>
+      <h1 style={{ fontSize: 48, fontWeight: 700, marginBottom: 24 }}>
+        Sign in
+      </h1>
+
       <form onSubmit={submit} style={{ display: "flex", gap: 8 }}>
         <input
           placeholder="email"
