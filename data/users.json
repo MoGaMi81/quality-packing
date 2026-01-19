@@ -1,7 +1,7 @@
 [
-  { "email": "admin@quality.test", "password": "1234", "role": "admin", "name": "admin" },
-  { "email": "proceso@quality.test", "password": "1234", "role": "proceso", "name": "proceso" },
-  { "email": "facturacion@quality.test", "password": "1234", "role": "facturacion", "name": "facturación" }
+  { "email": "admin@quality.test", "password": "mogami", "role": "admin", "name": "admin" },
+  { "email": "proceso@quality.test", "password": "mogami", "role": "proceso", "name": "proceso" },
+  { "email": "facturacion@quality.test", "password": "mogami", "role": "facturacion", "name": "facturación" }
 ]
 
 
