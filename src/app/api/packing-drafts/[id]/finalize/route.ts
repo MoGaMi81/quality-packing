@@ -25,7 +25,7 @@ export async function PATCH(
   const draftId = params.id;
 
   // 1️⃣ Obtener rol desde request (cookie / header)
-  const role = await getRoleFromRequest(req);
+  const role = await getRoleFromRequest();
 
   if (!role || !TRANSITIONS[role]) {
     return NextResponse.json(
