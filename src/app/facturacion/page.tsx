@@ -16,7 +16,7 @@ export default function FacturacionList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJSON<{ ok: boolean; rows: Row[] }>("/api/packings/ready")
+    fetchJSON<{ ok: boolean; rows: Row[] }>("/api/packings/drafts")
       .then((r) => r.ok && setRows(r.rows))
       .finally(() => setLoading(false));
   }, []);
