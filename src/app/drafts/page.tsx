@@ -17,25 +17,6 @@ type Draft = {
   created_at: string;
 };
 
-/* ================= FILTER ================= */
-function filterDraftsByRole(drafts: Draft[], role: Role) {
-  if (!role) return [];
-
-  if (role === "proceso") {
-    return drafts.filter((d) => d.status === "PROCESS");
-  }
-
-  if (role === "facturacion") {
-    return drafts.filter((d) => d.status === "TO_BILLING");
-  }
-
-  if (role === "admin") {
-    return drafts.filter((d) => d.status === "TO_ADMIN");
-  }
-
-  return [];
-}
-
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,40 +77,13 @@ export default function DraftsPage() {
     load();
   }
 
-  /* ================= FINALIZE ================= */
-  async function finalizeDraft(id: string) {
-  if (!confirm("¿Confirmas que deseas finalizar esta etapa?")) return;
-
-  const r = await fetch(`/api/packing-drafts/${id}/finalize`, {
-    method: "PATCH",
-    headers: {
-      "x-role": role, // 🔑 CLAVE
-    },
+  /* ================= VISIBLE DRAFTS ================= */
+  const visibleDrafts = drafts.filter((d) => {
+    if (role === "proceso") return d.status === "PROCESS";
+    if (role === "facturacion") return d.status === "PROCESS_DONE";
+    if (role === "admin") return d.status === "BILLED";
+    return false;
   });
-
-  const data = await r.json();
-
-  if (!r.ok || !data.ok) {
-    alert(data?.error || "No se pudo finalizar");
-    return;
-  }
-
-  load();
-}
-
-
-  /* ================= LABELS ================= */
-  const finalizeLabelByRole: Record<Role, string> = {
-    proceso: "Finalizar → Facturación",
-    facturacion: "Finalizar → Admin",
-    admin: "Cerrar proceso",
-  };
-
-  const finalizeIconByRole: Record<Role, string> = {
-    proceso: "📦",       // caja → proceso
-    facturacion: "💰",   // dinero → facturación
-    admin: "✅",         // check → admin
-  };
 
   if (loading) {
     return <p className="p-6">Cargando borradores…</p>;
@@ -176,13 +130,13 @@ export default function DraftsPage() {
 
       {/* LISTA */}
       <div className="space-y-3">
-        {filterDraftsByRole(drafts, role).length === 0 && (
+        {visibleDrafts.length === 0 && (
           <div className="text-center text-gray-500 py-12">
             No hay drafts pendientes
           </div>
         )}
 
-        {filterDraftsByRole(drafts, role).map((d) => (
+        {visibleDrafts.map((d) => (
           <div
             key={d.id}
             className="border bg-white rounded-lg p-4 shadow-sm flex justify-between items-center"
@@ -196,51 +150,61 @@ export default function DraftsPage() {
               </div>
             </div>
 
+            {/* BOTONES */}
             <div className="flex gap-2">
-              {/* EDITAR */}
-              {role === "proceso" && d.status === "PROCESS" && (
+              {/* PROCESO */}
+              {role === "proceso" && (
+                <>
+                  <Link
+                    href={`/drafts/${d.id}`}
+                    className="px-3 py-1 rounded border"
+                  >
+                    Editar
+                  </Link>
+
+                  <button
+                    onClick={() => router.push(`/drafts/${d.id}/finalize`)}
+                    className="px-3 py-1 rounded bg-blue-600 text-white"
+                  >
+                    Finalizar proceso
+                  </button>
+
+                  <button
+                    onClick={() => deleteDraft(d.id)}
+                    className="px-3 py-1 rounded bg-red-600 text-white"
+                  >
+                    Eliminar
+                  </button>
+                </>
+              )}
+
+              {/* FACTURACIÓN */}
+              {role === "facturacion" && (
                 <Link
-                  href={`/drafts/${d.id}`}
-                  className="px-3 py-1 border rounded"
+                  href={`/facturacion/${d.id}`}
+                  className="px-4 py-1 rounded bg-orange-500 text-white"
                 >
-                  Editar
+                  Facturar
                 </Link>
               )}
 
-              {/* FINALIZAR con ícono según rol */}
-              {role === "proceso" && d.status === "PROCESS" && (
-                <button
-                  onClick={() => finalizeDraft(d.id)}
-                  className="px-3 py-1 rounded bg-blue-600 text-white flex items-center gap-1"
-                >
-                  {finalizeIconByRole[role]} {finalizeLabelByRole[role]}
-                </button>
-              )}
-              {role === "facturacion" && d.status === "TO_BILLING" && (
-                <button
-                  onClick={() => finalizeDraft(d.id)}
-                  className="px-3 py-1 rounded bg-orange-500 text-white flex items-center gap-1"
-                >
-                  {finalizeIconByRole[role]} {finalizeLabelByRole[role]}
-                </button>
-              )}
-              {role === "admin" && d.status === "TO_ADMIN" && (
-                <button
-                  onClick={() => finalizeDraft(d.id)}
-                  className="px-3 py-1 rounded bg-green-700 text-white flex items-center gap-1"
-                >
-                  {finalizeIconByRole[role]} {finalizeLabelByRole[role]}
-                </button>
-              )}
+              {/* ADMIN */}
+              {role === "admin" && (
+                <>
+                  <Link
+                    href={`/packings/${d.id}/pricing`}
+                    className="px-3 py-1 rounded bg-green-700 text-white"
+                  >
+                    Pricing
+                  </Link>
 
-              {/* ELIMINAR */}
-              {role === "proceso" && d.status === "PROCESS" && (
-                <button
-                  onClick={() => deleteDraft(d.id)}
-                  className="px-3 py-1 rounded bg-red-600 text-white"
-                >
-                  🗑️
-                </button>
+                  <Link
+                    href={`/api/export/draft?id=${d.id}`}
+                    className="px-3 py-1 rounded bg-gray-800 text-white"
+                  >
+                    Exportar
+                  </Link>
+                </>
               )}
             </div>
           </div>
