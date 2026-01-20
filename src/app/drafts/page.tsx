@@ -163,11 +163,26 @@ export default function DraftsPage() {
                   </Link>
 
                   <button
-                    onClick={() => router.push(`/drafts/${d.id}/finalize`)}
-                    className="px-3 py-1 rounded bg-blue-600 text-white"
-                  >
-                    Finalizar proceso
-                  </button>
+  onClick={async () => {
+    if (!confirm("¿Finalizar proceso y enviar a facturación?")) return;
+
+    const r = await fetch(`/api/packing-drafts/${d.id}/finalize`, {
+      method: "PATCH",
+    });
+
+    const data = await r.json();
+
+    if (!r.ok || !data.ok) {
+      alert(data?.error || "No se pudo finalizar");
+      return;
+    }
+
+    load(); // 🔄 refresca lista
+  }}
+  className="px-3 py-1 rounded bg-blue-600 text-white"
+>
+  Finalizar proceso
+</button>
 
                   <button
                     onClick={() => deleteDraft(d.id)}
@@ -191,19 +206,15 @@ export default function DraftsPage() {
               {/* ADMIN */}
               {role === "admin" && (
                 <>
-                  <Link
-                    href={`/packings/${d.id}/pricing`}
-                    className="px-3 py-1 rounded bg-green-700 text-white"
-                  >
-                    Pricing
+                  <Link href={`/packings/${d.id}/pricing`}>
+                  className="px-3 py-1 rounded bg-green-700 text-white"
+                  Pricing
                   </Link>
+                  
 
-                  <Link
-                    href={`/api/export/draft?id=${d.id}`}
-                    className="px-3 py-1 rounded bg-gray-800 text-white"
-                  >
-                    Exportar
-                  </Link>
+                  <Link href={`/api/export/draft?id=${d.id}`}>
+                  className="px-3 py-1 rounded bg-green-800 text-white"
+                  Exportar</Link>
                 </>
               )}
             </div>
