@@ -167,15 +167,12 @@ export default function DraftsPage() {
                       if (!confirm("¿Finalizar proceso y enviar a facturación?"))
                         return;
 
-                      const r = await fetch(
-                        `/api/packing-drafts/${d.id}/finalize`,
-                        {
-                          method: "PATCH",
-                          headers: {
-                            "x-role": role, // 🔑 CLAVE
-                          },
-                        }
-                      );
+                      const r = await fetch(`/api/packing-drafts/${d.id}/finish-process`, {
+                        method: "PATCH",
+                        headers: {
+                          "x-role": role,
+                      },
+                     });
 
                       const data = await r.json();
 
