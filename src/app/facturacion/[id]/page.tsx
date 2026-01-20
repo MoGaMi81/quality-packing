@@ -13,7 +13,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   const [guide, setGuide] = useState("");
 
   useEffect(() => {
-    fetchJSON(`/api/packings/by-id/${packingId}`).then(setPacking);
+    fetchJSON(`/api/packing-drafts/${packingId}`).then(setPacking);
   }, [packingId]);
 
   if (!packing) return <main className="p-6">Cargando…</main>;
