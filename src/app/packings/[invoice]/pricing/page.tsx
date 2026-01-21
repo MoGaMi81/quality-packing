@@ -8,7 +8,7 @@ import type { PackingLine } from "@/domain/packing/types";
 import { getRole } from "@/lib/role";
 
 export default function PricingPage({ params }: { params: { invoice: string } }) {
-  const invoice = params.invoice.toUpperCase();
+  const draftId = params.invoice.toUpperCase();
   const role = getRole();
 
   const [packing, setPacking] = useState<any | null>(null);
@@ -30,28 +30,28 @@ export default function PricingPage({ params }: { params: { invoice: string } })
 
     (async () => {
       try {
-        const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
+        const res = await fetchJSON(`/api/packing-drafts/${draftId}`);
 
         if (!res.packing) {
           setErr("Packing no encontrado.");
         } else {
-          setPacking(res.packing);
-
-          // si NO tiene pricing previo → usar packing original
-          setPriced(res.packing.lines);
+          // ✅ Ajuste: usar res.draft y res.lines
+          setPacking(res.draft);
+          setPriced(res.lines);
         }
       } catch (e: any) {
         setErr(e.message || "Error al cargar packing.");
       }
       setLoading(false);
     })();
-  }, [invoice, role]);
+  }, [draftId, role]);
 
   if (loading) return <main className="p-6">Cargando…</main>;
   if (err) return <main className="p-6 text-red-600">{err}</main>;
   if (!packing) return null;
 
-  const lines: PackingLine[] = packing.lines;
+  // ✅ Reemplazo correcto
+  const lines: PackingLine[] = priced;
 
   // -------------------------------------------------
   // APLICAR PRECIOS DESDE EL MODAL
@@ -70,11 +70,12 @@ export default function PricingPage({ params }: { params: { invoice: string } })
   // -------------------------------------------------
   const saveToDb = async () => {
     try {
-      const res = await fetch("/api/packings/pricing/save", {
+      const res = await fetch("/api/packing-drafts/pricing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // ✅ Body correcto
         body: JSON.stringify({
-          invoice_no: packing.header.invoice_no,
+          draft_id: draftId,
           lines: priced, // las líneas ya con precios aplicados
         }),
       });
@@ -99,14 +100,13 @@ export default function PricingPage({ params }: { params: { invoice: string } })
 
   return (
     <main className="p-8 max-w-5xl mx-auto space-y-6">
-
       {/* BACK */}
-      <a href={`/packings/${invoice}/view`} className="px-3 py-1 border rounded">
+      <a href={`/packings/${draftId}/view`} className="px-3 py-1 border rounded">
         ← Regresar
       </a>
 
       <h1 className="text-3xl font-bold">
-        Pricing — Invoice {invoice}
+        Pricing — Invoice {draftId}
       </h1>
 
       {/* Botones */}
@@ -170,6 +170,3 @@ export default function PricingPage({ params }: { params: { invoice: string } })
     </main>
   );
 }
-
-
-
