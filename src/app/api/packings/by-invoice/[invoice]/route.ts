@@ -12,34 +12,35 @@ export async function GET(
 ) {
   const invoice = params.invoice?.toUpperCase();
 
-  // 👇 Blindaje total
   if (!invoice) {
-    return NextResponse.json({ ok: true, packing: null });
+    return NextResponse.json({ ok: false, error: "Invoice requerido" }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data: packing, error } = await supabase
     .from("packings")
     .select("*")
     .eq("invoice_no", invoice)
-    .eq("status", "DRAFT")
-    .order("created_at", { ascending: false })
-    .limit(1);
+    .single(); // 👈 CLAVE
 
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message });
+  if (error || !packing) {
+    return NextResponse.json(
+      { ok: false, error: "Packing no encontrado" },
+      { status: 404 }
+    );
   }
 
-  if (!data || data.length === 0) {
-    return NextResponse.json({ ok: true, packing: null });
-  }
-
-  const packing = data[0];
-
-  const { data: lines } = await supabase
+  const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
     .select("*")
     .eq("packing_id", packing.id)
     .order("box_no");
+
+  if (linesError) {
+    return NextResponse.json(
+      { ok: false, error: linesError.message },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     ok: true,

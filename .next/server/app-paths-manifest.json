@@ -1,9 +1,9 @@
 {
-  "/drafts/page": "app/drafts/page.js",
   "/page": "app/page.js",
   "/login/page": "app/login/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/drafts/page": "app/drafts/page.js",
   "/api/packing-drafts/list/route": "app/api/packing-drafts/list/route.js",
-  "/drafts/[id]/page": "app/drafts/[id]/page.js",
-  "/packings/new/page": "app/packings/new/page.js",
-  "/api/packing-drafts/save/route": "app/api/packing-drafts/save/route.js"
+  "/packings/[invoice]/pricing/page": "app/packings/[invoice]/pricing/page.js",
+  "/api/packing-drafts/[id]/route": "app/api/packing-drafts/[id]/route.js"
 }
