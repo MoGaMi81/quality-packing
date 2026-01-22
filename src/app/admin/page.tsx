@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type Packing = {
   invoice_no: string;
   client_code: string;
-  packing_date: string;
+  created_at: string;
   total_boxes: number;
   total_lbs: number;
 };
@@ -47,7 +47,7 @@ export default function AdminHome() {
               {p.invoice_no} · {p.client_code}
             </div>
             <div className="text-sm text-gray-500">
-              {new Date(p.packing_date).toLocaleString()}
+              {new Date(p.created_at).toLocaleString()}
             </div>
             <div className="text-sm mt-1">
               {p.total_boxes} cajas · {p.total_lbs} lbs
