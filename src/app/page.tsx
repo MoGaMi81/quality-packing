@@ -10,19 +10,19 @@ export default function Home() {
   useEffect(() => {
     const role = getRole();
 
-    // Sin sesión → login
     if (!role) {
       router.replace("/login");
       return;
     }
 
-    // Todos los roles entran por Drafts
+    if (role === "admin") {
+      router.replace("/admin");
+      return;
+    }
+
+    // proceso y facturación
     router.replace("/drafts");
   }, [router]);
 
-  return (
-    <div style={{ padding: 24 }}>
-      Redirigiendo…
-    </div>
-  );
+  return <div style={{ padding: 24 }}>Redirigiendo…</div>;
 }
