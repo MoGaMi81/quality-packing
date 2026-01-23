@@ -10,24 +10,15 @@ const supabase = createClient(
 export async function GET() {
   const { data, error } = await supabase
   .from("packings")
-  .select(`
-    invoice_no,
-    client_code,
-    created_at,
-    total_boxes,
-    total_lbs
-  `)
-  .eq("pricing_status", "PENDING")
-  .order("created_at", { ascending: false });
+  .select("*");
 
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
-  }
+if (error) {
+  console.error("READY FOR PRICING ERROR:", error);
+  return NextResponse.json(
+    { ok: false, error },
+    { status: 500 }
+  );
+}
 
-  return NextResponse.json({
-    packings: data ?? []
-  });
+return NextResponse.json({ ok: true, data });
 }
