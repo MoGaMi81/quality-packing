@@ -13,7 +13,10 @@ const supabase = createClient(
 export async function GET() {
   const { data, error } = await supabase
   .from("packings")
-  .select("*");
+  .select("*")
+  .eq("status", "READY")
+  .eq("pricing_status", "PENDING")
+  .order("created_at", { ascending: false });
 
 if (error) {
   console.error("READY FOR PRICING ERROR:", error);
