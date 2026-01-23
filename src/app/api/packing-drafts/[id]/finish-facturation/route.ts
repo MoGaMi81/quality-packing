@@ -71,13 +71,14 @@ const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 const { data: packing, error: packingError } = await supabase
   .from("packings")
   .insert({
-    invoice_no: invoice_no.toUpperCase(),
-    guide,
-    client_code: draft.client_code,
-    date: today,              // 👈 CLAVE añadida
-    pricing_status: "PENDING",
-    created_at: new Date().toISOString(),
-  })
+  invoice_no: invoice_no.toUpperCase(),
+  guide,
+  client_code: draft.client_code,
+  date: today,
+  status: "READY",           // 👈 CLAVE
+  pricing_status: "PENDING",
+  created_at: new Date().toISOString(),
+})
   .select()
   .single();
 
@@ -94,7 +95,6 @@ if (packingError || !packing) {
   const packingLines = draftLines.map((l: any) => ({
     packing_id: packing.id,
     box_no: l.box_no,
-    species_code: l.species_code,
     description_en: l.description_en,
     form: l.form,
     size: l.size,
