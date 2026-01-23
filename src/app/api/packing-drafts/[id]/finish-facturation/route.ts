@@ -11,7 +11,10 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const draft_id = params.id;
-  const { invoice_no, guide } = await req.json();
+  const { invoice_no, guide } = (await req.json()) as {
+    invoice_no?: string;
+    guide?: string;
+  };
 
   if (!invoice_no || !guide) {
     return NextResponse.json(
@@ -20,7 +23,9 @@ export async function PATCH(
     );
   }
 
-  // 1️⃣ Obtener draft
+  /* =====================================================
+     1️⃣ Obtener draft (y validar estado)
+     ===================================================== */
   const { data: draft, error: draftError } = await supabase
     .from("packing_drafts")
     .select("*")
@@ -34,20 +39,34 @@ export async function PATCH(
     );
   }
 
-  // 2️⃣ Obtener líneas del draft
-  const { data: lines, error: linesError } = await supabase
-    .from("draft_lines")
-    .select("*")
-    .eq("draft_id", draft_id);
-
-  if (linesError || !lines || lines.length === 0) {
+  if (draft.status !== "PROCESS_DONE") {
     return NextResponse.json(
-      { ok: false, error: "Draft sin líneas" },
+      {
+        ok: false,
+        error: `El draft no está listo para facturación (estado actual: ${draft.status})`,
+      },
       { status: 400 }
     );
   }
 
-  // 3️⃣ Crear PACKING (AQUÍ NACE)
+  /* =====================================================
+     2️⃣ Obtener líneas del draft
+     ===================================================== */
+  const { data: draftLines, error: linesError } = await supabase
+    .from("draft_lines")
+    .select("*")
+    .eq("draft_id", draft_id);
+
+  if (linesError || !draftLines || draftLines.length === 0) {
+    return NextResponse.json(
+      { ok: false, error: "El draft no tiene líneas" },
+      { status: 400 }
+    );
+  }
+
+  /* =====================================================
+     3️⃣ Crear PACKING (AQUÍ NACE)
+     ===================================================== */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .insert({
@@ -60,15 +79,17 @@ export async function PATCH(
     .select()
     .single();
 
-  if (packingError) {
+  if (packingError || !packing) {
     return NextResponse.json(
-      { ok: false, error: packingError.message },
+      { ok: false, error: packingError?.message || "No se pudo crear packing" },
       { status: 500 }
     );
   }
 
-  // 4️⃣ Copiar líneas → packing_lines
-  const packingLines = lines.map((l: any) => ({
+  /* =====================================================
+     4️⃣ Copiar líneas → packing_lines
+     ===================================================== */
+  const packingLines = draftLines.map((l: any) => ({
     packing_id: packing.id,
     box_no: l.box_no,
     species_code: l.species_code,
@@ -78,26 +99,38 @@ export async function PATCH(
     pounds: l.pounds,
   }));
 
-  const { error: linesInsertError } = await supabase
+  const { error: insertLinesError } = await supabase
     .from("packing_lines")
     .insert(packingLines);
 
-  if (linesInsertError) {
+  if (insertLinesError) {
     return NextResponse.json(
-      { ok: false, error: linesInsertError.message },
+      { ok: false, error: insertLinesError.message },
       { status: 500 }
     );
   }
 
-  // 5️⃣ Marcar draft como facturado
-  await supabase
+  /* =====================================================
+     5️⃣ Marcar draft como BILLED
+     ===================================================== */
+  const { error: updateDraftError } = await supabase
     .from("packing_drafts")
     .update({
-      status: "BILLED",
       invoice_no: invoice_no.toUpperCase(),
       guide,
+      status: "BILLED",
     })
     .eq("id", draft_id);
 
-  return NextResponse.json({ ok: true, packing_id: packing.id });
+  if (updateDraftError) {
+    return NextResponse.json(
+      { ok: false, error: updateDraftError.message },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    ok: true,
+    packing_id: packing.id,
+  });
 }
