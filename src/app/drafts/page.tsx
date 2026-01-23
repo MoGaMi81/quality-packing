@@ -24,6 +24,12 @@ export default function DraftsPage() {
   const router = useRouter();
   const role = getRole() as Role;
 
+  // 🔑 Validación de rol antes de renderizar
+  if (role === "admin") {
+    router.replace("/admin");
+    return null;
+  }
+
   /* ================= LOAD ================= */
   async function load() {
     setLoading(true);
@@ -81,7 +87,6 @@ export default function DraftsPage() {
   const visibleDrafts = drafts.filter((d) => {
     if (role === "proceso") return d.status === "PROCESS";
     if (role === "facturacion") return d.status === "PROCESS_DONE";
-    if (role === "admin") return d.status === "BILLED";
     return false;
   });
 
@@ -105,7 +110,6 @@ export default function DraftsPage() {
           <p className="text-sm text-gray-500">
             {role === "proceso" && "Borradores en proceso"}
             {role === "facturacion" && "Pendientes de facturación"}
-            {role === "admin" && "Listos para pricing"}
           </p>
         </div>
 
@@ -167,12 +171,15 @@ export default function DraftsPage() {
                       if (!confirm("¿Finalizar proceso y enviar a facturación?"))
                         return;
 
-                      const r = await fetch(`/api/packing-drafts/${d.id}/finish-process`, {
-                        method: "PATCH",
-                        headers: {
-                          "x-role": role,
-                      },
-                     });
+                      const r = await fetch(
+                        `/api/packing-drafts/${d.id}/finish-process`,
+                        {
+                          method: "PATCH",
+                          headers: {
+                            "x-role": role,
+                          },
+                        }
+                      );
 
                       const data = await r.json();
 
@@ -205,25 +212,6 @@ export default function DraftsPage() {
                 >
                   Facturar
                 </Link>
-              )}
-
-              {/* ADMIN */}
-              {role === "admin" && (
-                <>
-                  <Link
-                    href={`/packings/${d.id}/pricing`}
-                    className="px-3 py-1 rounded bg-green-700 text-white"
-                  >
-                    Pricing
-                  </Link>
-
-                  <Link
-                    href={`/api/export/draft?id=${d.id}`}
-                    className="px-3 py-1 rounded bg-green-800 text-white"
-                  >
-                    Exportar
-                  </Link>
-                </>
               )}
             </div>
           </div>
