@@ -64,27 +64,29 @@ export async function PATCH(
     );
   }
 
-  /* =====================================================
-     3️⃣ Crear PACKING (AQUÍ NACE)
-     ===================================================== */
-  const { data: packing, error: packingError } = await supabase
-    .from("packings")
-    .insert({
-      invoice_no: invoice_no.toUpperCase(),
-      guide,
-      client_code: draft.client_code,
-      pricing_status: "PENDING",
-      created_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
+  /* 3️⃣ Crear PACKING (AQUÍ NACE)
+   ===================================================== */
+const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-  if (packingError || !packing) {
-    return NextResponse.json(
-      { ok: false, error: packingError?.message || "No se pudo crear packing" },
-      { status: 500 }
-    );
-  }
+const { data: packing, error: packingError } = await supabase
+  .from("packings")
+  .insert({
+    invoice_no: invoice_no.toUpperCase(),
+    guide,
+    client_code: draft.client_code,
+    date: today,              // 👈 CLAVE añadida
+    pricing_status: "PENDING",
+    created_at: new Date().toISOString(),
+  })
+  .select()
+  .single();
+
+if (packingError || !packing) {
+  return NextResponse.json(
+    { ok: false, error: packingError?.message || "No se pudo crear packing" },
+    { status: 500 }
+  );
+}
 
   /* =====================================================
      4️⃣ Copiar líneas → packing_lines
