@@ -93,13 +93,14 @@ if (packingError || !packing) {
      4️⃣ Copiar líneas → packing_lines
      ===================================================== */
   const packingLines = draftLines.map((l: any) => ({
-    packing_id: packing.id,
-    box_no: l.box_no,
-    description_en: l.description_en,
-    form: l.form,
-    size: l.size,
-    pounds: l.pounds,
-  }));
+  packing_id: packing.id,
+  box_no: l.box_no,
+  code: l.code,                     // 👈 CLAVE OBLIGATORIA
+  description_en: l.description_en,
+  form: l.form,
+  size: l.size,
+  pounds: l.pounds,
+}));
 
   const { error: insertLinesError } = await supabase
     .from("packing_lines")
