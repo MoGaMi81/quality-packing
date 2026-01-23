@@ -18,7 +18,9 @@ export default function AdminHome() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/packings/ready-for-pricing");
+      const res = await fetch("/api/packings/ready-for-pricing", {
+        cache: "no-store",
+      });
       const data = await res.json();
       setPackings(data.packings ?? []);
       setLoading(false);

@@ -1,4 +1,7 @@
 // src/app/api/packings/ready-for-pricing/route.ts
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -10,15 +13,24 @@ const supabase = createClient(
 export async function GET() {
   const { data, error } = await supabase
   .from("packings")
-  .select("*");
+  .select(`
+    invoice_no,
+    client_code,
+    created_at,
+    total_boxes,
+    total_lbs
+  `)
+  .eq("pricing_status", "PENDING")
+  .order("created_at", { ascending: false });
 
-if (error) {
-  console.error("READY FOR PRICING ERROR:", error);
-  return NextResponse.json(
-    { ok: false, error },
-    { status: 500 }
-  );
-}
+  if (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
 
-return NextResponse.json({ ok: true, data });
+  return NextResponse.json({
+    packings: data ?? []
+  });
 }
