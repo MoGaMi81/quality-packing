@@ -66,32 +66,36 @@ export async function POST(
   /* =====================================================
      3️⃣ Aplicar precios
      ===================================================== */
+  console.log("🧾 PRICES RECIBIDOS:", prices); // 👈 agregado antes del loop
+
   for (const line of lines) {
-  const key = `${line.code}|${line.form}|${line.size}`;
-  const price = prices[key];
+    const key = `${line.code}|${line.form}|${line.size}`;
+    console.log("🔑 BUSCANDO KEY:", key); // 👈 agregado dentro del loop
 
-  if (price == null || price <= 0) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: `Falta precio válido para ${line.code} ${line.form} ${line.size}`,
-      },
-      { status: 400 }
-    );
+    const price = prices[key];
+
+    if (price == null || price <= 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Falta precio válido para ${line.code} ${line.form} ${line.size}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { error: updateError } = await supabase
+      .from("packing_lines")
+      .update({ price })
+      .eq("id", line.id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { ok: false, error: updateError.message },
+        { status: 500 }
+      );
+    }
   }
-
-  const { error: updateError } = await supabase
-    .from("packing_lines")
-    .update({ price })
-    .eq("id", line.id);
-
-  if (updateError) {
-    return NextResponse.json(
-      { ok: false, error: updateError.message },
-      { status: 500 }
-    );
-  }
-}
 
   /* =====================================================
      4️⃣ Marcar pricing como DONE
