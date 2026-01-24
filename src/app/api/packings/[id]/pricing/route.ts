@@ -53,7 +53,7 @@ export async function POST(
      ===================================================== */
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
-    .select("id, code")
+    .select("id, code, form, size")
     .eq("packing_id", packing_id);
 
   if (linesError || !lines || lines.length === 0) {
@@ -67,30 +67,31 @@ export async function POST(
      3️⃣ Aplicar precios
      ===================================================== */
   for (const line of lines) {
-    const price = prices[line.code];
+  const key = `${line.code}|${line.form}|${line.size}`;
+  const price = prices[key];
 
-    if (price == null || price <= 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: `Falta precio válido para la especie ${line.code}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const { error: updateError } = await supabase
-      .from("packing_lines")
-      .update({ price })
-      .eq("id", line.id);
-
-    if (updateError) {
-      return NextResponse.json(
-        { ok: false, error: updateError.message },
-        { status: 500 }
-      );
-    }
+  if (price == null || price <= 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Falta precio válido para ${line.code} ${line.form} ${line.size}`,
+      },
+      { status: 400 }
+    );
   }
+
+  const { error: updateError } = await supabase
+    .from("packing_lines")
+    .update({ price })
+    .eq("id", line.id);
+
+  if (updateError) {
+    return NextResponse.json(
+      { ok: false, error: updateError.message },
+      { status: 500 }
+    );
+  }
+}
 
   /* =====================================================
      4️⃣ Marcar pricing como DONE
