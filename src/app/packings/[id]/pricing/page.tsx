@@ -12,6 +12,7 @@ type Packing = {
   client_code: string;
   client_name?: string | null;
   created_at: string;
+  packing_lines?: PackingLine[];
 };
 
 export default function PricingPage({
@@ -32,14 +33,15 @@ export default function PricingPage({
     async function load() {
       try {
         const res = await fetchJSON(`/api/packings/${packingId}`);
-        if (!res?.ok) {
+
+        if (!res?.ok || !res?.packing) {
           alert(res?.error || "Packing no encontrado");
           router.replace("/admin");
           return;
         }
 
         setPacking(res.packing);
-        setLines(res.lines || []);
+        setLines(res.packing.packing_lines ?? []);
       } catch (e) {
         console.error(e);
         alert("Error cargando packing");
@@ -77,6 +79,11 @@ export default function PricingPage({
     router.replace("/admin");
   }
 
+  const totalLbs = lines.reduce(
+    (sum, l) => sum + (l.pounds ?? 0),
+    0
+  );
+
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       {/* HEADER */}
@@ -107,12 +114,11 @@ export default function PricingPage({
         </div>
       </div>
 
-      {/* LINES RESUMEN */}
+      {/* RESUMEN */}
       <div className="border rounded p-4">
         <h2 className="font-semibold mb-2">Resumen</h2>
         <div className="text-sm text-gray-600">
-          {lines.length} líneas ·{" "}
-          {lines.reduce((s, l) => s + l.lbs, 0).toFixed(2)} lbs
+          {lines.length} líneas · {totalLbs.toFixed(2)} lbs
         </div>
       </div>
 
