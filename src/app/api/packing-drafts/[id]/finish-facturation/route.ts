@@ -24,7 +24,7 @@ export async function PATCH(
   }
 
   /* =====================================================
-     1️⃣ Obtener draft (y validar estado)
+     1️⃣ Obtener draft
      ===================================================== */
   const { data: draft, error: draftError } = await supabase
     .from("packing_drafts")
@@ -64,43 +64,44 @@ export async function PATCH(
     );
   }
 
-  /* 3️⃣ Crear PACKING (AQUÍ NACE)
-   ===================================================== */
-const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  /* =====================================================
+     3️⃣ Crear PACKING
+     ===================================================== */
+  const today = new Date().toISOString().slice(0, 10);
 
-const { data: packing, error: packingError } = await supabase
-  .from("packings")
-  .insert({
-  invoice_no: invoice_no.toUpperCase(),
-  guide,
-  client_code: draft.client_code,
-  date: today,
-  status: "READY",           // 👈 CLAVE
-  pricing_status: "PENDING",
-  created_at: new Date().toISOString(),
-})
-  .select()
-  .single();
+  const { data: packing, error: packingError } = await supabase
+    .from("packings")
+    .insert({
+      invoice_no: invoice_no.toUpperCase(),
+      guide,
+      client_code: draft.client_code,
+      date: today,
+      status: "READY",
+      pricing_status: "PENDING",
+      created_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
 
-if (packingError || !packing) {
-  return NextResponse.json(
-    { ok: false, error: packingError?.message || "No se pudo crear packing" },
-    { status: 500 }
-  );
-}
+  if (packingError || !packing) {
+    return NextResponse.json(
+      { ok: false, error: packingError?.message || "No se pudo crear packing" },
+      { status: 500 }
+    );
+  }
 
   /* =====================================================
-     4️⃣ Copiar líneas → packing_lines
+     4️⃣ Copiar líneas → packing_lines (BLINDADO)
      ===================================================== */
   const packingLines = draftLines.map((l: any) => ({
-  packing_id: packing.id,
-  box_no: l.box_no,
-  code: l.code,                     // 👈 CLAVE OBLIGATORIA
-  description_en: l.description_en,
-  form: l.form,
-  size: l.size,
-  pounds: l.pounds,
-}));
+    packing_id: packing.id,
+    box_no: l.box_no,
+    code: l.code || l.species_code || l.key || "UNDEFINED",
+    description_en: l.description_en,
+    form: l.form,
+    size: l.size,
+    pounds: l.pounds,
+  }));
 
   const { error: insertLinesError } = await supabase
     .from("packing_lines")
