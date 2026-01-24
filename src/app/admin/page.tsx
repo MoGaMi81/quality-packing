@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Packing = {
-  invoice_no: string;
+  id: string;               // 🔑 UUID
+  invoice_no: string;       // visible
   client_code: string;
   created_at: string;
   total_boxes: number;
@@ -18,12 +19,18 @@ export default function AdminHome() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/packings/ready-for-pricing", {
-        cache: "no-store",
-      });
-      const data = await res.json();
-      setPackings(data.packings ?? []);
-      setLoading(false);
+      try {
+        const res = await fetch("/api/packings/ready-for-pricing", {
+          cache: "no-store",
+        });
+        const data = await res.json();
+        setPackings(data.packings ?? []);
+      } catch (e) {
+        console.error("Error cargando packings", e);
+        setPackings([]);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -41,7 +48,7 @@ export default function AdminHome() {
 
       {packings.map((p) => (
         <div
-          key={p.invoice_no}
+          key={p.id}   // ✅ UUID
           className="border rounded-xl p-4 mb-4 flex justify-between items-center"
         >
           <div>
@@ -58,7 +65,7 @@ export default function AdminHome() {
 
           <button
             onClick={() =>
-              router.push(`/packings/${p.invoice_no}/pricing`)
+              router.push(`/packings/${p.id}/pricing`) // ✅ ID, no invoice
             }
             className="bg-green-700 text-white px-4 py-2 rounded"
           >
