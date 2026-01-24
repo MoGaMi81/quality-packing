@@ -26,6 +26,8 @@ if (error) {
   );
 }
 
-return NextResponse.json({ ok: true, data });
-
+return NextResponse.json({
+  ok: true,
+  packings: data ?? [],
+});
 }
