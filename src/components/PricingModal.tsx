@@ -12,8 +12,8 @@ function priceKey(l: PackingLine) {
   if (
     l.description_en === "BLACK GROUPER FRESH" ||
     l.description_en === "GAG GROUPER FRESH" ||
-    l.description_en === "FLORIDA GROUPER FRESH" ||
-    l.description_en === "SNOWY GROUPER FRESH"
+    l.description_en === "FIRE BACK GROUPER FRESH" ||
+    l.description_en === "SCAMP GROUPER FRESH"
   ) {
     return l.description_en;
   }

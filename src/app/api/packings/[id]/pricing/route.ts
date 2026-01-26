@@ -6,6 +6,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// especies con precio único
+const GROUPER_UNICO = [
+  "BLACK GROUPER FRESH",
+  "GAG GROUPER FRESH",
+  "FiRE BAK GROUPER FRESH",
+  "SCAMP GROUPER FRESH",
+];
+
 export async function POST(
   req: Request,
   { params }: { params: { id: string } }
@@ -23,7 +31,7 @@ export async function POST(
   }
 
   /* =====================================================
-     1️⃣ Obtener packing y validar estado
+     1️⃣ Obtener packing
      ===================================================== */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
@@ -42,18 +50,18 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        error: `Packing no disponible para pricing (status=${packing.status}, pricing=${packing.pricing_status})`,
+        error: `Packing no disponible para pricing`,
       },
       { status: 400 }
     );
   }
 
   /* =====================================================
-     2️⃣ Obtener líneas del packing
+     2️⃣ Obtener líneas
      ===================================================== */
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
-    .select("id, code, form, size")
+    .select("id, description_en, form, size")
     .eq("packing_id", packing_id);
 
   if (linesError || !lines || lines.length === 0) {
@@ -64,21 +72,26 @@ export async function POST(
   }
 
   /* =====================================================
-     3️⃣ Aplicar precios
+     3️⃣ Aplicar precios (LÓGICA CORRECTA)
      ===================================================== */
-  console.log("🧾 PRICES RECIBIDOS:", prices); // 👈 agregado antes del loop
-
   for (const line of lines) {
-    const key = `${line.code}|${line.form}|${line.size}`;
-    console.log("🔑 BUSCANDO KEY:", key); // 👈 agregado dentro del loop
+    const keyLinea = `${line.description_en}|||${line.size}|||${line.form}`;
 
-    const price = prices[key];
+    let price = prices[keyLinea];
+
+    // excepción: groupers con precio único
+    if (
+      (price == null || price <= 0) &&
+      GROUPER_UNICO.includes(line.description_en)
+    ) {
+      price = prices[line.description_en];
+    }
 
     if (price == null || price <= 0) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Falta precio válido para ${line.code} ${line.form} ${line.size}`,
+          error: `Falta precio válido para ${line.description_en} ${line.form} ${line.size}`,
         },
         { status: 400 }
       );
@@ -102,9 +115,7 @@ export async function POST(
      ===================================================== */
   const { error: updatePackingError } = await supabase
     .from("packings")
-    .update({
-      pricing_status: "DONE",
-    })
+    .update({ pricing_status: "DONE" })
     .eq("id", packing_id);
 
   if (updatePackingError) {
