@@ -1,49 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { fetchJSON } from "@/lib/fetchJSON";
+import { useRouter } from "next/navigation";
 
-type Row = {
-  id: string;
-  client_code: string;
-  internal_ref: string;
-  date: string;
-};
-
-export default function FacturacionList() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchJSON<{ ok: boolean; rows: Row[] }>("/api/packings/drafts")
-      .then((r) => r.ok && setRows(r.rows))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <main className="p-6">Cargando…</main>;
+export default function FacturacionHome() {
+  const router = useRouter();
 
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Facturación</h1>
+    <main className="max-w-xl mx-auto p-6 space-y-8">
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.replace("/")}
+          className="px-3 py-1 border rounded"
+        >
+          ← Inicio
+        </button>
 
-      {rows.length === 0 && <div>No hay pendientes.</div>}
+        <h1 className="text-2xl font-bold">Facturación</h1>
 
-      {rows.map((r) => (
-        <div key={r.id} className="border rounded p-4 flex justify-between">
-          <div>
-            <div><b>Cliente:</b> {r.client_code}</div>
-            <div><b>Referencia:</b> {r.internal_ref}</div>
-            <div className="text-sm text-gray-500">{r.date}</div>
-          </div>
-          <Link
-            className="px-4 py-2 border rounded"
-            href={`/facturacion/${r.id}`}
-          >
-            Abrir
-          </Link>
-        </div>
-      ))}
+        <div />
+      </div>
+
+      {/* ACCIONES */}
+      <div className="grid gap-4">
+        <button
+          onClick={() => router.push("/facturacion/pending")}
+          className="w-full py-4 bg-blue-700 text-white rounded-xl text-lg font-semibold"
+        >
+          Facturar packing
+        </button>
+
+        <button
+          onClick={() => router.push("/facturacion/buscar")}
+          className="w-full py-4 bg-gray-800 text-white rounded-xl text-lg font-semibold"
+        >
+          Buscar factura
+        </button>
+      </div>
+
+      {/* AYUDA */}
+      <div className="text-sm text-gray-500 text-center">
+        Facturar packings pendientes o consultar facturas ya emitidas
+      </div>
     </main>
   );
 }
