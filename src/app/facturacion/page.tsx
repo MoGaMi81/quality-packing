@@ -10,7 +10,7 @@ export default function FacturacionHome() {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => router.replace("/")}
+          onClick={() => router.replace("/facturacion")}
           className="px-3 py-1 border rounded"
         >
           ← Inicio
