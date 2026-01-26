@@ -20,8 +20,15 @@ export default function Home() {
       return;
     }
 
-    // proceso y facturación
-    router.replace("/drafts");
+    if (role === "proceso") {
+      router.replace("/drafts");
+      return;
+    }
+
+    if (role === "facturacion") {
+      router.replace("/facturacion");
+      return;
+    }
   }, [router]);
 
   return <div style={{ padding: 24 }}>Redirigiendo…</div>;

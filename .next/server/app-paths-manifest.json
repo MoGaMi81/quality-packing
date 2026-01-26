@@ -1,8 +1,6 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/api/packings/ready-for-pricing/route": "app/api/packings/ready-for-pricing/route.js",
-  "/packings/[invoice]/pricing/page": "app/packings/[invoice]/pricing/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/api/packing-drafts/[id]/route": "app/api/packing-drafts/[id]/route.js"
+  "/login/page": "app/login/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/facturacion/page": "app/facturacion/page.js"
 }
