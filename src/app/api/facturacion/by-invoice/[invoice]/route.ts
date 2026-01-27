@@ -29,19 +29,19 @@ export async function GET(
   }
 
   /* =====================================================
-     2️⃣ Obtener líneas del PACKING
+     2️⃣ Obtener líneas del packing
      ===================================================== */
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
+      box_no,
       code,
       description_en,
       scientific_name,
       form,
       size,
       pounds,
-      price,
-      is_mixed
+      price
     `)
     .eq("packing_id", packing.id);
 
@@ -60,9 +60,9 @@ export async function GET(
   }
 
   /* =====================================================
-     3️⃣ Construir RESUMEN DE FACTURA
-        - Normales se agrupan
-        - Mixtas (MX) NO se agrupan
+     3️⃣ Construir RESUMEN FACTURA
+        - box_no = 'MX' → NO agrupar
+        - normales → agrupar por especie / forma / talla
      ===================================================== */
   type Row = {
     boxes: number | "MX";
@@ -78,13 +78,15 @@ export async function GET(
   const map = new Map<string, Row>();
 
   for (const l of lines) {
-    const key = l.is_mixed
+    const isMixed = l.box_no === "MX";
+
+    const key = isMixed
       ? `MX|${crypto.randomUUID()}` // MX nunca se agrupa
       : `${l.code}|${l.form}|${l.size}`;
 
     if (!map.has(key)) {
       map.set(key, {
-        boxes: l.is_mixed ? "MX" : 1,
+        boxes: isMixed ? "MX" : 1,
         pounds: l.pounds,
         description: l.description_en,
         size: l.size,
