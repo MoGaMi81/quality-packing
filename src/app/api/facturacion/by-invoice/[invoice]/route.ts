@@ -13,15 +13,15 @@ export async function GET(
   const invoice_no = params.invoice.toUpperCase();
 
   /* =============================
-     1️⃣ Obtener packing
+     1️⃣ Obtener DRAFT por factura
      ============================= */
-  const { data: packing, error: packingError } = await supabase
-    .from("packings")
-    .select("id, invoice_no, client_code, guide, created_at")
+  const { data: draft, error: draftError } = await supabase
+    .from("packing_drafts")
+    .select("id, client_code, guide, created_at, invoice_no")
     .eq("invoice_no", invoice_no)
     .single();
 
-  if (packingError || !packing) {
+  if (draftError || !draft) {
     return NextResponse.json(
       { ok: false, error: "Factura no encontrada" },
       { status: 404 }
@@ -29,7 +29,7 @@ export async function GET(
   }
 
   /* =============================
-     2️⃣ Obtener líneas
+     2️⃣ Obtener líneas reales
      ============================= */
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
@@ -43,7 +43,7 @@ export async function GET(
       price,
       is_mixed
     `)
-    .eq("packing_id", packing.id);
+    .eq("packing_id", draft.id);
 
   if (linesError || !lines || lines.length === 0) {
     return NextResponse.json(
@@ -53,14 +53,14 @@ export async function GET(
   }
 
   /* =============================
-     3️⃣ Construir RESUMEN FACTURA
+     3️⃣ Construir resumen factura
      ============================= */
-  type Key = string;
-  const map = new Map<Key, any>();
+  const map = new Map<string, any>();
+  let mixIndex = 0;
 
   for (const l of lines) {
     const key = l.is_mixed
-      ? `MX|${crypto.randomUUID()}` // MX nunca se agrupa
+      ? `MX|${mixIndex++}`
       : `${l.code}|${l.form}|${l.size}`;
 
     if (!map.has(key)) {
@@ -76,7 +76,7 @@ export async function GET(
       });
     } else {
       const row = map.get(key);
-      row.boxes += 1;
+      if (!l.is_mixed) row.boxes += 1;
       row.pounds += l.pounds;
       row.amount = row.pounds * row.price;
     }
@@ -85,10 +85,10 @@ export async function GET(
   return NextResponse.json({
     ok: true,
     invoice: {
-      invoice_no: packing.invoice_no,
-      client_code: packing.client_code,
-      guide: packing.guide,
-      date: packing.created_at,
+      invoice_no: draft.invoice_no,
+      client_code: draft.client_code,
+      guide: draft.guide,
+      date: draft.created_at,
       lines: Array.from(map.values()),
     },
   });
