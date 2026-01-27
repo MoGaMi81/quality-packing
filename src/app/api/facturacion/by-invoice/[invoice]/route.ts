@@ -3,8 +3,19 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // 👈 corregido
 );
+
+type PackingWithClient = {
+  id: string;
+  invoice_no: string;
+  guide: string | null;
+  created_at: string;
+  client: {
+    code: string;
+    name: string;
+  };
+};
 
 export async function GET(
   _req: Request,
@@ -12,14 +23,20 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
-  /* =====================================================
-     1️⃣ Obtener PACKING por invoice_no
-     ===================================================== */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
-    .select("id, invoice_no, client_code, guide, created_at")
+    .select(`
+      id,
+      invoice_no,
+      guide,
+      created_at,
+      client:clients (
+        code,
+        name
+      )
+    `)
     .eq("invoice_no", invoice_no)
-    .single();
+    .single<PackingWithClient>();
 
   if (packingError || !packing) {
     return NextResponse.json(
@@ -110,7 +127,8 @@ export async function GET(
     ok: true,
     invoice: {
       invoice_no: packing.invoice_no,
-      client_code: packing.client_code,
+      client_code: packing.client.code,   // 👈 ahora incluye código del cliente
+      client_name: packing.client.name,   // 👈 ahora incluye nombre del cliente
       guide: packing.guide,
       date: packing.created_at,
       lines: Array.from(map.values()),

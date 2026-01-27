@@ -18,6 +18,7 @@ type Line = {
 type Invoice = {
   invoice_no: string;
   client_code: string;
+  client_name: string;
   guide: string | null;
   date: string;
   lines: Line[];
@@ -48,15 +49,14 @@ export default function VerFacturaPage() {
   /* =============================
      TOTALES
      ============================= */
-
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
-
   const totalGross = totalNet * 1.31;
-
   const totalAmount = data.lines.reduce((s, l) => s + l.amount, 0);
 
+  // ✅ Adaptación: calcular cajas con MX aparte
+  const hasMixed = data.lines.some((l) => l.boxes === "MX");
   const totalBoxes = data.lines.reduce((s, l) => {
-    if (l.boxes === "MX") return s + 1;
+    if (l.boxes === "MX") return s; // NO sumar MX
     return s + l.boxes;
   }, 0);
 
@@ -78,12 +78,27 @@ export default function VerFacturaPage() {
 
       {/* INFO */}
       <div className="border rounded p-4 grid grid-cols-2 gap-2 text-sm">
-        <div><b>Cliente:</b> {data.client_code}</div>
-        <div><b>Guía:</b> {data.guide || "-"}</div>
-        <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
-        <div><b>Total cajas:</b> {totalBoxes}</div>
-        <div><b>NET WEIGHT:</b> {totalNet.toFixed(2)} lbs</div>
-        <div><b>GROSS WEIGHT (+31%):</b> {totalGross.toFixed(2)} lbs</div>
+        {/* ✅ Adaptación: mostrar nombre y código */}
+        <div>
+          <b>Cliente:</b> {data.client_name} ({data.client_code})
+        </div>
+        <div>
+          <b>Guía:</b> {data.guide || "-"}
+        </div>
+        <div>
+          <b>Fecha:</b> {new Date(data.date).toLocaleString()}
+        </div>
+        {/* ✅ Adaptación: mostrar cajas con MX */}
+        <div>
+          <b>Total cajas:</b>{" "}
+          {hasMixed ? `${totalBoxes} + MX` : totalBoxes}
+        </div>
+        <div>
+          <b>NET WEIGHT:</b> {totalNet.toFixed(2)} lbs
+        </div>
+        <div>
+          <b>GROSS WEIGHT (+31%):</b> {totalGross.toFixed(2)} lbs
+        </div>
       </div>
 
       {/* TABLE */}

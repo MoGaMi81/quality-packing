@@ -584,9 +584,6 @@ video {
 .w-40 {
   width: 10rem;
 }
-.w-64 {
-  width: 16rem;
-}
 .w-\[480px\] {
   width: 480px;
 }
@@ -604,9 +601,6 @@ video {
 }
 .max-w-4xl {
   max-width: 56rem;
-}
-.max-w-5xl {
-  max-width: 64rem;
 }
 .max-w-lg {
   max-width: 32rem;
@@ -717,9 +711,6 @@ video {
 }
 .border-b {
   border-bottom-width: 1px;
-}
-.border-t {
-  border-top-width: 1px;
 }
 .bg-black {
   --tw-bg-opacity: 1;
