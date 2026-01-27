@@ -45,8 +45,20 @@ export default function VerFacturaPage() {
   if (loading) return <main className="p-6">Cargando factura…</main>;
   if (!data) return null;
 
-  const totalPounds = data.lines.reduce((s, l) => s + l.pounds, 0);
+  /* =============================
+     TOTALES
+     ============================= */
+
+  const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
+
+  const totalGross = totalNet * 1.31;
+
   const totalAmount = data.lines.reduce((s, l) => s + l.amount, 0);
+
+  const totalBoxes = data.lines.reduce((s, l) => {
+    if (l.boxes === "MX") return s + 1;
+    return s + l.boxes;
+  }, 0);
 
   return (
     <main className="p-6 space-y-6">
@@ -69,6 +81,9 @@ export default function VerFacturaPage() {
         <div><b>Cliente:</b> {data.client_code}</div>
         <div><b>Guía:</b> {data.guide || "-"}</div>
         <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
+        <div><b>Total cajas:</b> {totalBoxes}</div>
+        <div><b>NET WEIGHT:</b> {totalNet.toFixed(2)} lbs</div>
+        <div><b>GROSS WEIGHT (+31%):</b> {totalGross.toFixed(2)} lbs</div>
       </div>
 
       {/* TABLE */}
@@ -90,22 +105,32 @@ export default function VerFacturaPage() {
             {data.lines.map((l, i) => (
               <tr key={i}>
                 <td className="border px-2 py-1 text-right">{l.boxes}</td>
-                <td className="border px-2 py-1 text-right">{l.pounds.toFixed(2)}</td>
+                <td className="border px-2 py-1 text-right">
+                  {l.pounds.toFixed(2)}
+                </td>
                 <td className="border px-2 py-1">{l.description}</td>
                 <td className="border px-2 py-1">{l.size}</td>
                 <td className="border px-2 py-1">{l.form}</td>
                 <td className="border px-2 py-1">{l.scientific_name}</td>
-                <td className="border px-2 py-1 text-right">{l.price.toFixed(2)}</td>
-                <td className="border px-2 py-1 text-right">{l.amount.toFixed(2)}</td>
+                <td className="border px-2 py-1 text-right">
+                  {l.price.toFixed(2)}
+                </td>
+                <td className="border px-2 py-1 text-right">
+                  {l.amount.toFixed(2)}
+                </td>
               </tr>
             ))}
           </tbody>
           <tfoot className="font-semibold bg-gray-50">
             <tr>
-              <td className="border px-2 py-1 text-right">Total</td>
-              <td className="border px-2 py-1 text-right">{totalPounds.toFixed(2)}</td>
+              <td className="border px-2 py-1 text-right">TOTAL</td>
+              <td className="border px-2 py-1 text-right">
+                {totalNet.toFixed(2)}
+              </td>
               <td colSpan={5} className="border" />
-              <td className="border px-2 py-1 text-right">{totalAmount.toFixed(2)}</td>
+              <td className="border px-2 py-1 text-right">
+                {totalAmount.toFixed(2)}
+              </td>
             </tr>
           </tfoot>
         </table>
