@@ -3,19 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // 👈 corregido
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-type PackingWithClient = {
-  id: string;
-  invoice_no: string;
-  guide: string | null;
-  created_at: string;
-  client: {
-    code: string;
-    name: string;
-  };
-};
 
 export async function GET(
   _req: Request,
@@ -23,20 +12,20 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
+  /* =====================================================
+     1️⃣ Obtener PACKING por invoice_no (SIN JOIN)
+     ===================================================== */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .select(`
       id,
       invoice_no,
+      client_code,
       guide,
-      created_at,
-      client:clients (
-        code,
-        name
-      )
+      created_at
     `)
     .eq("invoice_no", invoice_no)
-    .single<PackingWithClient>();
+    .single();
 
   if (packingError || !packing) {
     return NextResponse.json(
@@ -114,7 +103,7 @@ export async function GET(
       });
     } else {
       const row = map.get(key)!;
-      row.boxes = typeof row.boxes === "number" ? row.boxes + 1 : row.boxes;
+      if (typeof row.boxes === "number") row.boxes += 1;
       row.pounds += l.pounds;
       row.amount = row.pounds * row.price;
     }
@@ -127,8 +116,8 @@ export async function GET(
     ok: true,
     invoice: {
       invoice_no: packing.invoice_no,
-      client_code: packing.client.code,   // 👈 ahora incluye código del cliente
-      client_name: packing.client.name,   // 👈 ahora incluye nombre del cliente
+      client_code: packing.client_code,
+      client_name: packing.client_code, // 👈 por ahora igual al código
       guide: packing.guide,
       date: packing.created_at,
       lines: Array.from(map.values()),
