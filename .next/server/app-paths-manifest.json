@@ -1,8 +1,5 @@
 {
-  "/login/page": "app/login/page.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/page": "app/page.js",
   "/facturacion/page": "app/facturacion/page.js",
-  "/facturacion/pending/page": "app/facturacion/pending/page.js",
-  "/api/packings/[id]/route": "app/api/packings/[id]/route.js"
+  "/facturacion/pending/page": "app/facturacion/pending/page.js"
 }
