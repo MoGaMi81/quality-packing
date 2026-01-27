@@ -21,6 +21,7 @@ export async function GET() {
     .order("created_at", { ascending: true });
 
   if (error) {
+    console.error("[FACTURACION_PENDING]", error);
     return NextResponse.json(
       { ok: false, error: error.message },
       { status: 500 }
@@ -29,6 +30,6 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
-    drafts: data ?? [],
+    rows: data ?? [],
   });
 }
