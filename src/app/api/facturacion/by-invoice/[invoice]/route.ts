@@ -12,25 +12,25 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
-  /* =============================
-     1️⃣ Obtener DRAFT por factura
-     ============================= */
-  const { data: draft, error: draftError } = await supabase
-    .from("packing_drafts")
-    .select("id, client_code, guide, created_at, invoice_no")
+  /* =====================================================
+     1️⃣ Obtener PACKING por invoice_no
+     ===================================================== */
+  const { data: packing, error: packingError } = await supabase
+    .from("packings")
+    .select("id, invoice_no, client_code, guide, created_at")
     .eq("invoice_no", invoice_no)
     .single();
 
-  if (draftError || !draft) {
+  if (packingError || !packing) {
     return NextResponse.json(
       { ok: false, error: "Factura no encontrada" },
       { status: 404 }
     );
   }
 
-  /* =============================
-     2️⃣ Obtener líneas reales
-     ============================= */
+  /* =====================================================
+     2️⃣ Obtener líneas del PACKING
+     ===================================================== */
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
@@ -43,24 +43,43 @@ export async function GET(
       price,
       is_mixed
     `)
-    .eq("packing_id", draft.id);
+    .eq("packing_id", packing.id);
 
-  if (linesError || !lines || lines.length === 0) {
+  if (linesError) {
+    return NextResponse.json(
+      { ok: false, error: linesError.message },
+      { status: 500 }
+    );
+  }
+
+  if (!lines || lines.length === 0) {
     return NextResponse.json(
       { ok: false, error: "Factura sin líneas" },
       { status: 400 }
     );
   }
 
-  /* =============================
-     3️⃣ Construir resumen factura
-     ============================= */
-  const map = new Map<string, any>();
-  let mixIndex = 0;
+  /* =====================================================
+     3️⃣ Construir RESUMEN DE FACTURA
+        - Normales se agrupan
+        - Mixtas (MX) NO se agrupan
+     ===================================================== */
+  type Row = {
+    boxes: number | "MX";
+    pounds: number;
+    description: string;
+    size: string;
+    form: string;
+    scientific_name: string | null;
+    price: number;
+    amount: number;
+  };
+
+  const map = new Map<string, Row>();
 
   for (const l of lines) {
     const key = l.is_mixed
-      ? `MX|${mixIndex++}`
+      ? `MX|${crypto.randomUUID()}` // MX nunca se agrupa
       : `${l.code}|${l.form}|${l.size}`;
 
     if (!map.has(key)) {
@@ -70,25 +89,28 @@ export async function GET(
         description: l.description_en,
         size: l.size,
         form: l.form,
-        scientific_name: l.scientific_name,
+        scientific_name: l.scientific_name ?? null,
         price: l.price,
         amount: l.pounds * l.price,
       });
     } else {
-      const row = map.get(key);
-      if (!l.is_mixed) row.boxes += 1;
+      const row = map.get(key)!;
+      row.boxes = typeof row.boxes === "number" ? row.boxes + 1 : row.boxes;
       row.pounds += l.pounds;
       row.amount = row.pounds * row.price;
     }
   }
 
+  /* =====================================================
+     4️⃣ Respuesta final
+     ===================================================== */
   return NextResponse.json({
     ok: true,
     invoice: {
-      invoice_no: draft.invoice_no,
-      client_code: draft.client_code,
-      guide: draft.guide,
-      date: draft.created_at,
+      invoice_no: packing.invoice_no,
+      client_code: packing.client_code,
+      guide: packing.guide,
+      date: packing.created_at,
       lines: Array.from(map.values()),
     },
   });
