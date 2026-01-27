@@ -12,9 +12,8 @@ export async function GET() {
     .select(`
       id,
       client_code,
-      created_at,
-      total_boxes,
-      total_lbs
+      internal_ref,
+      created_at
     `)
     .eq("status", "PROCESS_DONE")
     .is("invoice_no", null)

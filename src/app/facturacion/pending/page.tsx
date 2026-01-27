@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
+// 🔑 Tipo Row sin total_boxes ni total_lbs
 type Row = {
   id: string;
   client_code: string;
+  internal_ref: string;
   created_at: string;
-  total_boxes: number;
-  total_lbs: number;
 };
 
 export default function FacturacionPendingPage() {
@@ -45,9 +45,7 @@ export default function FacturacionPendingPage() {
         <div />
       </div>
 
-      {rows.length === 0 && (
-        <div>No hay pendientes.</div>
-      )}
+      {rows.length === 0 && <div>No hay pendientes.</div>}
 
       {rows.map((r) => (
         <div
@@ -55,12 +53,14 @@ export default function FacturacionPendingPage() {
           className="border rounded p-4 flex justify-between"
         >
           <div>
-            <div><b>Cliente:</b> {r.client_code}</div>
+            <div>
+              <b>Cliente:</b> {r.client_code}
+            </div>
+            <div>
+              <b>Referencia:</b> {r.internal_ref}
+            </div>
             <div className="text-sm text-gray-500">
               {new Date(r.created_at).toLocaleString()}
-            </div>
-            <div className="text-sm">
-              {r.total_boxes} cajas · {r.total_lbs} lbs
             </div>
           </div>
 
