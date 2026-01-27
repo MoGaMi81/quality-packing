@@ -8,8 +8,9 @@ import { fetchJSON } from "@/lib/fetchJSON";
 type Row = {
   id: string;
   client_code: string;
-  internal_ref: string;
-  date: string;
+  created_at: string;
+  total_boxes: number;
+  total_lbs: number;
 };
 
 export default function FacturacionPending() {
@@ -18,7 +19,9 @@ export default function FacturacionPending() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchJSON<{ ok: boolean; rows: Row[] }>("/api/packings/drafts")
+    fetchJSON<{ ok: boolean; rows: Row[] }>(
+      "/api/facturacion/pending"
+    )
       .then((r) => r.ok && setRows(r.rows))
       .finally(() => setLoading(false));
   }, []);
@@ -26,7 +29,7 @@ export default function FacturacionPending() {
   if (loading) return <main className="p-6">Cargando…</main>;
 
   return (
-    <main className="p-6 space-y-4">
+    <main className="p-6 space-y-4 max-w-4xl mx-auto">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <button
@@ -41,20 +44,32 @@ export default function FacturacionPending() {
         <div />
       </div>
 
-      {rows.length === 0 && <div>No hay pendientes.</div>}
+      {rows.length === 0 && (
+        <div className="text-gray-500">No hay pendientes.</div>
+      )}
 
       {rows.map((r) => (
-        <div key={r.id} className="border rounded p-4 flex justify-between">
+        <div
+          key={r.id}
+          className="border rounded-xl p-4 flex justify-between items-center"
+        >
           <div>
-            <div><b>Cliente:</b> {r.client_code}</div>
-            <div><b>Referencia:</b> {r.internal_ref}</div>
-            <div className="text-sm text-gray-500">{r.date}</div>
+            <div className="font-semibold">
+              Cliente: {r.client_code}
+            </div>
+            <div className="text-sm text-gray-500">
+              {new Date(r.created_at).toLocaleString()}
+            </div>
+            <div className="text-sm mt-1">
+              {r.total_boxes} cajas · {r.total_lbs} lbs
+            </div>
           </div>
+
           <Link
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2 bg-blue-700 text-white rounded"
             href={`/facturacion/${r.id}`}
           >
-            Abrir
+            Facturar
           </Link>
         </div>
       ))}
