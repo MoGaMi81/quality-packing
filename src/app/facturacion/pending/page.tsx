@@ -26,6 +26,14 @@ export default function FacturacionPendingPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // ✅ Función de logout
+  async function logout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    router.replace("/login");
+  }
+
   if (loading) {
     return <main className="p-6">Cargando…</main>;
   }
@@ -42,7 +50,14 @@ export default function FacturacionPendingPage() {
         </button>
 
         <h1 className="text-2xl font-bold">Pendientes de facturar</h1>
-        <div />
+
+        {/* ✅ Botón de cerrar sesión */}
+        <button
+          onClick={logout}
+          className="px-3 py-1 border rounded text-sm bg-red-600 text-white"
+        >
+          Cerrar sesión
+        </button>
       </div>
 
       {rows.length === 0 && <div>No hay pendientes.</div>}
