@@ -78,7 +78,6 @@ export default function VerFacturaPage() {
 
       {/* INFO */}
       <div className="border rounded p-4 grid grid-cols-2 gap-2 text-sm">
-        {/* ✅ Adaptación: mostrar nombre y código */}
         <div>
           <b>Cliente:</b> {data.client_name} ({data.client_code})
         </div>
@@ -88,7 +87,6 @@ export default function VerFacturaPage() {
         <div>
           <b>Fecha:</b> {new Date(data.date).toLocaleString()}
         </div>
-        {/* ✅ Adaptación: mostrar cajas con MX */}
         <div>
           <b>Total cajas:</b>{" "}
           {hasMixed ? `${totalBoxes} + MX` : totalBoxes}
