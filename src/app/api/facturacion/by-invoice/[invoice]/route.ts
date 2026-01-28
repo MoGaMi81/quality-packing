@@ -12,9 +12,7 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
-  /* =====================================================
-     1️⃣ Obtener PACKING por invoice_no (SIN JOIN)
-     ===================================================== */
+  // 1️⃣ Obtener PACKING
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .select(`
@@ -34,9 +32,7 @@ export async function GET(
     );
   }
 
-  /* =====================================================
-     2️⃣ Obtener líneas del packing
-     ===================================================== */
+  // 2️⃣ Obtener líneas
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
@@ -65,11 +61,23 @@ export async function GET(
     );
   }
 
-  /* =====================================================
-     3️⃣ Construir RESUMEN FACTURA
-        - MX → agrupar todas en una sola caja
-        - normales → agrupar por especie / forma / talla
-     ===================================================== */
+  // =============================
+  // CÁLCULO CORRECTO DE CAJAS
+  // =============================
+  const normalBoxes = new Set<string>();
+  let hasMixed = false;
+
+  for (const l of lines) {
+    if (l.box_no === "MX") {
+      hasMixed = true;
+    } else {
+      normalBoxes.add(l.box_no);
+    }
+  }
+
+  const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
+
+  // 3️⃣ Construir resumen
   type Row = {
     boxes: number | "MX";
     pounds: number;
@@ -133,17 +141,16 @@ export async function GET(
     map.set("MX", mxRow);
   }
 
-  /* =====================================================
-     4️⃣ Respuesta final
-     ===================================================== */
+  // 4️⃣ Respuesta final
   return NextResponse.json({
     ok: true,
     invoice: {
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name: packing.client_code, // 👈 por ahora igual al código
+      client_name: packing.client_code,
       guide: packing.guide,
       date: packing.created_at,
+      total_boxes, // 👈 FUENTE ÚNICA Y CORRECTA
       lines: Array.from(map.values()),
     },
   });
