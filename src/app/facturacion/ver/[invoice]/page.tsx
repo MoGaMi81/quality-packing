@@ -61,9 +61,9 @@ export default function VerFacturaPage() {
   // ✅ Adaptación: calcular cajas con MX aparte
   const hasMixed = data.lines.some((l) => l.boxes === "MX");
   const totalBoxes = data.lines.reduce((s, l) => {
-    if (l.boxes === "MX") return s; // NO sumar MX
-    return s + l.boxes;
-  }, 0);
+  if (l.boxes === "MX") return s; // 👈 MX NO suma
+  return s + l.boxes;
+}, 0);
 
   return (
     <main className="p-6 space-y-6">
