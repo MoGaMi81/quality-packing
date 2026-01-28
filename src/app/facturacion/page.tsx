@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 export default function FacturacionHome() {
   const router = useRouter();
 
+  // ✅ Función de logout
+  async function logout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    router.replace("/login");
+  }
+
   return (
     <main className="max-w-xl mx-auto p-6 space-y-8">
       {/* HEADER */}
@@ -18,7 +26,13 @@ export default function FacturacionHome() {
 
         <h1 className="text-2xl font-bold">Facturación</h1>
 
-        <div />
+        {/* ✅ Botón cerrar sesión */}
+        <button
+          onClick={logout}
+          className="px-3 py-1 border rounded text-sm bg-red-600 text-white"
+        >
+          Cerrar sesión
+        </button>
       </div>
 
       {/* ACCIONES */}
