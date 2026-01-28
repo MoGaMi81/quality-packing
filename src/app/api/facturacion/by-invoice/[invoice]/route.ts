@@ -67,7 +67,7 @@ export async function GET(
 
   /* =====================================================
      3️⃣ Construir RESUMEN FACTURA
-        - box_no = 'MX' → NO agrupar
+        - MX → agrupar todas en una sola caja
         - normales → agrupar por especie / forma / talla
      ===================================================== */
   type Row = {
@@ -82,17 +82,35 @@ export async function GET(
   };
 
   const map = new Map<string, Row>();
+  let mxRow: Row | null = null;
 
   for (const l of lines) {
     const isMixed = l.box_no === "MX";
 
-    const key = isMixed
-      ? `MX|${crypto.randomUUID()}` // MX nunca se agrupa
-      : `${l.code}|${l.form}|${l.size}`;
+    if (isMixed) {
+      if (!mxRow) {
+        mxRow = {
+          boxes: "MX",
+          pounds: l.pounds,
+          description: l.description_en,
+          size: l.size,
+          form: l.form,
+          scientific_name: l.scientific_name ?? null,
+          price: l.price,
+          amount: l.pounds * l.price,
+        };
+      } else {
+        mxRow.pounds += l.pounds;
+        mxRow.amount = mxRow.pounds * mxRow.price;
+      }
+      continue;
+    }
+
+    const key = `${l.code}|${l.form}|${l.size}`;
 
     if (!map.has(key)) {
       map.set(key, {
-        boxes: isMixed ? "MX" : 1,
+        boxes: 1,
         pounds: l.pounds,
         description: l.description_en,
         size: l.size,
@@ -103,10 +121,16 @@ export async function GET(
       });
     } else {
       const row = map.get(key)!;
-      if (typeof row.boxes === "number") row.boxes += 1;
+      if (typeof row.boxes === "number") {
+        row.boxes += 1;
+      }
       row.pounds += l.pounds;
       row.amount = row.pounds * row.price;
     }
+  }
+
+  if (mxRow) {
+    map.set("MX", mxRow);
   }
 
   /* =====================================================
