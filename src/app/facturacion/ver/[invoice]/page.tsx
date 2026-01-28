@@ -58,12 +58,19 @@ export default function VerFacturaPage() {
     0
   );
 
-  // ✅ Adaptación: calcular cajas con MX aparte
+  // ✅ Adaptación: calcular cajas con MX como UNA sola caja
   const hasMixed = data.lines.some((l) => l.boxes === "MX");
   const totalBoxes = data.lines.reduce((s, l) => {
-  if (l.boxes === "MX") return s; // 👈 MX NO suma
-  return s + l.boxes;
-}, 0);
+    if (l.boxes === "MX") return s; // 👈 no sumamos las MX aquí
+    return s + l.boxes;
+  }, 0);
+
+  // Mostrar resultado final
+  const totalBoxesDisplay = hasMixed
+    ? totalBoxes === 0
+      ? "1 MX"
+      : `${totalBoxes} + 1 MX`
+    : totalBoxes;
 
   return (
     <main className="p-6 space-y-6">
@@ -93,8 +100,7 @@ export default function VerFacturaPage() {
           <b>Fecha:</b> {new Date(data.date).toLocaleString()}
         </div>
         <div>
-          <b>Total cajas:</b>{" "}
-          {hasMixed ? `${totalBoxes} + MX` : totalBoxes}
+          <b>Total cajas:</b> {totalBoxesDisplay}
         </div>
         <div>
           <b>NET WEIGHT:</b> {totalNet.toFixed(2)} lbs
