@@ -11,8 +11,8 @@ type Line = {
   size: string;
   form: string;
   scientific_name: string | null;
-  price: number;
-  amount: number;
+  price: number | null;
+  amount: number | null;
 };
 
 type Invoice = {
@@ -51,7 +51,12 @@ export default function VerFacturaPage() {
      ============================= */
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalGross = totalNet * 1.31;
-  const totalAmount = data.lines.reduce((s, l) => s + l.amount, 0);
+
+  // ✅ Adaptación: usar nullish coalescing para evitar errores
+  const totalAmount = data.lines.reduce(
+    (s, l) => s + (l.amount ?? 0),
+    0
+  );
 
   // ✅ Adaptación: calcular cajas con MX aparte
   const hasMixed = data.lines.some((l) => l.boxes === "MX");
@@ -125,11 +130,13 @@ export default function VerFacturaPage() {
                 <td className="border px-2 py-1">{l.size}</td>
                 <td className="border px-2 py-1">{l.form}</td>
                 <td className="border px-2 py-1">{l.scientific_name}</td>
+
+                {/* ✅ Adaptación: price y amount seguros */}
                 <td className="border px-2 py-1 text-right">
-                  {l.price.toFixed(2)}
+                  {l.price != null ? l.price.toFixed(2) : "-"}
                 </td>
                 <td className="border px-2 py-1 text-right">
-                  {l.amount.toFixed(2)}
+                  {l.amount != null ? l.amount.toFixed(2) : "0.00"}
                 </td>
               </tr>
             ))}
