@@ -34,7 +34,7 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
-  // 1️⃣ Obtener PACKING
+  // 1️⃣ PACKING
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .select(`
@@ -54,8 +54,8 @@ export async function GET(
     );
   }
 
-  // 2️⃣ Obtener líneas
-  const { data: lines, error: linesError } = await supabase
+  // 2️⃣ LÍNEAS
+  const { data, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
       box_no,
@@ -76,42 +76,38 @@ export async function GET(
     );
   }
 
-  if (!lines || lines.length === 0) {
+  if (!data || data.length === 0) {
     return NextResponse.json(
       { ok: false, error: "Factura sin líneas" },
       { status: 400 }
     );
   }
 
-  const typedLines = lines as LineDB[];
+  const lines = data as LineDB[];
 
   // =============================
-  // CÁLCULO CORRECTO DE CAJAS
+  // 3️⃣ CONTAR OCURRENCIAS
   // =============================
-  const normalBoxes = new Set<string>();
-  let hasMixed = false;
+  const counter = new Map<string, number>();
 
-  for (const l of typedLines) {
-    if (l.box_no === "MX") {
-      hasMixed = true;
-    } else {
-      normalBoxes.add(l.box_no);
-    }
+  for (const l of lines) {
+    const key = `${l.code}|${l.form}|${l.size}`;
+    counter.set(key, (counter.get(key) ?? 0) + 1);
   }
 
-  const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
-
   // =============================
-  // RESUMEN COMERCIAL CORRECTO
+  // 4️⃣ CONSTRUIR FILAS
   // =============================
   const rows: Row[] = [];
   const normalMap = new Map<string, Row>();
 
-  for (const l of typedLines) {
+  for (const l of lines) {
+    const key = `${l.code}|${l.form}|${l.size}`;
+    const times = counter.get(key)!;
     const price = l.price ?? 0;
 
-    // 👉 MIXED: UNA FILA POR CADA CAJA MX
-    if (l.box_no === "MX") {
+    // 👉 MIXTA (solo aparece 1 vez)
+    if (times === 1) {
       rows.push({
         boxes: "MX",
         pounds: l.pounds,
@@ -125,9 +121,7 @@ export async function GET(
       continue;
     }
 
-    // 👉 NORMALES: AGRUPAR
-    const key = `${l.code}|${l.form}|${l.size}`;
-
+    // 👉 NORMAL (agrupar)
     if (!normalMap.has(key)) {
       normalMap.set(key, {
         boxes: 1,
@@ -141,26 +135,34 @@ export async function GET(
       });
     } else {
       const row = normalMap.get(key)!;
-      row.boxes = row.boxes as number + 1;
+      row.boxes = (row.boxes as number) + 1;
       row.pounds += l.pounds;
       row.amount = row.pounds * row.price;
     }
   }
 
-  // Primero normales, luego MX (orden comercial)
-  const finalRows = [...normalMap.values(), ...rows];
+  // =============================
+  // 5️⃣ TOTAL CAJAS (CORRECTO)
+  // =============================
+  const total_boxes =
+    Array.from(normalMap.values()).reduce(
+      (s, r) => s + (r.boxes as number),
+      0
+    ) + rows.length;
 
-  // 4️⃣ Respuesta final
+  // =============================
+  // 6️⃣ RESPUESTA FINAL
+  // =============================
   return NextResponse.json({
     ok: true,
     invoice: {
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name: packing.client_code, // 🔜 luego catálogo
+      client_name: packing.client_code, // 🔜 se conecta a catálogo
       guide: packing.guide,
       date: packing.created_at,
-      total_boxes, // 🔒 FUENTE ÚNICA
-      lines: finalRows,
+      total_boxes,
+      lines: [...normalMap.values(), ...rows],
     },
   });
 }
