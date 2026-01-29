@@ -68,16 +68,20 @@ export async function GET(
   let hasMixed = false;
 
   for (const l of lines) {
-    if (l.box_no === "MX") {
+    const box = String(l.box_no);
+
+    if (box === "MX") {
       hasMixed = true;
     } else {
-      normalBoxes.add(l.box_no);
+      normalBoxes.add(box);
     }
   }
 
   const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
 
-  // 3️⃣ Construir resumen
+  // =============================
+  // RESUMEN COMERCIAL
+  // =============================
   type Row = {
     boxes: number | "MX";
     pounds: number;
@@ -93,7 +97,9 @@ export async function GET(
   let mxRow: Row | null = null;
 
   for (const l of lines) {
-    const isMixed = l.box_no === "MX";
+    const box = String(l.box_no);
+    const isMixed = box === "MX";
+    const price = l.price ?? 0;
 
     if (isMixed) {
       if (!mxRow) {
@@ -104,8 +110,8 @@ export async function GET(
           size: l.size,
           form: l.form,
           scientific_name: l.scientific_name ?? null,
-          price: l.price,
-          amount: l.pounds * l.price,
+          price,
+          amount: l.pounds * price,
         };
       } else {
         mxRow.pounds += l.pounds;
@@ -124,17 +130,19 @@ export async function GET(
         size: l.size,
         form: l.form,
         scientific_name: l.scientific_name ?? null,
-        price: l.price,
-        amount: l.pounds * l.price,
+        price,
+        amount: l.pounds * price,
       });
     } else {
-      const row = map.get(key)!;
-      if (typeof row.boxes === "number") {
-        row.boxes += 1;
-      }
-      row.pounds += l.pounds;
-      row.amount = row.pounds * row.price;
-    }
+  const row = map.get(key)!;
+
+  if (typeof row.boxes === "number") {
+    row.boxes += 1;
+  }
+
+  row.pounds += l.pounds;
+  row.amount = row.pounds * row.price;
+}
   }
 
   if (mxRow) {
@@ -147,10 +155,10 @@ export async function GET(
     invoice: {
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name: packing.client_code,
+      client_name: packing.client_code, // luego lo conectamos al catálogo
       guide: packing.guide,
       date: packing.created_at,
-      total_boxes, // 👈 FUENTE ÚNICA Y CORRECTA
+      total_boxes, // 🔒 FUENTE ÚNICA
       lines: Array.from(map.values()),
     },
   });

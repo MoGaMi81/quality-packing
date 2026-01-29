@@ -21,6 +21,7 @@ type Invoice = {
   client_name: string;
   guide: string | null;
   date: string;
+  total_boxes: number; // ✅ ahora viene del backend
   lines: Line[];
 };
 
@@ -58,20 +59,6 @@ export default function VerFacturaPage() {
     0
   );
 
-  // ✅ Adaptación: calcular cajas con MX como UNA sola caja
-  const hasMixed = data.lines.some((l) => l.boxes === "MX");
-  const totalBoxes = data.lines.reduce((s, l) => {
-    if (l.boxes === "MX") return s; // 👈 no sumamos las MX aquí
-    return s + l.boxes;
-  }, 0);
-
-  // Mostrar resultado final
-  const totalBoxesDisplay = hasMixed
-    ? totalBoxes === 0
-      ? "1 MX"
-      : `${totalBoxes} + 1 MX`
-    : totalBoxes;
-
   return (
     <main className="p-6 space-y-6">
       {/* HEADER */}
@@ -100,7 +87,7 @@ export default function VerFacturaPage() {
           <b>Fecha:</b> {new Date(data.date).toLocaleString()}
         </div>
         <div>
-          <b>Total cajas:</b> {totalBoxesDisplay}
+          <b>Total cajas:</b> {data.total_boxes}
         </div>
         <div>
           <b>NET WEIGHT:</b> {totalNet.toFixed(2)} lbs
