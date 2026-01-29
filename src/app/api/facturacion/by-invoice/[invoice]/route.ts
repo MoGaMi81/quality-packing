@@ -69,7 +69,6 @@ export async function GET(
 
   for (const l of lines) {
     const box = String(l.box_no);
-
     if (box === "MX") {
       hasMixed = true;
     } else {
@@ -80,7 +79,7 @@ export async function GET(
   const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
 
   // =============================
-  // RESUMEN COMERCIAL
+  // RESUMEN COMERCIAL (CORRECTO)
   // =============================
   type Row = {
     boxes: number | "MX";
@@ -93,37 +92,37 @@ export async function GET(
     amount: number;
   };
 
-  const map = new Map<string, Row>();
-  let mxRow: Row | null = null;
+  const normalMap = new Map<string, Row>();
+  const rows: Row[] = [];
 
   for (const l of lines) {
     const box = String(l.box_no);
-    const isMixed = box === "MX";
     const price = l.price ?? 0;
 
-    if (isMixed) {
-      if (!mxRow) {
-        mxRow = {
-          boxes: "MX",
-          pounds: l.pounds,
-          description: l.description_en,
-          size: l.size,
-          form: l.form,
-          scientific_name: l.scientific_name ?? null,
-          price,
-          amount: l.pounds * price,
-        };
-      } else {
-        mxRow.pounds += l.pounds;
-        mxRow.amount = mxRow.pounds * mxRow.price;
-      }
+    // =====================
+    // MX → UNA FILA POR LÍNEA
+    // =====================
+    if (box === "MX") {
+      rows.push({
+        boxes: "MX",
+        pounds: l.pounds,
+        description: l.description_en,
+        size: l.size,
+        form: l.form,
+        scientific_name: l.scientific_name ?? null,
+        price,
+        amount: l.pounds * price,
+      });
       continue;
     }
 
+    // =====================
+    // NORMALES → AGRUPADAS
+    // =====================
     const key = `${l.code}|${l.form}|${l.size}`;
 
-    if (!map.has(key)) {
-      map.set(key, {
+    if (!normalMap.has(key)) {
+      normalMap.set(key, {
         boxes: 1,
         pounds: l.pounds,
         description: l.description_en,
@@ -134,20 +133,15 @@ export async function GET(
         amount: l.pounds * price,
       });
     } else {
-  const row = map.get(key)!;
-
-  if (typeof row.boxes === "number") {
-    row.boxes += 1;
+      const row = normalMap.get(key)!;
+      row.boxes = (row.boxes as number) + 1;
+      row.pounds += l.pounds;
+      row.amount = row.pounds * row.price;
+    }
   }
 
-  row.pounds += l.pounds;
-  row.amount = row.pounds * row.price;
-}
-  }
-
-  if (mxRow) {
-    map.set("MX", mxRow);
-  }
+  // Primero normales, luego MX (orden lógico)
+  const finalLines = [...normalMap.values(), ...rows];
 
   // 4️⃣ Respuesta final
   return NextResponse.json({
@@ -155,11 +149,11 @@ export async function GET(
     invoice: {
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name: packing.client_code, // luego lo conectamos al catálogo
+      client_name: packing.client_code, // luego se conecta al catálogo
       guide: packing.guide,
       date: packing.created_at,
       total_boxes, // 🔒 FUENTE ÚNICA
-      lines: Array.from(map.values()),
+      lines: finalLines,
     },
   });
 }
