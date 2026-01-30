@@ -204,12 +204,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
               {error && <div className="text-red-600 mt-2">{error}</div>}
 
-              <button
-                onClick={goStep1}
-                className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
-              >
-                Continuar
-              </button>
+              
             </>
           )}
 
