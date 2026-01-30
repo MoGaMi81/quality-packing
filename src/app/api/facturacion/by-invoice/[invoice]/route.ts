@@ -106,25 +106,24 @@ let hasMixed = false;
 for (const l of lines) {
   const price = l.price ?? 0;
 
-  // 👉 CAJA COMBINADA
+  // 👉 CAJA COMBINADA (MX)
   if (l.box_no === "MX") {
-  hasMixed = true;
+    hasMixed = true;
 
-  const isFirstMX = !rows.some(r => r.boxes === "MX");
+    rows.push({
+      boxes: "MX", // ✅ SIEMPRE MX
+      pounds: l.pounds,
+      description: l.description_en,
+      size: l.size,
+      form: l.form,
+      scientific_name: l.scientific_name,
+      price,
+      amount: l.pounds * price,
+    });
 
-  rows.push({
-    boxes: isFirstMX ? "MX" : null, // 👈 solo la primera línea muestra "MX"
-    pounds: l.pounds,
-    description: l.description_en,
-    size: l.size,
-    form: l.form,
-    scientific_name: l.scientific_name,
-    price,
-    amount: l.pounds * price,
-  });
+    continue;
+  }
 
-  continue;
-}
   // 👉 CAJA NORMAL
   normalBoxes.add(l.box_no);
 

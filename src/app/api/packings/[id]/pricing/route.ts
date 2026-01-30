@@ -10,7 +10,7 @@ const supabase = createClient(
 const GROUPER_UNICO = [
   "BLACK GROUPER FRESH",
   "GAG GROUPER FRESH",
-  "FiRE BAK GROUPER FRESH",
+  "FIRE BAK GROUPER FRESH",
   "SCAMP GROUPER FRESH",
 ];
 
@@ -60,7 +60,7 @@ export async function POST(
      2️⃣ Obtener líneas
      ===================================================== */
   const { data: lines, error: linesError } = await supabase
-    .from("packings")
+    .from("packing_lines")
     .select("id, description_en, form, size")
     .eq("packing_id", packing_id);
 
