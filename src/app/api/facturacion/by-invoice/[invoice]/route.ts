@@ -96,59 +96,62 @@ export async function GET(
   }
 
   // =============================
-  // 4️⃣ CONSTRUIR FILAS
-  // =============================
-  const rows: Row[] = [];
-  const normalMap = new Map<string, Row>();
+// 3️⃣ CONSTRUIR FILAS (CORRECTO)
+// =============================
+const rows: Row[] = [];
+const normalMap = new Map<string, Row>();
+const normalBoxes = new Set<string>();
+let hasMixed = false;
 
-  for (const l of lines) {
-    const key = `${l.code}|${l.form}|${l.size}`;
-    const times = counter.get(key)!;
-    const price = l.price ?? 0;
+for (const l of lines) {
+  const price = l.price ?? 0;
 
-    // 👉 MIXTA (solo aparece 1 vez)
-    if (times === 1) {
-      rows.push({
-        boxes: "MX",
-        pounds: l.pounds,
-        description: l.description_en,
-        size: l.size,
-        form: l.form,
-        scientific_name: l.scientific_name,
-        price,
-        amount: l.pounds * price,
-      });
-      continue;
-    }
+  // 👉 CAJA COMBINADA
+  if (l.box_no === "MX") {
+    hasMixed = true;
 
-    // 👉 NORMAL (agrupar)
-    if (!normalMap.has(key)) {
-      normalMap.set(key, {
-        boxes: 1,
-        pounds: l.pounds,
-        description: l.description_en,
-        size: l.size,
-        form: l.form,
-        scientific_name: l.scientific_name,
-        price,
-        amount: l.pounds * price,
-      });
-    } else {
-      const row = normalMap.get(key)!;
-      row.boxes = (row.boxes as number) + 1;
-      row.pounds += l.pounds;
-      row.amount = row.pounds * row.price;
-    }
+    rows.push({
+      boxes: "MX",
+      pounds: l.pounds,
+      description: l.description_en,
+      size: l.size,
+      form: l.form,
+      scientific_name: l.scientific_name,
+      price,
+      amount: l.pounds * price,
+    });
+
+    continue;
   }
+
+  // 👉 CAJA NORMAL
+  normalBoxes.add(l.box_no);
+
+  const key = `${l.code}|${l.form}|${l.size}`;
+
+  if (!normalMap.has(key)) {
+    normalMap.set(key, {
+      boxes: 1,
+      pounds: l.pounds,
+      description: l.description_en,
+      size: l.size,
+      form: l.form,
+      scientific_name: l.scientific_name,
+      price,
+      amount: l.pounds * price,
+    });
+  } else {
+    const row = normalMap.get(key)!;
+    row.boxes = (row.boxes as number) + 1;
+    row.pounds += l.pounds;
+    row.amount = row.pounds * row.price;
+  }
+}
 
   // =============================
   // 5️⃣ TOTAL CAJAS (CORRECTO)
   // =============================
-  const total_boxes =
-    Array.from(normalMap.values()).reduce(
-      (s, r) => s + (r.boxes as number),
-      0
-    ) + rows.length;
+  const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
 
   // =============================
   // 6️⃣ RESPUESTA FINAL
