@@ -18,7 +18,7 @@ type LineDB = {
 };
 
 type Row = {
-  boxes: number | "MX";
+  boxes: number | "MX" | null;
   pounds: number;
   description: string;
   size: string;
@@ -34,9 +34,9 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
-  /* =====================================================
+  /* =============================
      1️⃣ PACKING + CLIENTE
-     ===================================================== */
+     ============================= */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .select(`
@@ -60,15 +60,15 @@ export async function GET(
     );
   }
 
-  // 🔑 CLAVE: el join SIEMPRE es arreglo
+  // 👇 RELACIÓN VIENE COMO ARRAY
   const client =
     Array.isArray(packing.client) && packing.client.length > 0
       ? packing.client[0]
       : null;
 
-  /* =====================================================
+  /* =============================
      2️⃣ LÍNEAS
-     ===================================================== */
+     ============================= */
   const { data, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
@@ -99,9 +99,9 @@ export async function GET(
 
   const lines = data as LineDB[];
 
-  /* =====================================================
-     3️⃣ CONSTRUIR FILAS (RESPETANDO MX)
-     ===================================================== */
+  /* =============================
+     3️⃣ CONSTRUIR FILAS
+     ============================= */
   const rows: Row[] = [];
   const normalMap = new Map<string, Row>();
   const normalBoxes = new Set<string>();
@@ -110,7 +110,7 @@ export async function GET(
   for (const l of lines) {
     const price = l.price ?? 0;
 
-    // 👉 MIXTA (cada caja MX es una línea, boxes = "MX")
+    // 👉 COMBINADA
     if (l.box_no === "MX") {
       hasMixed = true;
 
@@ -130,6 +130,7 @@ export async function GET(
 
     // 👉 NORMAL
     normalBoxes.add(l.box_no);
+
     const key = `${l.code}|${l.form}|${l.size}`;
 
     if (!normalMap.has(key)) {
@@ -151,14 +152,14 @@ export async function GET(
     }
   }
 
-  /* =====================================================
-     4️⃣ TOTAL CAJAS (LOGÍSTICA CORRECTA)
-     ===================================================== */
+  /* =============================
+     4️⃣ TOTAL CAJAS (NO TOCAR)
+     ============================= */
   const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
 
-  /* =====================================================
+  /* =============================
      5️⃣ RESPUESTA FINAL
-     ===================================================== */
+     ============================= */
   return NextResponse.json({
     ok: true,
     invoice: {
