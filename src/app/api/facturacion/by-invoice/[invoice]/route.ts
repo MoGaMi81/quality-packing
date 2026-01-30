@@ -18,7 +18,7 @@ type LineDB = {
 };
 
 type Row = {
-  boxes: number | "MX" | null;
+  boxes: number | "MX";
   pounds: number;
   description: string;
   size: string;
@@ -34,9 +34,9 @@ export async function GET(
 ) {
   const invoice_no = params.invoice.toUpperCase();
 
-  /* =============================
-     1️⃣ PACKING + CLIENTE
-     ============================= */
+  /* =====================================================
+     1️⃣ PACKING + CLIENTE (JOIN SEGURO)
+     ===================================================== */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .select(`
@@ -60,15 +60,15 @@ export async function GET(
     );
   }
 
-  // 👇 RELACIÓN VIENE COMO ARRAY
+  // ⚠️ IMPORTANTE: Supabase devuelve JOIN como ARRAY
   const client =
     Array.isArray(packing.client) && packing.client.length > 0
       ? packing.client[0]
       : null;
 
-  /* =============================
+  /* =====================================================
      2️⃣ LÍNEAS
-     ============================= */
+     ===================================================== */
   const { data, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
@@ -99,9 +99,9 @@ export async function GET(
 
   const lines = data as LineDB[];
 
-  /* =============================
-     3️⃣ CONSTRUIR FILAS
-     ============================= */
+  /* =====================================================
+     3️⃣ CONSTRUIR FILAS (MISMA LÓGICA QUE YA FUNCIONA)
+     ===================================================== */
   const rows: Row[] = [];
   const normalMap = new Map<string, Row>();
   const normalBoxes = new Set<string>();
@@ -110,7 +110,7 @@ export async function GET(
   for (const l of lines) {
     const price = l.price ?? 0;
 
-    // 👉 COMBINADA
+    // 👉 CAJA COMBINADA
     if (l.box_no === "MX") {
       hasMixed = true;
 
@@ -128,7 +128,7 @@ export async function GET(
       continue;
     }
 
-    // 👉 NORMAL
+    // 👉 CAJA NORMAL
     normalBoxes.add(l.box_no);
 
     const key = `${l.code}|${l.form}|${l.size}`;
@@ -152,20 +152,23 @@ export async function GET(
     }
   }
 
-  /* =============================
-     4️⃣ TOTAL CAJAS (NO TOCAR)
-     ============================= */
+  /* =====================================================
+     4️⃣ TOTAL DE CAJAS (NO TOCAR – YA FUNCIONA)
+     ===================================================== */
   const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
 
-  /* =============================
+  /* =====================================================
      5️⃣ RESPUESTA FINAL
-     ============================= */
+     ===================================================== */
   return NextResponse.json({
     ok: true,
     invoice: {
       invoice_no: packing.invoice_no,
+
+      // 👇 AHORA SÍ CORRECTO
       client_code: client?.code ?? packing.client_code,
       client_name: client?.name ?? packing.client_code,
+
       guide: packing.guide,
       date: packing.created_at,
       total_boxes,

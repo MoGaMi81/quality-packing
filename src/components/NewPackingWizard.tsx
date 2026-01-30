@@ -314,7 +314,12 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                   Regresar
                 </button>
 
-                
+                <button
+                  onClick={finishProcess}
+                  className="flex-1 bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Finalizar Proceso
+                </button>
               </div>
             </>
           )}
