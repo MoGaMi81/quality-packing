@@ -60,7 +60,7 @@ export async function POST(
      2️⃣ Obtener líneas
      ===================================================== */
   const { data: lines, error: linesError } = await supabase
-    .from("packing_lines")
+    .from("packings")
     .select("id, description_en, form, size")
     .eq("packing_id", packing_id);
 
