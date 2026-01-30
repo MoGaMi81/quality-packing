@@ -95,7 +95,7 @@ export async function GET(
     counter.set(key, (counter.get(key) ?? 0) + 1);
   }
 
-  // =============================
+// =============================
 // 3️⃣ CONSTRUIR FILAS (CORRECTO)
 // =============================
 const rows: Row[] = [];
