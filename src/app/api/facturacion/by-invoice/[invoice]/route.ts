@@ -18,7 +18,7 @@ type LineDB = {
 };
 
 type Row = {
-  boxes: number | "MX" | null;
+  boxes: number | "MX";
   pounds: number;
   description: string;
   size: string;
@@ -108,23 +108,21 @@ for (const l of lines) {
 
   // 👉 CAJA COMBINADA
   if (l.box_no === "MX") {
-  hasMixed = true;
+    hasMixed = true;
 
-  const isFirstMX = !rows.some(r => r.boxes === "MX");
+    rows.push({
+      boxes: "MX",
+      pounds: l.pounds,
+      description: l.description_en,
+      size: l.size,
+      form: l.form,
+      scientific_name: l.scientific_name,
+      price,
+      amount: l.pounds * price,
+    });
 
-  rows.push({
-    boxes: isFirstMX ? "MX" : null, // 👈 solo la primera línea muestra "MX"
-    pounds: l.pounds,
-    description: l.description_en,
-    size: l.size,
-    form: l.form,
-    scientific_name: l.scientific_name,
-    price,
-    amount: l.pounds * price,
-  });
-
-  continue;
-}
+    continue;
+  }
 
   // 👉 CAJA NORMAL
   normalBoxes.add(l.box_no);
