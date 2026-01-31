@@ -44,11 +44,7 @@ export async function GET(
       invoice_no,
       client_code,
       guide,
-      created_at,
-      client:clients (
-        code,
-        name
-      )
+      created_at
     `)
     .eq("invoice_no", invoice_no)
     .single();
@@ -59,12 +55,6 @@ export async function GET(
       { status: 404 }
     );
   }
-
-  // ⚠️ IMPORTANTE: Supabase devuelve JOIN como ARRAY
-  const client =
-    Array.isArray(packing.client) && packing.client.length > 0
-      ? packing.client[0]
-      : null;
 
   /* =====================================================
      2️⃣ LÍNEAS
@@ -166,8 +156,8 @@ export async function GET(
       invoice_no: packing.invoice_no,
 
       // 👇 AHORA SÍ CORRECTO
-      client_code: client?.code ?? packing.client_code,
-      client_name: client?.name ?? packing.client_code,
+      client_code: packing.client_code,
+      client_name: packing.client_code, 
 
       guide: packing.guide,
       date: packing.created_at,
