@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Packing = {
-  id: string;               // 🔑 UUID
-  invoice_no: string;       // visible
-  client_code: string;
+  id: string;
+  invoice_no: string;
   created_at: string;
   total_boxes: number;
   total_lbs: number;
+  clients: {
+    code: string;
+    name: string;
+  } | null;
 };
 
 export default function AdminHome() {
@@ -20,7 +23,7 @@ export default function AdminHome() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/packings/ready-for-pricing", {
+        const res = await fetch("/api/admin/packings", {
           cache: "no-store",
         });
         const data = await res.json();
@@ -53,7 +56,7 @@ export default function AdminHome() {
         >
           <div>
             <div className="font-semibold text-lg">
-              {p.invoice_no} · {p.client_code}
+              {p.invoice_no} · {p.clients?.name ?? "—"}
             </div>
             <div className="text-sm text-gray-500">
               {new Date(p.created_at).toLocaleString()}
