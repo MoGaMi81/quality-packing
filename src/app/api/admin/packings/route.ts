@@ -14,11 +14,13 @@ export async function GET() {
     id,
     invoice_no,
     created_at,
+    pricing_status,
     clients (
-      code,
-      name
+    code,
+    name
     )
   `)
+  .eq("pricing_status", "PENDING")
   .order("created_at", { ascending: false });
 
   if (error) {
