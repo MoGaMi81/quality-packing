@@ -61,13 +61,12 @@ export default function AdminHome() {
             </div>
             <div className="text-sm mt-1 text-gray-500">—</div>
           </div>
-
-          <button
-            onClick={() => router.push(`/packings/${p.id}/pricing`)}
-            className="bg-green-700 text-white px-4 py-2 rounded"
-          >
-            Pricing
-          </button>
+         <button
+          onClick={() => router.push(`/admin/pricing/${p.id}`)}
+          className="bg-green-700 text-white px-4 py-2 rounded"
+        >
+          Pricing
+        </button>
         </div>
       ))}
     </div>
