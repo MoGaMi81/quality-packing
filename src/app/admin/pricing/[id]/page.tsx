@@ -76,7 +76,8 @@ export default function PricingPage({
     }
 
     alert("Pricing guardado correctamente");
-    router.replace("/admin");
+    router.push("/admin/pricing");
+    router.refresh();
   }
 
   const totalLbs = lines.reduce(
