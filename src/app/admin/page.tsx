@@ -7,13 +7,12 @@ type Packing = {
   id: string;
   invoice_no: string;
   created_at: string;
-  total_boxes: number;
-  total_lbs: number;
   clients: {
     code: string;
     name: string;
   } | null;
 };
+
 
 export default function AdminHome() {
   const router = useRouter();
@@ -61,8 +60,8 @@ export default function AdminHome() {
             <div className="text-sm text-gray-500">
               {new Date(p.created_at).toLocaleString()}
             </div>
-            <div className="text-sm mt-1">
-              {p.total_boxes} cajas · {p.total_lbs} lbs
+            <div className="text-sm mt-1 text-gray-500">
+               —
             </div>
           </div>
 

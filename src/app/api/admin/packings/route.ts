@@ -9,19 +9,17 @@ const supabase = createClient(
 
 export async function GET() {
   const { data, error } = await supabase
-    .from("packings")
-    .select(`
-      id,
-      invoice_no,
-      created_at,
-      total_boxes,
-      total_lbs,
-      clients (
-        code,
-        name
-      )
-    `)
-    .order("created_at", { ascending: false });
+  .from("packings")
+  .select(`
+    id,
+    invoice_no,
+    created_at,
+    clients (
+      code,
+      name
+    )
+  `)
+  .order("created_at", { ascending: false });
 
   if (error) {
     console.error("ADMIN PACKINGS ERROR:", error);
