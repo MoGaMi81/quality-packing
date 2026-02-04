@@ -30,7 +30,7 @@ export async function GET(
       price
     )
   `)
-  .eq("id", id)
+  .eq("id", params.id)
   .single();
 
   if (error || !data) {
@@ -40,8 +40,11 @@ export async function GET(
     );
   }
 
-  return NextResponse.json(
-  { packings: data },
+ return NextResponse.json(
+  {
+    ok: true,
+    packing: data,
+  },
   {
     headers: {
       "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",

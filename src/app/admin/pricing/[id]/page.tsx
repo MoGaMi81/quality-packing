@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import PricingModal from "@/components/PricingModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import type { PackingLine } from "@/domain/packing/types";
@@ -24,6 +24,7 @@ export default function PricingPage({
   params: { id: string };
 }) {
   const router = useRouter();
+  const pathname = usePathname(); // ✅ ahora usamos pathname
   const packingId = params.id;
 
   const [packing, setPacking] = useState<Packing | null>(null);
@@ -56,7 +57,7 @@ export default function PricingPage({
     }
 
     load();
-  }, [packingId, router]);
+  }, [pathname]); // ✅ se ejecuta cuando cambia la ruta
 
   if (loading) {
     return <main className="p-6">Cargando pricing…</main>;
@@ -84,10 +85,7 @@ export default function PricingPage({
     setTimeout(() => router.refresh(), 0);
   }
 
-  const totalLbs = lines.reduce(
-    (sum, l) => sum + (l.pounds ?? 0),
-    0
-  );
+  const totalLbs = lines.reduce((sum, l) => sum + (l.pounds ?? 0), 0);
 
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
@@ -111,8 +109,7 @@ export default function PricingPage({
           <b>Factura:</b> {packing.invoice_no}
         </div>
         <div>
-          <b>Cliente:</b>{" "}
-          {packing.client_name || packing.client_code}
+          <b>Cliente:</b> {packing.client_name || packing.client_code}
         </div>
         <div className="text-sm text-gray-500">
           {new Date(packing.created_at).toLocaleString()}
