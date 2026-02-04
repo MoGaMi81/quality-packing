@@ -31,5 +31,14 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ packings: data });
+  return NextResponse.json(
+  { packings: data },
+  {
+    headers: {
+      "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  }
+);
 }
