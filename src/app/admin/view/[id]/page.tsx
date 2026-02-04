@@ -23,6 +23,22 @@ export default function ViewPacking() {
 
   if (!packing) return <div className="p-6">Cargando…</div>;
 
+  // 📊 Totales
+  const totalLbs = packing.packing_lines.reduce(
+    (sum: number, l: any) => sum + (l.pounds ?? 0),
+    0
+  );
+
+  const totalBoxes = packing.packing_lines.length;
+
+  const totalAmount =
+    packing.pricing_status === "DONE"
+      ? packing.packing_lines.reduce(
+          (sum: number, l: any) => sum + (l.pounds ?? 0) * (l.price ?? 0),
+          0
+        )
+      : null;
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <button onClick={() => router.back()} className="mb-4">
@@ -46,7 +62,22 @@ export default function ViewPacking() {
         </div>
       </div>
 
-      {/* LÍNEAS */}
+      {/* 📊 RESUMEN */}
+      <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm mb-6">
+        <div>
+          <b>Cajas:</b> {totalBoxes}
+        </div>
+        <div>
+          <b>Total lbs:</b> {totalLbs.toFixed(2)}
+        </div>
+        {totalAmount != null && (
+          <div>
+            <b>Total USD:</b> ${totalAmount.toFixed(2)}
+          </div>
+        )}
+      </div>
+
+      {/* 📦 TABLA CON NUMERACIÓN DE CAJAS */}
       <div className="border rounded p-4">
         <h2 className="font-semibold mb-2">Líneas</h2>
 
@@ -54,25 +85,35 @@ export default function ViewPacking() {
           <div className="text-gray-500">Sin líneas</div>
         )}
 
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-1">Especie</th>
-              <th>Forma</th>
-              <th>Talla</th>
-              <th>Lbs</th>
-              <th>Precio</th>
+        <table className="w-full border mt-4 text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 border">Caja</th>
+              <th className="p-2 border">Especie</th>
+              <th className="p-2 border">Forma</th>
+              <th className="p-2 border">Size</th>
+              <th className="p-2 border text-right">Lbs</th>
+              <th className="p-2 border text-right">Precio</th>
+              <th className="p-2 border text-right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            {packing.packing_lines?.map((l: any, i: number) => (
-              <tr key={i} className="border-b">
-                <td>{l.description_en}</td>
-                <td className="text-center">{l.form}</td>
-                <td className="text-center">{l.size}</td>
-                <td className="text-right">{l.pounds}</td>
-                <td className="text-right">
-                  {l.price != null ? `$${l.price}` : "—"}
+            {packing.packing_lines.map((l: any, i: number) => (
+              <tr key={i}>
+                <td className="border p-2 text-center">{i + 1}</td>
+                <td className="border p-2">{l.description_en}</td>
+                <td className="border p-2">{l.form}</td>
+                <td className="border p-2">{l.size}</td>
+                <td className="border p-2 text-right">
+                  {l.pounds?.toFixed(2)}
+                </td>
+                <td className="border p-2 text-right">
+                  {l.price ? `$${l.price.toFixed(2)}` : "—"}
+                </td>
+                <td className="border p-2 text-right">
+                  {l.price
+                    ? `$${((l.pounds ?? 0) * l.price).toFixed(2)}`
+                    : "—"}
                 </td>
               </tr>
             ))}
