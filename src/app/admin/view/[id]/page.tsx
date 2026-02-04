@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
@@ -10,7 +13,7 @@ export default function ViewPacking() {
   const [packing, setPacking] = useState<any>(null);
 
   useEffect(() => {
-    fetchJSON(`/api/packings/${id}`)
+    fetchJSON(`/api/packings/${id}`, { cache: "no-store" })
       .then(res => {
         if (!res?.ok) throw new Error();
         setPacking(res.packing);

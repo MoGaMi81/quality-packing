@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -17,7 +20,7 @@ export default function AdminView() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/packings/latest")
+    fetch("/api/admin/packings/latest", { cache: "no-store" })
       .then(r => r.json())
       .then(d => setLatest(d.packings ?? []));
   }, []);

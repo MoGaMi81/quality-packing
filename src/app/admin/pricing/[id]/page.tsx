@@ -32,14 +32,15 @@ export default function PricingPage({
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetchJSON(`/api/packings/${packingId}`);
+        const res = await fetchJSON(`/api/packings/${packingId}`, {
+          cache: "no-store",
+        });
 
         if (!res?.ok || !res?.packing) {
           alert(res?.error || "Packing no encontrado");
           router.replace("/admin");
           return;
         }
-
         setPacking(res.packing);
         setLines(res.packing.packing_lines ?? []);
       } catch (e) {
@@ -76,7 +77,7 @@ export default function PricingPage({
     }
 
     alert("Pricing guardado correctamente");
-    router.push("/admin/pricing");
+    router.replace("/admin/pricing");
     router.refresh();
   }
 

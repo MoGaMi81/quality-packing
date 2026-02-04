@@ -13,13 +13,25 @@ export async function GET(
   const { id } = params;
 
   const { data, error } = await supabase
-    .from("packings")
-    .select(`
-      *,
-      packing_lines (*)
-    `)
-    .eq("id", id)
-    .single();
+  .from("packings")
+  .select(`
+    id,
+    invoice_no,
+    created_at,
+    pricing_status,
+    clients (
+      name
+    ),
+    packing_lines (
+      description_en,
+      form,
+      size,
+      pounds,
+      price
+    )
+  `)
+  .eq("id", id)
+  .single();
 
   if (error || !data) {
     return NextResponse.json(
