@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { supabase } from "@/lib/supabaseClient";
 import { NextResponse } from "next/server";
 
