@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -125,5 +127,15 @@ export async function POST(
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(
+  { ok: true },
+  {
+    headers: {
+      "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  }
+);
+
 }
