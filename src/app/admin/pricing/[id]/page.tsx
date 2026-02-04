@@ -6,7 +6,6 @@ export const fetchCache = "force-no-store";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import PricingModal from "@/components/PricingModal";
-import { fetchJSON } from "@/lib/fetchJSON";
 import type { PackingLine } from "@/domain/packing/types";
 
 type Packing = {
@@ -36,17 +35,19 @@ export default function PricingPage({
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetchJSON(`/api/packings/${packingId}`, {
+        const res = await fetch(`/api/packings/${packingId}`, {
           cache: "no-store",
         });
+        const json = await res.json();
 
-        if (!res?.ok || !res?.packing) {
-          alert(res?.error || "Packing no encontrado");
+        if (!json?.ok || !json?.packing) {
+          alert(json?.error || "Packing no encontrado");
           router.replace("/admin");
           return;
         }
-        setPacking(res.packing);
-        setLines(res.packing.packing_lines ?? []);
+
+        setPacking(json.packing);
+        setLines(json.packing.packing_lines ?? []);
       } catch (e) {
         console.error(e);
         alert("Error cargando packing");
