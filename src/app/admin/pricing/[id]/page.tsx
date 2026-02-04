@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PricingModal from "@/components/PricingModal";
@@ -78,7 +81,7 @@ export default function PricingPage({
 
     alert("Pricing guardado correctamente");
     router.replace("/admin/pricing");
-    router.refresh();
+    setTimeout(() => router.refresh(), 0);
   }
 
   const totalLbs = lines.reduce(
