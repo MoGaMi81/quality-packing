@@ -1,4 +1,7 @@
 // src/app/api/packings/ready/route.ts
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -18,5 +21,11 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, rows: data });
+  return NextResponse.json({ ok: true, rows: data }, {
+  headers: {
+    "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
+  },
+});
 }
