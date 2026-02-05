@@ -23,18 +23,38 @@ export default function ViewPacking() {
 
   if (!packing) return <div className="p-6">Cargando…</div>;
 
-  // 📊 Totales
+  /* =====================================================
+     📦 AGRUPAR LÍNEAS POR CAJA (RESPETA COMBINADAS)
+     ===================================================== */
+  const boxes: Record<number, any[]> = packing.packing_lines.reduce(
+    (acc: Record<number, any[]>, line: any) => {
+      const boxNo = line.box_no ?? 0;
+      acc[boxNo] ||= [];
+      acc[boxNo].push(line);
+      return acc;
+    },
+    {}
+  );
+
+  const boxNumbers = Object.keys(boxes)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  /* =====================================================
+     📊 TOTALES REALES
+     ===================================================== */
+  const totalBoxes = boxNumbers.length;
+
   const totalLbs = packing.packing_lines.reduce(
     (sum: number, l: any) => sum + (l.pounds ?? 0),
     0
   );
 
-  const totalBoxes = packing.packing_lines.length;
-
   const totalAmount =
     packing.pricing_status === "DONE"
       ? packing.packing_lines.reduce(
-          (sum: number, l: any) => sum + (l.pounds ?? 0) * (l.price ?? 0),
+          (sum: number, l: any) =>
+            sum + (l.pounds ?? 0) * (l.price ?? 0),
           0
         )
       : null;
@@ -49,7 +69,7 @@ export default function ViewPacking() {
         Factura: {packing.invoice_no}
       </h1>
 
-      {/* HEADER INFO */}
+      {/* ================= HEADER ================= */}
       <div className="border rounded p-4 mb-6 space-y-1">
         <div>
           <b>Cliente:</b> {packing.clients?.name ?? "—"}
@@ -62,7 +82,7 @@ export default function ViewPacking() {
         </div>
       </div>
 
-      {/* 📊 RESUMEN */}
+      {/* ================= RESUMEN ================= */}
       <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm mb-6">
         <div>
           <b>Cajas:</b> {totalBoxes}
@@ -77,11 +97,11 @@ export default function ViewPacking() {
         )}
       </div>
 
-      {/* 📦 TABLA CON NUMERACIÓN DE CAJAS */}
+      {/* ================= TABLA ================= */}
       <div className="border rounded p-4">
         <h2 className="font-semibold mb-2">Líneas</h2>
 
-        {packing.packing_lines?.length === 0 && (
+        {packing.packing_lines.length === 0 && (
           <div className="text-gray-500">Sin líneas</div>
         )}
 
@@ -98,25 +118,30 @@ export default function ViewPacking() {
             </tr>
           </thead>
           <tbody>
-            {packing.packing_lines.map((l: any, i: number) => (
-              <tr key={i}>
-                <td className="border p-2 text-center">{i + 1}</td>
-                <td className="border p-2">{l.description_en}</td>
-                <td className="border p-2">{l.form}</td>
-                <td className="border p-2">{l.size}</td>
-                <td className="border p-2 text-right">
-                  {l.pounds?.toFixed(2)}
-                </td>
-                <td className="border p-2 text-right">
-                  {l.price ? `$${l.price.toFixed(2)}` : "—"}
-                </td>
-                <td className="border p-2 text-right">
-                  {l.price
-                    ? `$${((l.pounds ?? 0) * l.price).toFixed(2)}`
-                    : "—"}
-                </td>
-              </tr>
-            ))}
+            {boxNumbers.map((boxNo) =>
+              boxes[boxNo].map((l: any, i: number) => (
+                <tr key={`${boxNo}-${i}`}>
+                  <td className="border p-2 text-center">
+                    Caja #{boxNo}
+                    {boxes[boxNo].length > 1 && " (Combinada)"}
+                  </td>
+                  <td className="border p-2">{l.description_en}</td>
+                  <td className="border p-2">{l.form}</td>
+                  <td className="border p-2">{l.size}</td>
+                  <td className="border p-2 text-right">
+                    {l.pounds?.toFixed(2)}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {l.price ? `$${l.price.toFixed(2)}` : "—"}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {l.price
+                      ? `$${((l.pounds ?? 0) * l.price).toFixed(2)}`
+                      : "—"}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
