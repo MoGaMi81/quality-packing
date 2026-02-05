@@ -6,6 +6,8 @@ export const fetchCache = "force-no-store";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
+import { groupBoxesForView } from "@/domain/packing/view";
+import type { ViewBox } from "@/domain/packing/view";
 
 export default function ViewPacking() {
   const { id } = useParams();
@@ -26,20 +28,25 @@ export default function ViewPacking() {
   /* =========================
      📊 TOTALES REALES
      ========================= */
-  const totalBoxes = new Set(
-    packing.packing_lines.map((l: any) => l.box_no)
-  ).size;
+  const boxes: ViewBox[] = groupBoxesForView(packing.packing_lines);
 
-  const totalLbs = packing.packing_lines.reduce(
-    (sum: number, l: any) => sum + (l.pounds ?? 0),
+  const totalBoxes = boxes.length;
+
+  const totalLbs = boxes.reduce(
+    (s: number, b: ViewBox) => s + b.total_lbs,
     0
   );
 
   const totalUSD =
     packing.pricing_status === "DONE"
-      ? packing.packing_lines.reduce(
-          (sum: number, l: any) =>
-            sum + (l.pounds ?? 0) * (l.price ?? 0),
+      ? boxes.reduce(
+          (s: number, b: ViewBox) =>
+            s +
+            b.lines.reduce(
+              (x: number, l: any) =>
+                x + (l.pounds ?? 0) * (l.price ?? 0),
+              0
+            ),
           0
         )
       : null;
@@ -99,34 +106,35 @@ export default function ViewPacking() {
             </tr>
           </thead>
           <tbody>
-  {packing.packing_lines.map((l: any, i: number) => (
-    <tr key={i}>
-      <td className="border p-2 text-center">
-        Caja #{l.box_no}
-        {l.is_combined ? " (Combinada)" : ""}
-      </td>
+            {boxes.map((box: ViewBox, bi: number) =>
+              box.lines.map((l: any, li: number) => (
+                <tr key={`${bi}-${li}`}>
+                  <td className="border p-2 text-center">
+                    Caja #{box.box_no}
+                    {box.isCombined ? " (Combinada)" : ""}
+                  </td>
 
-      <td className="border p-2">{l.description_en}</td>
-      <td className="border p-2">{l.form}</td>
-      <td className="border p-2">{l.size}</td>
+                  <td className="border p-2">{l.description_en}</td>
+                  <td className="border p-2">{l.form}</td>
+                  <td className="border p-2">{l.size}</td>
 
-      <td className="border p-2 text-right">
-        {l.pounds?.toFixed(2)}
-      </td>
+                  <td className="border p-2 text-right">
+                    {l.pounds?.toFixed(2)}
+                  </td>
 
-      <td className="border p-2 text-right">
-        {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
-      </td>
+                  <td className="border p-2 text-right">
+                    {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
+                  </td>
 
-      <td className="border p-2 text-right">
-        {l.price != null
-          ? `$${(l.pounds * l.price).toFixed(2)}`
-          : "—"}
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+                  <td className="border p-2 text-right">
+                    {l.price != null
+                      ? `$${(l.pounds * l.price).toFixed(2)}`
+                      : "—"}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
         </table>
       </div>
     </div>

@@ -7,17 +7,25 @@ import type { PackingLine } from "@/domain/packing/types";
  * Genera la clave EXACTA por línea
  * (misma lógica que el backend espera)
  */
-function priceKey(l: PackingLine) {
-  // EXCEPCIÓN: GROUPERS → un solo precio
-  if (
+function isGrouperWG(l: PackingLine) {
+  if (l.form !== "W&G") return false;
+  if (l.description_en.toUpperCase().includes("FILLET")) return false;
+
+  return (
     l.description_en === "BLACK GROUPER FRESH" ||
     l.description_en === "GAG GROUPER FRESH" ||
     l.description_en === "FIRE BACK GROUPER FRESH" ||
     l.description_en === "SCAMP GROUPER FRESH"
-  ) {
-    return l.description_en;
+  );
+}
+
+function priceKey(l: PackingLine) {
+  // GROUPERS W&G → precio único
+  if (isGrouperWG(l)) {
+    return "GROUPER_WG";
   }
 
+  // resto → por talla
   return `${l.description_en}|||${l.size}|||${l.form}`;
 }
 
