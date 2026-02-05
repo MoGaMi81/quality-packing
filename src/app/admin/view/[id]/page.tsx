@@ -7,20 +7,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
-type PackingLine = {
-  description_en: string;
-  form: string;
-  size: string;
-  pounds: number;
-  price?: number | null;
-};
-
-type Box = {
-  boxNo: number;
-  isCombined: boolean;
-  lines: PackingLine[];
-};
-
 export default function ViewPacking() {
   const { id } = useParams();
   const router = useRouter();
@@ -37,74 +23,23 @@ export default function ViewPacking() {
 
   if (!packing) return <div className="p-6">Cargando…</div>;
 
-  /* =====================================================
-     🧠 AGRUPAR LÍNEAS EN CAJAS REALES
-     ===================================================== */
-  const boxes: Box[] = [];
-  let currentBox: Box | null = null;
-
-  for (const line of packing.packing_lines as PackingLine[]) {
-    const key = `${line.description_en}|${line.form}|${line.size}`;
-
-    if (!currentBox) {
-      currentBox = {
-        boxNo: boxes.length + 1,
-        isCombined: false,
-        lines: [line],
-      };
-      boxes.push(currentBox);
-      continue;
-    }
-
-    const prevKey = `${currentBox.lines[0].description_en}|${currentBox.lines[0].form}|${currentBox.lines[0].size}`;
-
-    if (key === prevKey && currentBox.lines.length === 1) {
-      // sigue siendo caja simple
-      currentBox.lines.push(line);
-    } else {
-      // nueva caja
-      currentBox = {
-        boxNo: boxes.length + 1,
-        isCombined: false,
-        lines: [line],
-      };
-      boxes.push(currentBox);
-    }
-  }
-
-  // marcar combinadas
-  for (const box of boxes) {
-    const uniqueKeys = new Set(
-      box.lines.map(
-        (l) => `${l.description_en}|${l.form}|${l.size}`
-      )
-    );
-    box.isCombined = uniqueKeys.size > 1;
-  }
-
-  /* =====================================================
-     📊 TOTALES
-     ===================================================== */
+  /* =========================
+     📊 TOTALES REALES
+     ========================= */
   const totalBoxes = new Set(
-  packing.packing_lines.map((l: any) => l.box_no)
-).size;
+    packing.packing_lines.map((l: any) => l.box_no)
+  ).size;
 
-  const totalLbs = boxes.reduce(
-    (sum, b) =>
-      sum +
-      b.lines.reduce((s, l) => s + (l.pounds ?? 0), 0),
+  const totalLbs = packing.packing_lines.reduce(
+    (sum: number, l: any) => sum + (l.pounds ?? 0),
     0
   );
 
   const totalUSD =
     packing.pricing_status === "DONE"
-      ? boxes.reduce(
-          (sum, b) =>
-            sum +
-            b.lines.reduce(
-              (s, l) => s + (l.pounds ?? 0) * (l.price ?? 0),
-              0
-            ),
+      ? packing.packing_lines.reduce(
+          (sum: number, l: any) =>
+            sum + (l.pounds ?? 0) * (l.price ?? 0),
           0
         )
       : null;
@@ -164,34 +99,29 @@ export default function ViewPacking() {
             </tr>
           </thead>
           <tbody>
-           {packing.packing_lines.map((l: any, i: number) => (
-             <tr key={i}>
-              <td className="border p-2 text-center">
-                Caja #{l.box_no}
-                {l.is_combined ? " (Combinada)" : ""}
-              </td>
-
-              <td className="border p-2">{l.description_en}</td>
-              <td className="border p-2">{l.form}</td>
-              <td className="border p-2">{l.size}</td>
-
-              <td className="border p-2 text-right">
-                {l.pounds?.toFixed(2)}
-              </td>
-
-              <td className="border p-2 text-right">
-                {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
-              </td>
-
-              <td className="border p-2 text-right">
-                {l.price != null
-                  ? `$${(l.pounds * l.price).toFixed(2)}`
-                  : "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-
+            {packing.packing_lines.map((l: any, i: number) => (
+              <tr key={i}>
+                <td className="border p-2 text-center">
+                  Caja #{l.box_no}
+                  {l.is_combined ? " (Combinada)" : ""}
+                </td>
+                <td className="border p-2">{l.description_en}</td>
+                <td className="border p-2">{l.form}</td>
+                <td className="border p-2">{l.size}</td>
+                <td className="border p-2 text-right">
+                  {l.pounds?.toFixed(2)}
+                </td>
+                <td className="border p-2 text-right">
+                  {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
+                </td>
+                <td className="border p-2 text-right">
+                  {l.price != null
+                    ? `$${(l.pounds * l.price).toFixed(2)}`
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
