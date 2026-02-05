@@ -85,7 +85,9 @@ export default function ViewPacking() {
   /* =====================================================
      📊 TOTALES
      ===================================================== */
-  const totalBoxes = boxes.length;
+  const totalBoxes = new Set(
+  packing.packing_lines.map((l: any) => l.box_no)
+).size;
 
   const totalLbs = boxes.reduce(
     (sum, b) =>
@@ -162,31 +164,34 @@ export default function ViewPacking() {
             </tr>
           </thead>
           <tbody>
-            {boxes.map((box) =>
-              box.lines.map((l, i) => (
-                <tr key={`${box.boxNo}-${i}`}>
-                  <td className="border p-2">
-                    Caja #{box.boxNo}
-                    {box.isCombined && " (Combinada)"}
-                  </td>
-                  <td className="border p-2">{l.description_en}</td>
-                  <td className="border p-2">{l.form}</td>
-                  <td className="border p-2">{l.size}</td>
-                  <td className="border p-2 text-right">
-                    {l.pounds.toFixed(2)}
-                  </td>
-                  <td className="border p-2 text-right">
-                    {l.price ? `$${l.price.toFixed(2)}` : "—"}
-                  </td>
-                  <td className="border p-2 text-right">
-                    {l.price
-                      ? `$${(l.pounds * l.price).toFixed(2)}`
-                      : "—"}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
+           {packing.packing_lines.map((l: any, i: number) => (
+             <tr key={i}>
+              <td className="border p-2 text-center">
+                Caja #{l.box_no}
+                {l.is_combined ? " (Combinada)" : ""}
+              </td>
+
+              <td className="border p-2">{l.description_en}</td>
+              <td className="border p-2">{l.form}</td>
+              <td className="border p-2">{l.size}</td>
+
+              <td className="border p-2 text-right">
+                {l.pounds?.toFixed(2)}
+              </td>
+
+              <td className="border p-2 text-right">
+                {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
+              </td>
+
+              <td className="border p-2 text-right">
+                {l.price != null
+                  ? `$${(l.pounds * l.price).toFixed(2)}`
+                  : "—"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+
         </table>
       </div>
     </div>

@@ -96,6 +96,8 @@ export async function PATCH(
   const packingLines = draftLines.map((l: any) => ({
     packing_id: packing.id,
     box_no: l.box_no,
+    is_combined: l.is_combined ?? false,
+    combined_with: l.combined_with ?? null,
     code: l.code || l.species_code || l.key || "UNDEFINED",
     description_en: l.description_en,
     form: l.form,
