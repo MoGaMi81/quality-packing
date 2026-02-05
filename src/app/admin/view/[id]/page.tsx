@@ -122,7 +122,7 @@ export default function ViewPacking() {
               boxes[boxNo].map((l: any, i: number) => (
                 <tr key={`${boxNo}-${i}`}>
                   <td className="border p-2 text-center">
-                    Caja #{boxNo}
+                    Caja #{boxNo + 1}
                     {boxes[boxNo].length > 1 && " (Combinada)"}
                   </td>
                   <td className="border p-2">{l.description_en}</td>
