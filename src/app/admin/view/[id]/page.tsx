@@ -3,17 +3,18 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
-type Line = {
-  box_no: number;
+type PackingLine = {
   description_en: string;
   form: string;
   size: string;
   pounds: number;
-  price?: number | null;
+  price?: number;
+  box_no: number;
+  box_type: "SIMPLE" | "RANGE" | "COMBINED";
 };
 
 export default function ViewPacking() {
@@ -32,26 +33,20 @@ export default function ViewPacking() {
 
   if (!packing) return <div className="p-6">Cargando…</div>;
 
-  const lines: Line[] = packing.packing_lines ?? [];
+  const lines: PackingLine[] = packing.packing_lines ?? [];
 
-  /* =======================
-     AGRUPAR POR CAJA
-     ======================= */
-  const boxes = lines.reduce<Record<number, Line[]>>((acc, l) => {
-    const key = l.box_no ?? 0;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(l);
-    return acc;
-  }, {});
+  /* ================= AGRUPAR POR CAJA ================= */
+  const boxes = useMemo(() => {
+    const map = new Map<number, PackingLine[]>();
+    for (const l of lines) {
+      if (!map.has(l.box_no)) map.set(l.box_no, []);
+      map.get(l.box_no)!.push(l);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
+  }, [lines]);
 
-  const boxNumbers = Object.keys(boxes)
-    .map(Number)
-    .sort((a, b) => a - b);
-
-  /* =======================
-     TOTALES
-     ======================= */
-  const totalBoxes = boxNumbers.length;
+  /* ================= TOTALES ================= */
+  const totalBoxes = boxes.length;
 
   const totalLbs = lines.reduce(
     (sum, l) => sum + (l.pounds ?? 0),
@@ -104,57 +99,61 @@ export default function ViewPacking() {
         )}
       </div>
 
-      {/* TABLA */}
-      <div className="border rounded p-4">
-        <h2 className="font-semibold mb-3">Líneas</h2>
+      {/* CAJAS */}
+      <div className="space-y-6">
+        {boxes.map(([boxNo, boxLines]) => {
+          const isCombined = boxLines[0].box_type === "COMBINED";
+          const boxTotal = boxLines.reduce(
+            (s, l) => s + (l.pounds ?? 0),
+            0
+          );
 
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 border">Caja</th>
-              <th className="p-2 border">Especie</th>
-              <th className="p-2 border">Forma</th>
-              <th className="p-2 border">Size</th>
-              <th className="p-2 border text-right">Lbs</th>
-              <th className="p-2 border text-right">Precio</th>
-              <th className="p-2 border text-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {boxNumbers.map((boxNo) => {
-              const boxLines = boxes[boxNo];
+          return (
+            <div key={boxNo} className="border rounded p-4">
+              <h3 className="font-semibold mb-2">
+                Caja #{boxNo}
+                {isCombined && " (Combinada)"}
+              </h3>
 
-              // 🔑 combinada SOLO si hay más de una especie distinta
-              const speciesSet = new Set(
-                boxLines.map((l) => l.description_en)
-              );
-              const isCombined = speciesSet.size > 1;
+              <table className="w-full text-sm border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 border">Especie</th>
+                    <th className="p-2 border">Forma</th>
+                    <th className="p-2 border">Size</th>
+                    <th className="p-2 border text-right">Lbs</th>
+                    <th className="p-2 border text-right">Precio</th>
+                    <th className="p-2 border text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {boxLines.map((l, i) => (
+                    <tr key={i}>
+                      <td className="border p-2">{l.description_en}</td>
+                      <td className="border p-2">{l.form}</td>
+                      <td className="border p-2">{l.size}</td>
+                      <td className="border p-2 text-right">
+                        {l.pounds.toFixed(2)}
+                      </td>
+                      <td className="border p-2 text-right">
+                        {l.price ? `$${l.price.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="border p-2 text-right">
+                        {l.price
+                          ? `$${(l.pounds * l.price).toFixed(2)}`
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-              return boxLines.map((l, idx) => (
-                <tr key={`${boxNo}-${idx}`}>
-                  <td className="border p-2 text-center">
-                    Caja #{boxNo + 1}
-                    {isCombined && " (Combinada)"}
-                  </td>
-                  <td className="border p-2">{l.description_en}</td>
-                  <td className="border p-2">{l.form}</td>
-                  <td className="border p-2">{l.size}</td>
-                  <td className="border p-2 text-right">
-                    {l.pounds.toFixed(2)}
-                  </td>
-                  <td className="border p-2 text-right">
-                    {l.price ? `$${l.price.toFixed(2)}` : "—"}
-                  </td>
-                  <td className="border p-2 text-right">
-                    {l.price
-                      ? `$${(l.pounds * l.price).toFixed(2)}`
-                      : "—"}
-                  </td>
-                </tr>
-              ));
-            })}
-          </tbody>
-        </table>
+              <div className="text-right mt-2 text-sm font-semibold">
+                Total caja: {boxTotal.toFixed(2)} lbs
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
