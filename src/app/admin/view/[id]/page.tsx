@@ -99,29 +99,34 @@ export default function ViewPacking() {
             </tr>
           </thead>
           <tbody>
-            {packing.packing_lines.map((l: any, i: number) => (
-              <tr key={i}>
-                <td className="border p-2 text-center">
-                  Caja #{l.box_no}
-                  {l.is_combined ? " (Combinada)" : ""}
-                </td>
-                <td className="border p-2">{l.description_en}</td>
-                <td className="border p-2">{l.form}</td>
-                <td className="border p-2">{l.size}</td>
-                <td className="border p-2 text-right">
-                  {l.pounds?.toFixed(2)}
-                </td>
-                <td className="border p-2 text-right">
-                  {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
-                </td>
-                <td className="border p-2 text-right">
-                  {l.price != null
-                    ? `$${(l.pounds * l.price).toFixed(2)}`
-                    : "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {packing.packing_lines.map((l: any, i: number) => (
+    <tr key={i}>
+      <td className="border p-2 text-center">
+        Caja #{l.box_no}
+        {l.is_combined ? " (Combinada)" : ""}
+      </td>
+
+      <td className="border p-2">{l.description_en}</td>
+      <td className="border p-2">{l.form}</td>
+      <td className="border p-2">{l.size}</td>
+
+      <td className="border p-2 text-right">
+        {l.pounds?.toFixed(2)}
+      </td>
+
+      <td className="border p-2 text-right">
+        {l.price != null ? `$${l.price.toFixed(2)}` : "—"}
+      </td>
+
+      <td className="border p-2 text-right">
+        {l.price != null
+          ? `$${(l.pounds * l.price).toFixed(2)}`
+          : "—"}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
       </div>
     </div>
