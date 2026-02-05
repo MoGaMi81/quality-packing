@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
@@ -12,9 +12,13 @@ type PackingLine = {
   form: string;
   size: string;
   pounds: number;
-  price?: number;
-  box_no: number;
-  box_type: "SIMPLE" | "RANGE" | "COMBINED";
+  price?: number | null;
+};
+
+type Box = {
+  boxNo: number;
+  isCombined: boolean;
+  lines: PackingLine[];
 };
 
 export default function ViewPacking() {
@@ -33,30 +37,72 @@ export default function ViewPacking() {
 
   if (!packing) return <div className="p-6">Cargando…</div>;
 
-  const lines: PackingLine[] = packing.packing_lines ?? [];
+  /* =====================================================
+     🧠 AGRUPAR LÍNEAS EN CAJAS REALES
+     ===================================================== */
+  const boxes: Box[] = [];
+  let currentBox: Box | null = null;
 
-  /* ================= AGRUPAR POR CAJA ================= */
-  const boxes = useMemo(() => {
-    const map = new Map<number, PackingLine[]>();
-    for (const l of lines) {
-      if (!map.has(l.box_no)) map.set(l.box_no, []);
-      map.get(l.box_no)!.push(l);
+  for (const line of packing.packing_lines as PackingLine[]) {
+    const key = `${line.description_en}|${line.form}|${line.size}`;
+
+    if (!currentBox) {
+      currentBox = {
+        boxNo: boxes.length + 1,
+        isCombined: false,
+        lines: [line],
+      };
+      boxes.push(currentBox);
+      continue;
     }
-    return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
-  }, [lines]);
 
-  /* ================= TOTALES ================= */
+    const prevKey = `${currentBox.lines[0].description_en}|${currentBox.lines[0].form}|${currentBox.lines[0].size}`;
+
+    if (key === prevKey && currentBox.lines.length === 1) {
+      // sigue siendo caja simple
+      currentBox.lines.push(line);
+    } else {
+      // nueva caja
+      currentBox = {
+        boxNo: boxes.length + 1,
+        isCombined: false,
+        lines: [line],
+      };
+      boxes.push(currentBox);
+    }
+  }
+
+  // marcar combinadas
+  for (const box of boxes) {
+    const uniqueKeys = new Set(
+      box.lines.map(
+        (l) => `${l.description_en}|${l.form}|${l.size}`
+      )
+    );
+    box.isCombined = uniqueKeys.size > 1;
+  }
+
+  /* =====================================================
+     📊 TOTALES
+     ===================================================== */
   const totalBoxes = boxes.length;
 
-  const totalLbs = lines.reduce(
-    (sum, l) => sum + (l.pounds ?? 0),
+  const totalLbs = boxes.reduce(
+    (sum, b) =>
+      sum +
+      b.lines.reduce((s, l) => s + (l.pounds ?? 0), 0),
     0
   );
 
-  const totalAmount =
+  const totalUSD =
     packing.pricing_status === "DONE"
-      ? lines.reduce(
-          (sum, l) => sum + (l.pounds ?? 0) * (l.price ?? 0),
+      ? boxes.reduce(
+          (sum, b) =>
+            sum +
+            b.lines.reduce(
+              (s, l) => s + (l.pounds ?? 0) * (l.price ?? 0),
+              0
+            ),
           0
         )
       : null;
@@ -92,68 +138,56 @@ export default function ViewPacking() {
         <div>
           <b>Total lbs:</b> {totalLbs.toFixed(2)}
         </div>
-        {totalAmount != null && (
+        {totalUSD != null && (
           <div>
-            <b>Total USD:</b> ${totalAmount.toFixed(2)}
+            <b>Total USD:</b> ${totalUSD.toFixed(2)}
           </div>
         )}
       </div>
 
-      {/* CAJAS */}
-      <div className="space-y-6">
-        {boxes.map(([boxNo, boxLines]) => {
-          const isCombined = boxLines[0].box_type === "COMBINED";
-          const boxTotal = boxLines.reduce(
-            (s, l) => s + (l.pounds ?? 0),
-            0
-          );
+      {/* TABLA */}
+      <div className="border rounded p-4">
+        <h2 className="font-semibold mb-2">Líneas</h2>
 
-          return (
-            <div key={boxNo} className="border rounded p-4">
-              <h3 className="font-semibold mb-2">
-                Caja #{boxNo}
-                {isCombined && " (Combinada)"}
-              </h3>
-
-              <table className="w-full text-sm border">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="p-2 border">Especie</th>
-                    <th className="p-2 border">Forma</th>
-                    <th className="p-2 border">Size</th>
-                    <th className="p-2 border text-right">Lbs</th>
-                    <th className="p-2 border text-right">Precio</th>
-                    <th className="p-2 border text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {boxLines.map((l, i) => (
-                    <tr key={i}>
-                      <td className="border p-2">{l.description_en}</td>
-                      <td className="border p-2">{l.form}</td>
-                      <td className="border p-2">{l.size}</td>
-                      <td className="border p-2 text-right">
-                        {l.pounds.toFixed(2)}
-                      </td>
-                      <td className="border p-2 text-right">
-                        {l.price ? `$${l.price.toFixed(2)}` : "—"}
-                      </td>
-                      <td className="border p-2 text-right">
-                        {l.price
-                          ? `$${(l.pounds * l.price).toFixed(2)}`
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="text-right mt-2 text-sm font-semibold">
-                Total caja: {boxTotal.toFixed(2)} lbs
-              </div>
-            </div>
-          );
-        })}
+        <table className="w-full border text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 border">Caja</th>
+              <th className="p-2 border">Especie</th>
+              <th className="p-2 border">Forma</th>
+              <th className="p-2 border">Size</th>
+              <th className="p-2 border text-right">Lbs</th>
+              <th className="p-2 border text-right">Precio</th>
+              <th className="p-2 border text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {boxes.map((box) =>
+              box.lines.map((l, i) => (
+                <tr key={`${box.boxNo}-${i}`}>
+                  <td className="border p-2">
+                    Caja #{box.boxNo}
+                    {box.isCombined && " (Combinada)"}
+                  </td>
+                  <td className="border p-2">{l.description_en}</td>
+                  <td className="border p-2">{l.form}</td>
+                  <td className="border p-2">{l.size}</td>
+                  <td className="border p-2 text-right">
+                    {l.pounds.toFixed(2)}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {l.price ? `$${l.price.toFixed(2)}` : "—"}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {l.price
+                      ? `$${(l.pounds * l.price).toFixed(2)}`
+                      : "—"}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
