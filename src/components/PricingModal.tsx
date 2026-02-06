@@ -2,10 +2,37 @@
 
 import { useEffect, useState } from "react";
 import type { PackingLine } from "@/domain/packing/types";
-import {
-  extractPricingSpecies,
-  type PricingRequest,
-} from "@/domain/packing/pricing";
+
+/**
+ * Determina si es GROUPER W&G
+ * - Forma W&G
+ * - NO Fillet
+ * - Nombre contiene GROUPER
+ */
+function isGrouperWG(l: PackingLine) {
+  if (l.form !== "W&G") return false;
+  if (l.description_en?.toUpperCase().includes("FILLET")) return false;
+
+  return l.description_en?.toUpperCase().includes("GROUPER");
+}
+
+/**
+ * Genera la clave EXACTA por línea
+ */
+function priceKey(l: PackingLine) {
+  // ✅ GROUPERS W&G → precio único
+  if (isGrouperWG(l)) {
+    return "GROUPER_WG";
+  }
+
+  // resto → por especie + talla + forma
+  return `${l.description_en}|||${l.size}|||${l.form}`;
+}
+
+type PriceReq = {
+  key: string;
+  display: string;
+};
 
 type Props = {
   open: boolean;
@@ -20,23 +47,36 @@ export default function PricingModal({
   onClose,
   onSave,
 }: Props) {
-  const [reqs, setReqs] = useState<PricingRequest[]>([]);
+  const [reqs, setReqs] = useState<PriceReq[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
 
-    // 🔑 USAR MOTOR OFICIAL DE PRICING
-    const pricingReqs = extractPricingSpecies(lines);
+    // 1️⃣ Construir requerimientos ÚNICOS
+    const map = new Map<string, PriceReq>();
 
-    setReqs(pricingReqs);
+    for (const l of lines) {
+      const key = priceKey(l);
 
-    // inicializar inputs
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          display:
+            key === "GROUPER_WG"
+              ? "GROUPER W&G"
+              : `${l.description_en} ${l.form} ${l.size}`,
+        });
+      }
+    }
+
+    const r = Array.from(map.values());
+    setReqs(r);
+
+    // 2️⃣ Inicializar valores
     const init: Record<string, string> = {};
-    pricingReqs.forEach((r) => {
-      init[r.key] = "";
-    });
+    r.forEach((x) => (init[x.key] = ""));
     setValues(init);
 
     setError("");
