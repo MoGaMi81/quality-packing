@@ -5,11 +5,7 @@ import type { PackingLine } from "@/domain/packing/types";
 import { getFamilyKeyFromCode } from "@/domain/packing/families";
 
 /**
- * Determina si la línea pertenece a GROUPER W&G
- * Regla:
- * - Forma W&G
- * - NO Fillet
- * - Familia por CLAVE (BG, GG, FB, SG)
+ * Determina si la línea pertenece al grupo GROUPER W&G
  */
 function isGrouperWG(l: PackingLine) {
   if (l.form !== "W&G") return false;
@@ -20,16 +16,15 @@ function isGrouperWG(l: PackingLine) {
 }
 
 /**
- * Genera la clave EXACTA de pricing
- * (misma lógica backend)
+ * Clave de precio
  */
 function priceKey(l: PackingLine) {
-  // GROUPERS W&G → precio único
+  // ✅ GROUPERS W&G → UN SOLO PRECIO
   if (isGrouperWG(l)) {
     return "GROUPER_WG";
   }
 
-  // Resto → por especie + forma + talla
+  // ✅ resto → especie + talla + forma
   return `${l.description_en}|||${l.form}|||${l.size}`;
 }
 
@@ -58,7 +53,6 @@ export default function PricingModal({
   useEffect(() => {
     if (!open) return;
 
-    // 1️⃣ Construir requerimientos ÚNICOS
     const map = new Map<string, PriceReq>();
 
     for (const l of lines) {
@@ -69,7 +63,7 @@ export default function PricingModal({
           key,
           display:
             key === "GROUPER_WG"
-              ? "GROUPER W&G"
+              ? "GROUPER W&G (precio único)"
               : `${l.description_en} ${l.form} ${l.size}`,
         });
       }
@@ -78,7 +72,6 @@ export default function PricingModal({
     const r = Array.from(map.values());
     setReqs(r);
 
-    // 2️⃣ Inicializar valores
     const init: Record<string, string> = {};
     r.forEach((x) => (init[x.key] = ""));
     setValues(init);
@@ -92,8 +85,7 @@ export default function PricingModal({
     const out: Record<string, number> = {};
 
     for (const req of reqs) {
-      const raw = values[req.key];
-      const n = Number(raw);
+      const n = Number(values[req.key]);
 
       if (!Number.isFinite(n) || n <= 0) {
         setError(`Falta precio válido para ${req.display}`);
