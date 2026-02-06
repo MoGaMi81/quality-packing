@@ -56,12 +56,12 @@ export default function PricingModal({
       const key = priceKey(l);
       if (!map.has(key)) {
         map.set(key, {
-          key,
-          display:
-            key.includes("|||")
-              ? `${l.description_en} ${l.form} ${l.size}`
-              : l.description_en,
-        });
+  key,
+  display:
+    key === "BG"
+      ? "GROUPER W&G (BG)"
+      : `${l.description_en} ${l.form} ${l.size}`,
+});
       }
     }
 
