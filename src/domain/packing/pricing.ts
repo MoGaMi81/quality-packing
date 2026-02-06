@@ -1,116 +1,146 @@
-// ===============================================
-//  PRICING ENGINE — Sistema de precios unificados
-//  Quality Packing
-// ===============================================
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
-import type { PackingLine } from "./types";
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import type { PackingLine } from "@/domain/packing/types";
 
-// ----------------------------------------------------------
-// 1. Tabla de prefijos unificados (BG / GG / FB / SG)
-//    Todos comparten el precio del grupo “BLACK GROUPER FRESH”
-// ----------------------------------------------------------
-const GROUPER_PREFIXES = ["BG", "GG", "FB", "SG"];
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export function unifyGroupKey(code: string | null | undefined): string {
-  if (!code) return "";
-
-  const up = code.toUpperCase();
-  const prefix = up.slice(0, 2);
-
-  if (GROUPER_PREFIXES.includes(prefix)) {
-    return "BLACK GROUPER FRESH"; // ← clave unificada para pedir precio
-  }
-
-  return ""; // otros no se agrupan por grupo, sino por talla completa
+/**
+ * Detecta Grouper W&G (sin fillet)
+ */
+function isGrouperWG(line: PackingLine) {
+  return (
+    line.form === "W&G" &&
+    !line.description_en?.toUpperCase().includes("FILLET") &&
+    line.description_en?.toUpperCase().includes("GROUPER")
+  );
 }
 
-// ----------------------------------------------------------
-// 2. Extraer especies únicas a las que se les debe pedir precio
-//
-//    Regla:
-//    - BG/GG/FB/SG → solo 1 entrada: “BLACK GROUPER FRESH”
-//    - Todas las demás → price key = description + size + form
-// ----------------------------------------------------------
-export type PricingRequest = {
-  key: string;              // identificador único
-  display: string;          // texto mostrado en modal
-  codes: Set<string>;       // todas las claves involucradas
-};
-
-export function extractPricingSpecies(lines: PackingLine[]): PricingRequest[] {
-  const map = new Map<string, PricingRequest>();
-
-  for (const l of lines) {
-    const code = l.code ?? "";
-    const unified = unifyGroupKey(code);
-
-    let priceKey = "";
-    let displayName = "";
-
-    if (unified) {
-      // GRUPO GROUPER → piden precio solo 1 vez
-      priceKey = unified;                         // ej. "BLACK GROUPER FRESH"
-      displayName = unified;
-    } else {
-      // TALLA ESPECÍFICA → precio individual
-      priceKey = `${l.description_en}|||${l.size}|||${l.form}`;
-      displayName = `${l.description_en} ${l.size}`;
-    }
-
-    if (!map.has(priceKey)) {
-      map.set(priceKey, {
-        key: priceKey,
-        display: displayName,
-        codes: new Set(),
-      });
-    }
-
-    map.get(priceKey)!.codes.add(code);
+/**
+ * Clave de pricing unificada
+ */
+function priceKey(line: PackingLine) {
+  if (isGrouperWG(line)) {
+    return "GROUPER_WG"; // 🔑 clave única para todos los Grouper W&G
   }
-
-  return [...map.values()];
+  return `${line.description_en}|||${line.form}|||${line.size}`;
 }
 
-// ----------------------------------------------------------
-// 3. Aplicar precios a todas las líneas del packing
-//    input:
-//      - lines: packing original
-//      - prices: diccionario { priceKey → precio numérico }
-// ----------------------------------------------------------
-export type PricedLine = PackingLine & {
-  price: number;
-  total: number;
-  priceKey: string;
-};
+export async function POST(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const packing_id = params.id;
+  const { prices } = (await req.json()) as {
+    prices: Record<string, number>;
+  };
 
-export function applyPricing(
-  lines: PackingLine[],
-  prices: Record<string, number>
-): PricedLine[] {
-  const result: PricedLine[] = [];
-
-  for (const l of lines) {
-    const code = l.code ?? "";
-    const unified = unifyGroupKey(code);
-
-    let priceKey = "";
-
-    if (unified) {
-      priceKey = unified; // usa precio grupal
-    } else {
-      priceKey = `${l.description_en}|||${l.size}|||${l.form}`;
-    }
-
-    const price = prices[priceKey] ?? 0;
-    const total = price * (l.pounds ?? 0);
-
-    result.push({
-      ...l,
-      price,
-      total,
-      priceKey,
-    });
+  if (!prices || Object.keys(prices).length === 0) {
+    return NextResponse.json(
+      { ok: false, error: "No se recibieron precios" },
+      { status: 400 }
+    );
   }
 
-  return result;
+  /* =====================================================
+     1️⃣ Obtener packing
+     ===================================================== */
+  const { data: packing, error: packingError } = await supabase
+    .from("packings")
+    .select("id, status, pricing_status")
+    .eq("id", packing_id)
+    .single();
+
+  if (packingError || !packing) {
+    return NextResponse.json(
+      { ok: false, error: "Packing no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  if (packing.status !== "READY" || packing.pricing_status !== "PENDING") {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Packing no disponible para pricing`,
+      },
+      { status: 400 }
+    );
+  }
+
+  /* =====================================================
+     2️⃣ Obtener líneas
+     ===================================================== */
+  const { data: lines, error: linesError } = await supabase
+    .from("packing_lines")
+    .select("id, description_en, form, size, pounds, code, box_no, is_combined") // ← incluir campos obligatorios
+    .eq("packing_id", packing_id);
+
+  if (linesError || !lines || lines.length === 0) {
+    return NextResponse.json(
+      { ok: false, error: "El packing no tiene líneas" },
+      { status: 400 }
+    );
+  }
+
+  /* =====================================================
+     3️⃣ Aplicar precios
+     ===================================================== */
+  for (const line of lines as PackingLine[]) {
+    const key = priceKey(line);
+    const price = prices[key];
+
+    if (price == null || price <= 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Falta precio válido para ${line.description_en} ${line.form} ${line.size}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { error: updateError } = await supabase
+      .from("packing_lines")
+      .update({ price })
+      .eq("id", line.id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { ok: false, error: updateError.message },
+        { status: 500 }
+      );
+    }
+  }
+
+  /* =====================================================
+     4️⃣ Marcar pricing como DONE
+     ===================================================== */
+  const { error: updatePackingError } = await supabase
+    .from("packings")
+    .update({ pricing_status: "DONE" })
+    .eq("id", packing_id);
+
+  if (updatePackingError) {
+    return NextResponse.json(
+      { ok: false, error: updatePackingError.message },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(
+    { ok: true },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
