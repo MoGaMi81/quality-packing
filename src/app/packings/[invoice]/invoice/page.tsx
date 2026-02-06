@@ -1,0 +1,84 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { fetchJSON } from "@/lib/fetchJSON";
+import Link from "next/link";
+
+type Line = {
+  pricing_key: string;
+  species: string;
+  form: string;
+  lbs: number;
+  price: number;
+  total: number;
+};
+
+export default function InvoicePage({
+  params,
+}: {
+  params: { invoice: string };
+}) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJSON(`/api/packings/${params.invoice}/invoice`)
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [params.invoice]);
+
+  if (loading) return <p>Cargando factura…</p>;
+  if (!data) return <p>No encontrado</p>;
+
+  const { header, lines, totals } = data;
+
+  return (
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold">Factura / Resumen</h1>
+        <p><b>Cliente:</b> {header.client_name}</p>
+        <p><b>Invoice:</b> {header.invoice}</p>
+        <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
+      </header>
+
+      <table className="w-full border text-sm">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="border p-2">Especie</th>
+            <th className="border p-2">Forma</th>
+            <th className="border p-2 text-right">Lbs</th>
+            <th className="border p-2 text-right">Precio</th>
+            <th className="border p-2 text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((l: Line, i: number) => (
+            <tr key={i}>
+              <td className="border p-2">{l.species}</td>
+              <td className="border p-2">{l.form}</td>
+              <td className="border p-2 text-right">{l.lbs.toFixed(2)}</td>
+              <td className="border p-2 text-right">${l.price.toFixed(2)}</td>
+              <td className="border p-2 text-right">${l.total.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <footer className="text-right space-y-1">
+        <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
+        <p className="text-lg font-bold">
+          Total USD: ${totals.total_usd.toFixed(2)}
+        </p>
+      </footer>
+
+      <div className="flex gap-4">
+        <Link href={`/packings/${params.invoice}/view`} className="underline">
+          Ver Packing
+        </Link>
+        <Link href="/admin" className="underline">
+          Volver a Admin
+        </Link>
+      </div>
+    </div>
+  );
+}
