@@ -2,19 +2,12 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { applyPricing } from "@/domain/packing/pricing";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// especies con precio único
-const GROUPER_UNICO = [
-  "BLACK GROUPER FRESH",
-  "GAG GROUPER FRESH",
-  "FIRE BAK GROUPER FRESH",
-  "SCAMP GROUPER FRESH",
-];
 
 export async function POST(
   req: Request,
@@ -50,20 +43,27 @@ export async function POST(
 
   if (packing.status !== "READY" || packing.pricing_status !== "PENDING") {
     return NextResponse.json(
-      {
-        ok: false,
-        error: `Packing no disponible para pricing`,
-      },
+      { ok: false, error: "Packing no disponible para pricing" },
       { status: 400 }
     );
   }
 
   /* =====================================================
-     2️⃣ Obtener líneas
+     2️⃣ Obtener líneas COMPLETAS (PackingLine)
      ===================================================== */
   const { data: lines, error: linesError } = await supabase
     .from("packing_lines")
-    .select("id, description_en, form, size")
+    .select(`
+      id,
+      code,
+      description_en,
+      form,
+      size,
+      pounds,
+      box_no,
+      is_combined,
+      combined_with
+    `)
     .eq("packing_id", packing_id);
 
   if (linesError || !lines || lines.length === 0) {
@@ -74,39 +74,29 @@ export async function POST(
   }
 
   /* =====================================================
-     3️⃣ Aplicar precios (LÓGICA CORRECTA)
+     3️⃣ Aplicar precios USANDO EL ENGINE (única verdad)
      ===================================================== */
-  for (const line of lines) {
-    const keyLinea = `${line.description_en}|||${line.size}|||${line.form}`;
+  const priced = applyPricing(lines, prices);
 
-    let price = prices[keyLinea];
-
-    // excepción: groupers con precio único
-    if (
-      (price == null || price <= 0) &&
-      GROUPER_UNICO.includes(line.description_en)
-    ) {
-      price = prices[line.description_en];
-    }
-
-    if (price == null || price <= 0) {
+  for (const l of priced) {
+    if (!l.price || l.price <= 0) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Falta precio válido para ${line.description_en} ${line.form} ${line.size}`,
+          error: `Falta precio válido para ${l.description_en} ${l.form} ${l.size}`,
         },
         { status: 400 }
       );
     }
 
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from("packing_lines")
-      .update({ price })
-      .eq("id", line.id);
+      .update({ price: l.price })
+      .eq("id", l.id);
 
-    if (updateError) {
+    if (error) {
       return NextResponse.json(
-        { ok: false, error: updateError.message },
+        { ok: false, error: error.message },
         { status: 500 }
       );
     }
@@ -128,13 +118,13 @@ export async function POST(
   }
 
   return NextResponse.json(
-  { ok: true },
-  {
-    headers: {
-      "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
-    },
-  }
-);
+    { ok: true },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
