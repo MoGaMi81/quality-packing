@@ -61,7 +61,7 @@ export default function PricingModal({
           key,
           display:
             key === "GROUPER_WG"
-              ? "GROUPER W&G" // ← nombre único en el modal
+              ? "GROUPER W&G"
               : `${l.description_en} ${l.form} ${l.size}`,
         });
       }

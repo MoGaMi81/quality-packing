@@ -1,146 +1,91 @@
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+// ===============================================
+//  PRICING ENGINE — Sistema de precios unificados
+//  Quality Packing (FINAL)
+// ===============================================
 
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import type { PackingLine } from "@/domain/packing/types";
+import type { PackingLine } from "./types";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-/**
- * Detecta Grouper W&G (sin fillet)
- */
-function isGrouperWG(line: PackingLine) {
+// ----------------------------------------------------------
+// 1. Detectar GROUPER W&G REAL (sin depender de code)
+// ----------------------------------------------------------
+function isGrouperWG(l: PackingLine): boolean {
   return (
-    line.form === "W&G" &&
-    !line.description_en?.toUpperCase().includes("FILLET") &&
-    line.description_en?.toUpperCase().includes("GROUPER")
+    l.form === "W&G" &&
+    !l.description_en?.toUpperCase().includes("FILLET") &&
+    l.description_en?.toUpperCase().includes("GROUPER")
   );
 }
 
-/**
- * Clave de pricing unificada
- */
-function priceKey(line: PackingLine) {
-  if (isGrouperWG(line)) {
-    return "GROUPER_WG"; // 🔑 clave única para todos los Grouper W&G
+// ----------------------------------------------------------
+// 2. Extraer especies únicas a las que se les debe pedir precio
+//
+//    Reglas:
+//    - GROUPER W&G → UNA SOLA entrada: "GROUPER_WG"
+//    - Resto → description + form + size
+// ----------------------------------------------------------
+export type PricingRequest = {
+  key: string;        // identificador único
+  display: string;    // texto mostrado en modal
+};
+
+export function extractPricingSpecies(
+  lines: PackingLine[]
+): PricingRequest[] {
+  const map = new Map<string, PricingRequest>();
+
+  for (const l of lines) {
+    let key: string;
+    let display: string;
+
+    if (isGrouperWG(l)) {
+      key = "GROUPER_WG";
+      display = "GROUPER W&G (BG)";
+    } else {
+      key = `${l.description_en}|||${l.form}|||${l.size}`;
+      display = `${l.description_en} ${l.form} ${l.size}`;
+    }
+
+    if (!map.has(key)) {
+      map.set(key, { key, display });
+    }
   }
-  return `${line.description_en}|||${line.form}|||${line.size}`;
+
+  return Array.from(map.values());
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const packing_id = params.id;
-  const { prices } = (await req.json()) as {
-    prices: Record<string, number>;
-  };
+// ----------------------------------------------------------
+// 3. Aplicar precios a todas las líneas del packing
+// ----------------------------------------------------------
+export type PricedLine = PackingLine & {
+  price: number;
+  total: number;
+  priceKey: string;
+};
 
-  if (!prices || Object.keys(prices).length === 0) {
-    return NextResponse.json(
-      { ok: false, error: "No se recibieron precios" },
-      { status: 400 }
-    );
-  }
+export function applyPricing(
+  lines: PackingLine[],
+  prices: Record<string, number>
+): PricedLine[] {
+  return lines.map((l) => {
+    const priceKey = isGrouperWG(l)
+      ? "GROUPER_WG"
+      : `${l.description_en}|||${l.form}|||${l.size}`;
 
-  /* =====================================================
-     1️⃣ Obtener packing
-     ===================================================== */
-  const { data: packing, error: packingError } = await supabase
-    .from("packings")
-    .select("id, status, pricing_status")
-    .eq("id", packing_id)
-    .single();
+    const price = prices[priceKey];
 
-  if (packingError || !packing) {
-    return NextResponse.json(
-      { ok: false, error: "Packing no encontrado" },
-      { status: 404 }
-    );
-  }
-
-  if (packing.status !== "READY" || packing.pricing_status !== "PENDING") {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: `Packing no disponible para pricing`,
-      },
-      { status: 400 }
-    );
-  }
-
-  /* =====================================================
-     2️⃣ Obtener líneas
-     ===================================================== */
-  const { data: lines, error: linesError } = await supabase
-    .from("packing_lines")
-    .select("id, description_en, form, size, pounds, code, box_no, is_combined") // ← incluir campos obligatorios
-    .eq("packing_id", packing_id);
-
-  if (linesError || !lines || lines.length === 0) {
-    return NextResponse.json(
-      { ok: false, error: "El packing no tiene líneas" },
-      { status: 400 }
-    );
-  }
-
-  /* =====================================================
-     3️⃣ Aplicar precios
-     ===================================================== */
-  for (const line of lines as PackingLine[]) {
-    const key = priceKey(line);
-    const price = prices[key];
-
-    if (price == null || price <= 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: `Falta precio válido para ${line.description_en} ${line.form} ${line.size}`,
-        },
-        { status: 400 }
+    if (!Number.isFinite(price)) {
+      throw new Error(
+        `Falta precio válido para ${l.description_en} ${l.form} ${l.size}`
       );
     }
 
-    const { error: updateError } = await supabase
-      .from("packing_lines")
-      .update({ price })
-      .eq("id", line.id);
+    const pounds = l.pounds ?? 0;
 
-    if (updateError) {
-      return NextResponse.json(
-        { ok: false, error: updateError.message },
-        { status: 500 }
-      );
-    }
-  }
-
-  /* =====================================================
-     4️⃣ Marcar pricing como DONE
-     ===================================================== */
-  const { error: updatePackingError } = await supabase
-    .from("packings")
-    .update({ pricing_status: "DONE" })
-    .eq("id", packing_id);
-
-  if (updatePackingError) {
-    return NextResponse.json(
-      { ok: false, error: updatePackingError.message },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json(
-    { ok: true },
-    {
-      headers: {
-        "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    }
-  );
+    return {
+      ...l,
+      price,
+      total: price * pounds,
+      priceKey,
+    };
+  });
 }
