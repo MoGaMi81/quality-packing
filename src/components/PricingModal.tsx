@@ -2,10 +2,33 @@
 
 import { useEffect, useState } from "react";
 import type { PackingLine } from "@/domain/packing/types";
-import {
-  extractPricingSpecies,
-  type PricingRequest,
-} from "@/domain/packing/pricing";
+
+/**
+ * Detecta GROUPER W&G (sin fillet)
+ */
+function isGrouperWG(l: PackingLine) {
+  if (l.form !== "W&G") return false;
+  if (l.description_en?.toUpperCase().includes("FILLET")) return false;
+  return l.description_en?.toUpperCase().includes("GROUPER");
+}
+
+/**
+ * Clave de pricing REAL (con datos disponibles)
+ */
+function priceKey(l: PackingLine) {
+  // GROUPERS W&G → 1 solo precio por especie
+  if (isGrouperWG(l)) {
+    return l.description_en; // 🔑 clave estable
+  }
+
+  // resto → por talla
+  return `${l.description_en}|||${l.form}|||${l.size}`;
+}
+
+type PriceReq = {
+  key: string;
+  display: string;
+};
 
 type Props = {
   open: boolean;
@@ -20,23 +43,33 @@ export default function PricingModal({
   onClose,
   onSave,
 }: Props) {
-  const [reqs, setReqs] = useState<PricingRequest[]>([]);
+  const [reqs, setReqs] = useState<PriceReq[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
 
-    // 🔑 ÚNICA FUENTE DE VERDAD
-    const pricingReqs = extractPricingSpecies(lines);
+    const map = new Map<string, PriceReq>();
 
-    setReqs(pricingReqs);
+    for (const l of lines) {
+      const key = priceKey(l);
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          display:
+            key.includes("|||")
+              ? `${l.description_en} ${l.form} ${l.size}`
+              : l.description_en,
+        });
+      }
+    }
 
-    // Inicializar valores
+    const r = Array.from(map.values());
+    setReqs(r);
+
     const init: Record<string, string> = {};
-    pricingReqs.forEach((r) => {
-      init[r.key] = "";
-    });
+    r.forEach((x) => (init[x.key] = ""));
     setValues(init);
 
     setError("");
@@ -48,14 +81,11 @@ export default function PricingModal({
     const out: Record<string, number> = {};
 
     for (const req of reqs) {
-      const raw = values[req.key];
-      const n = Number(raw);
-
+      const n = Number(values[req.key]);
       if (!Number.isFinite(n) || n <= 0) {
         setError(`Falta precio válido para ${req.display}`);
         return;
       }
-
       out[req.key] = n;
     }
 
@@ -93,10 +123,7 @@ export default function PricingModal({
         {error && <div className="text-red-600 text-sm">{error}</div>}
 
         <div className="flex justify-end gap-3 pt-4">
-          <button
-            className="px-3 py-1 border rounded"
-            onClick={onClose}
-          >
+          <button className="px-3 py-1 border rounded" onClick={onClose}>
             Cancelar
           </button>
           <button
