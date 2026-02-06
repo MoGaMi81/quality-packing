@@ -2,31 +2,35 @@
 
 import { useEffect, useState } from "react";
 import type { PackingLine } from "@/domain/packing/types";
+import { getFamilyKeyFromCode } from "@/domain/packing/families";
 
 /**
- * Genera la clave EXACTA por línea
- * (misma lógica que el backend espera)
+ * Determina si la línea pertenece a GROUPER W&G
+ * Regla:
+ * - Forma W&G
+ * - NO Fillet
+ * - Familia por CLAVE (BG, GG, FB, SG)
  */
 function isGrouperWG(l: PackingLine) {
   if (l.form !== "W&G") return false;
-  if (l.description_en.toUpperCase().includes("FILLET")) return false;
+  if (l.description_en?.toUpperCase().includes("FILLET")) return false;
 
-  return (
-    l.description_en === "BLACK GROUPER FRESH" ||
-    l.description_en === "GAG GROUPER FRESH" ||
-    l.description_en === "FIRE BACK GROUPER FRESH" ||
-    l.description_en === "SCAMP GROUPER FRESH"
-  );
+  const family = getFamilyKeyFromCode(l.code ?? null);
+  return family === "GROUPER_WG";
 }
 
+/**
+ * Genera la clave EXACTA de pricing
+ * (misma lógica backend)
+ */
 function priceKey(l: PackingLine) {
   // GROUPERS W&G → precio único
   if (isGrouperWG(l)) {
     return "GROUPER_WG";
   }
 
-  // resto → por talla
-  return `${l.description_en}|||${l.size}|||${l.form}`;
+  // Resto → por especie + forma + talla
+  return `${l.description_en}|||${l.form}|||${l.size}`;
 }
 
 type PriceReq = {
@@ -59,12 +63,13 @@ export default function PricingModal({
 
     for (const l of lines) {
       const key = priceKey(l);
+
       if (!map.has(key)) {
         map.set(key, {
           key,
           display:
-            key.indexOf("|||") === -1
-              ? key
+            key === "GROUPER_WG"
+              ? "GROUPER W&G"
               : `${l.description_en} ${l.form} ${l.size}`,
         });
       }

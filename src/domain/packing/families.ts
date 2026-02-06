@@ -7,7 +7,7 @@ export function getFamilyKeyFromCode(code: string | null) {
 
   // Estas 4 familias usan precio único
   if (["BG", "GG", "FB", "SG"].includes(prefix)) {
-    return "BLACK GROUPER";
+    return "GROUPER_WG";
   }
 
   return null;
