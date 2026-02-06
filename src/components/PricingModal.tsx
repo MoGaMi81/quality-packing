@@ -16,12 +16,12 @@ function isGrouperWG(l: PackingLine) {
  * Clave de pricing REAL (con datos disponibles)
  */
 function priceKey(l: PackingLine) {
-  // GROUPERS W&G → 1 solo precio por especie
+  // 🔑 TODOS los Grouper W&G usan UNA sola clave
   if (isGrouperWG(l)) {
-    return l.description_en; // 🔑 clave estable
+    return "BG"; // ← CLAVE ÚNICA
   }
 
-  // resto → por talla
+  // resto → por especie + forma + talla
   return `${l.description_en}|||${l.form}|||${l.size}`;
 }
 
