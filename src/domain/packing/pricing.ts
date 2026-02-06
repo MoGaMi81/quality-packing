@@ -48,7 +48,7 @@ export function extractPricingSpecies(lines: PackingLine[]): PricingRequest[] {
     let displayName = "";
 
     if (unified) {
-      // GRUPO GROPER → piden precio solo 1 vez
+      // GRUPO GROUPER → piden precio solo 1 vez
       priceKey = unified;                         // ej. "BLACK GROUPER FRESH"
       displayName = unified;
     } else {
@@ -102,7 +102,7 @@ export function applyPricing(
     }
 
     const price = prices[priceKey] ?? 0;
-    const total = price * l.pounds;
+    const total = price * (l.pounds ?? 0);
 
     result.push({
       ...l,
@@ -114,4 +114,3 @@ export function applyPricing(
 
   return result;
 }
-

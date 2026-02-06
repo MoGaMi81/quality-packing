@@ -7,9 +7,11 @@ import type { PackingLine } from "@/domain/packing/types";
  * Detecta GROUPER W&G (sin fillet)
  */
 function isGrouperWG(l: PackingLine) {
-  if (l.form !== "W&G") return false;
-  if (l.description_en?.toUpperCase().includes("FILLET")) return false;
-  return l.description_en?.toUpperCase().includes("GROUPER");
+  return (
+    l.form === "W&G" &&
+    !l.description_en?.toUpperCase().includes("FILLET") &&
+    l.description_en?.toUpperCase().includes("GROUPER")
+  );
 }
 
 /**
@@ -18,7 +20,7 @@ function isGrouperWG(l: PackingLine) {
 function priceKey(l: PackingLine) {
   // 🔑 TODOS los Grouper W&G usan UNA sola clave
   if (isGrouperWG(l)) {
-    return "BG"; // ← CLAVE ÚNICA
+    return "GROUPER_WG"; // ← CLAVE ÚNICA
   }
 
   // resto → por especie + forma + talla
@@ -56,12 +58,12 @@ export default function PricingModal({
       const key = priceKey(l);
       if (!map.has(key)) {
         map.set(key, {
-  key,
-  display:
-    key === "BG"
-      ? "GROUPER W&G (BG)"
-      : `${l.description_en} ${l.form} ${l.size}`,
-});
+          key,
+          display:
+            key === "GROUPER_WG"
+              ? "GROUPER W&G"
+              : `${l.description_en} ${l.form} ${l.size}`,
+        });
       }
     }
 
