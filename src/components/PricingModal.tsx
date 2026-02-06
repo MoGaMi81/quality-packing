@@ -2,36 +2,10 @@
 
 import { useEffect, useState } from "react";
 import type { PackingLine } from "@/domain/packing/types";
-import { getFamilyKeyFromCode } from "@/domain/packing/families";
-
-/**
- * Determina si la línea pertenece al grupo GROUPER W&G
- */
-function isGrouperWG(l: PackingLine) {
-  if (l.form !== "W&G") return false;
-  if (l.description_en?.toUpperCase().includes("FILLET")) return false;
-
-  const family = getFamilyKeyFromCode(l.code ?? null);
-  return family === "GROUPER_WG";
-}
-
-/**
- * Clave de precio
- */
-function priceKey(l: PackingLine) {
-  // ✅ GROUPERS W&G → UN SOLO PRECIO
-  if (isGrouperWG(l)) {
-    return "GROUPER_WG";
-  }
-
-  // ✅ resto → especie + talla + forma
-  return `${l.description_en}|||${l.form}|||${l.size}`;
-}
-
-type PriceReq = {
-  key: string;
-  display: string;
-};
+import {
+  extractPricingSpecies,
+  type PricingRequest,
+} from "@/domain/packing/pricing";
 
 type Props = {
   open: boolean;
@@ -46,34 +20,23 @@ export default function PricingModal({
   onClose,
   onSave,
 }: Props) {
-  const [reqs, setReqs] = useState<PriceReq[]>([]);
+  const [reqs, setReqs] = useState<PricingRequest[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
 
-    const map = new Map<string, PriceReq>();
+    // 🔑 USAR MOTOR OFICIAL DE PRICING
+    const pricingReqs = extractPricingSpecies(lines);
 
-    for (const l of lines) {
-      const key = priceKey(l);
+    setReqs(pricingReqs);
 
-      if (!map.has(key)) {
-        map.set(key, {
-          key,
-          display:
-            key === "GROUPER_WG"
-              ? "GROUPER W&G (precio único)"
-              : `${l.description_en} ${l.form} ${l.size}`,
-        });
-      }
-    }
-
-    const r = Array.from(map.values());
-    setReqs(r);
-
+    // inicializar inputs
     const init: Record<string, string> = {};
-    r.forEach((x) => (init[x.key] = ""));
+    pricingReqs.forEach((r) => {
+      init[r.key] = "";
+    });
     setValues(init);
 
     setError("");
@@ -85,7 +48,8 @@ export default function PricingModal({
     const out: Record<string, number> = {};
 
     for (const req of reqs) {
-      const n = Number(values[req.key]);
+      const raw = values[req.key];
+      const n = Number(raw);
 
       if (!Number.isFinite(n) || n <= 0) {
         setError(`Falta precio válido para ${req.display}`);
