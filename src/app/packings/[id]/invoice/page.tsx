@@ -15,15 +15,15 @@ type Line = {
 
 export default function InvoicePage({
   params,
-}: { params: { invoice: string } }) {
+}: { params: { id: string } }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJSON(`/api/packings/${params.invoice}/invoice`)
+    fetchJSON(`/api/packings/${params.id}/invoice`)
       .then(setData)
       .finally(() => setLoading(false));
-  }, [params.invoice]);
+  }, [params.id]);
 
   if (loading) return <p>Cargando factura…</p>;
   if (!data) return <p>No encontrado</p>;
@@ -72,7 +72,7 @@ export default function InvoicePage({
       {/* ✅ Bloque de exportación a Excel */}
       <div className="mt-6 flex justify-end gap-4">
         <a
-          href={`/api/export/${params.invoice}/excel`}
+          href={`/api/export/${params.id}/excel`}
           className="px-4 py-2 bg-black text-white rounded"
         >
           Exportar Excel
@@ -80,11 +80,8 @@ export default function InvoicePage({
       </div>
 
       <div className="flex gap-4">
-        <Link href={`/packings/${params.invoice}/view`} className="underline">
+        <Link href={`/packings/${params.id}/view`} className="underline">
           Ver Packing
-        </Link>
-        <Link href="/admin" className="underline">
-          Volver a Admin
         </Link>
       </div>
     </div>
