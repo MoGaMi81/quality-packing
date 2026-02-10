@@ -80,6 +80,9 @@ export default function InvoicePage({
       </div>
 
       <div className="flex gap-4">
+        <Link href={`/packings/${params.id}/view`} className="underline">
+          Ver Packing
+        </Link>
         <Link href="/admin" className="underline">
           Volver a Admin
         </Link>
