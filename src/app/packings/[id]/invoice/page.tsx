@@ -15,9 +15,7 @@ type Line = {
 
 export default function InvoicePage({
   params,
-}: {
-  params: { invoice: string };
-}) {
+}: { params: { invoice: string } }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -70,6 +68,16 @@ export default function InvoicePage({
           Total USD: ${totals.total_usd.toFixed(2)}
         </p>
       </footer>
+
+      {/* ✅ Bloque de exportación a Excel */}
+      <div className="mt-6 flex justify-end gap-4">
+        <a
+          href={`/api/export/${params.invoice}/excel`}
+          className="px-4 py-2 bg-black text-white rounded"
+        >
+          Exportar Excel
+        </a>
+      </div>
 
       <div className="flex gap-4">
         <Link href={`/packings/${params.invoice}/view`} className="underline">
