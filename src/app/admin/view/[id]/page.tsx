@@ -23,6 +23,13 @@ export default function ViewPacking() {
       .catch(() => router.replace("/admin/view"));
   }, [id, router]);
 
+  // ✅ Nuevo efecto: redirigir si el pricing ya está DONE
+  useEffect(() => {
+    if (packing?.pricing_status === "DONE") {
+      router.replace(`/packings/${id}/invoice`);
+    }
+  }, [packing, id, router]);
+
   if (!packing) return <div className="p-6">Cargando…</div>;
 
   /* =========================
