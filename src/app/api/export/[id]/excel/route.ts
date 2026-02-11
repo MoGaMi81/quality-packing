@@ -132,7 +132,6 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const invoice = decodeURIComponent(params.id);
 
   // 1️⃣ Header
   const { data: packing, error: e1 } = await supabase
@@ -144,7 +143,7 @@ export async function GET(
       clients ( name ),
       created_at
     `)
-    .eq("invoice_no", invoice)
+    .eq("id", params.id)
     .single();
 
   if (e1 || !packing) {
