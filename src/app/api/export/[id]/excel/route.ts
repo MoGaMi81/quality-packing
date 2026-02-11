@@ -8,131 +8,13 @@ const supabase = createClient(
 );
 
 // ==============================
-// Helpers
+// API: Export Excel
 // ==============================
-
-function isSeaLion(clientCode: string) {
-  return clientCode?.toUpperCase() === "SL";
-}
-
-// ==============================
-// Sheet: INVOICE (GENERAL)
-// ==============================
-
-function buildInvoiceSheet(
-  wb: ExcelJS.Workbook,
-  header: any,
-  lines: any[]
-) {
-  const ws = wb.addWorksheet("Invoice");
-
-  ws.columns = [
-    { header: "Boxes", key: "boxes", width: 10 },
-    { header: "Pounds", key: "lbs", width: 12 },
-    { header: "Description", key: "desc", width: 30 },
-    { header: "Size", key: "size", width: 12 },
-    { header: "Form", key: "form", width: 10 },
-    { header: "Scientific Name", key: "sci", width: 22 },
-    { header: "Price", key: "price", width: 10 },
-    { header: "Amount", key: "amount", width: 14 },
-  ];
-
-  const map = new Map<string, any>();
-
-  lines.forEach((l) => {
-    const key = `${l.pricing_key}|${l.size}|${l.form}`;
-
-    if (!map.has(key)) {
-      map.set(key, {
-        desc: l.species_name,
-        size: l.size,
-        form: l.form,
-        boxes: 1,
-        lbs: l.lbs,
-        price: l.price,
-      });
-    } else {
-      const g = map.get(key);
-      g.boxes += 1;
-      g.lbs += l.lbs;
-    }
-  });
-
-  let totalAmount = 0;
-  let totalLbs = 0;
-
-  map.forEach((g) => {
-    const amount = g.lbs * g.price;
-    totalAmount += amount;
-    totalLbs += g.lbs;
-
-    ws.addRow({
-      boxes: g.boxes,
-      lbs: g.lbs,
-      desc: g.desc,
-      size: g.size,
-      form: g.form,
-      sci: "",
-      price: g.price,
-      amount,
-    });
-  });
-
-  ws.addRow([]);
-  ws.addRow({
-    desc: "TOTAL",
-    lbs: totalLbs,
-    amount: totalAmount,
-  });
-
-  return ws;
-}
-
-// ==============================
-// Sheet: PACKING (GENERAL)
-// ==============================
-
-function buildPackingSheet(
-  wb: ExcelJS.Workbook,
-  header: any,
-  lines: any[]
-) {
-  const ws = wb.addWorksheet("Packing");
-
-  ws.columns = [
-    { header: "Box No.", key: "box", width: 10 },
-    { header: "Item Name", key: "desc", width: 30 },
-    { header: "Form", key: "form", width: 10 },
-    { header: "Size", key: "size", width: 12 },
-    { header: "Box Weight (lbs)", key: "lbs", width: 18 },
-  ];
-
-  lines
-    .sort((a, b) => a.box_no - b.box_no)
-    .forEach((l) => {
-      ws.addRow({
-        box: l.box_no,
-        desc: l.species_name,
-        form: l.form,
-        size: l.size,
-        lbs: l.lbs,
-      });
-    });
-
-  return ws;
-}
-
-// ==============================
-// API
-// ==============================
-
-// src/app/api/export/[id]/excel/route.ts
 
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-
   // 1️⃣ Header
   const { data: packing, error: e1 } = await supabase
     .from("packings")
@@ -150,18 +32,20 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // 2️⃣ Lines (columnas reales)
+  // 2️⃣ Lines + JOIN species
   const { data: lines, error: e2 } = await supabase
     .from("packing_lines")
     .select(`
       box_no,
       code,
       description_en,
-      scientific_name,
       size,
       form,
       pounds,
-      price
+      price,
+      species (
+        scientific_name
+      )
     `)
     .eq("packing_id", packing.id)
     .order("box_no");
@@ -176,7 +60,6 @@ export async function GET(
   // ==============================
   // INVOICE SHEET
   // ==============================
-
   const invoiceSheet = wb.addWorksheet("Invoice");
 
   invoiceSheet.columns = [
@@ -192,13 +75,13 @@ export async function GET(
 
   const map = new Map<string, any>();
 
-  lines?.forEach((l) => {
+  lines?.forEach((l: any) => {
     const key = `${l.code}|${l.size}|${l.form}`;
 
     if (!map.has(key)) {
       map.set(key, {
         desc: l.description_en,
-        sci: l.scientific_name,
+        sci: l.species?.scientific_name ?? "",
         size: l.size,
         form: l.form,
         boxes: 1,
@@ -242,7 +125,6 @@ export async function GET(
   // ==============================
   // PACKING SHEET
   // ==============================
-
   const packingSheet = wb.addWorksheet("Packing");
 
   packingSheet.columns = [
@@ -254,8 +136,8 @@ export async function GET(
   ];
 
   lines
-    ?.sort((a, b) => a.box_no - b.box_no)
-    .forEach((l) => {
+    ?.sort((a: any, b: any) => a.box_no - b.box_no)
+    .forEach((l: any) => {
       packingSheet.addRow({
         box: l.box_no,
         desc: l.description_en,
