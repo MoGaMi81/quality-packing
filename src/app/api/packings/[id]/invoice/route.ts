@@ -8,9 +8,9 @@ const supabase = createClient(
 
 export async function GET(
   _req: Request,
-  { params }: { params: { invoice: string } }
+  { params }: { params: { id: string } }
 ) {
-  const invoice = decodeURIComponent(params.invoice);
+  const invoice = decodeURIComponent(params.id);
 
   const { data, error } = await supabase
     .from("packings")
