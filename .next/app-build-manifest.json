@@ -16,20 +16,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
     ],
-    "/facturacion/page": [
+    "/admin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/facturacion/page.js"
+      "static/chunks/app/admin/page.js"
     ],
-    "/facturacion/buscar/page": [
+    "/admin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/facturacion/buscar/page.js"
+      "static/chunks/app/admin/layout.js"
     ],
-    "/facturacion/ver/[invoice]/page": [
+    "/admin/view/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/facturacion/ver/[invoice]/page.js"
+      "static/chunks/app/admin/view/page.js"
+    ],
+    "/admin/view/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/view/[id]/page.js"
+    ],
+    "/packings/[id]/invoice/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/packings/[id]/invoice/page.js"
     ]
   }
 }

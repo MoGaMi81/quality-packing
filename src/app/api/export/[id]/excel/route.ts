@@ -37,7 +37,6 @@ function buildInvoiceSheet(
     { header: "Amount", key: "amount", width: 14 },
   ];
 
-  // Agrupar por especie + size + form (ya pricado)
   const map = new Map<string, any>();
 
   lines.forEach((l) => {
@@ -73,7 +72,7 @@ function buildInvoiceSheet(
       desc: g.desc,
       size: g.size,
       form: g.form,
-      sci: "", // fase 2 (catalogo)
+      sci: "",
       price: g.price,
       amount,
     });
@@ -131,8 +130,9 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const invoice = decodeURIComponent(params.id);
+  const id = params.id; // 🔥 usamos UUID, NO invoice_no
 
+  // 1️⃣ Header
   const { data: packing, error: e1 } = await supabase
     .from("packings")
     .select(`
@@ -142,14 +142,14 @@ export async function GET(
       clients ( name ),
       created_at
     `)
-    .eq("invoice_no", invoice)
+    .eq("id", id)   // 🔥 CAMBIO IMPORTANTE
     .single();
 
   if (e1 || !packing) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Packing not found" }, { status: 404 });
   }
 
-  // 2️⃣ Lines (ya pricadas)
+  // 2️⃣ Lines
   const { data: lines, error: e2 } = await supabase
     .from("packing_lines")
     .select(`
@@ -171,8 +171,8 @@ export async function GET(
   // 3️⃣ Workbook
   const wb = new ExcelJS.Workbook();
 
-  buildInvoiceSheet(wb, packing, lines);
-  buildPackingSheet(wb, packing, lines);
+  buildInvoiceSheet(wb, packing, lines || []);
+  buildPackingSheet(wb, packing, lines || []);
 
   // 4️⃣ Export
   const buffer = await wb.xlsx.writeBuffer();

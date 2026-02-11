@@ -1,9 +1,6 @@
 {
-  "/page": "app/page.js",
-  "/facturacion/page": "app/facturacion/page.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/facturacion/buscar/page": "app/facturacion/buscar/page.js",
-  "/api/facturacion/by-invoice/[invoice]/route": "app/api/facturacion/by-invoice/[invoice]/route.js",
+  "/packings/[id]/invoice/page": "app/packings/[id]/invoice/page.js",
   "/login/page": "app/login/page.js",
-  "/facturacion/ver/[invoice]/page": "app/facturacion/ver/[invoice]/page.js"
+  "/admin/view/page": "app/admin/view/page.js",
+  "/admin/view/[id]/page": "app/admin/view/[id]/page.js"
 }
