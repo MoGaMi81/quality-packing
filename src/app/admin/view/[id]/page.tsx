@@ -20,15 +20,8 @@ export default function ViewPacking() {
         if (!res?.ok) throw new Error();
         setPacking(res.packing);
       })
-      .catch(() => router.replace("/admin/view"));
+      .catch(() => router.push("/admin/view")); // ❌ ya no usamos replace
   }, [id, router]);
-
-  // ✅ Nuevo efecto: redirigir si el pricing ya está DONE
-  useEffect(() => {
-    if (packing?.pricing_status === "DONE") {
-      router.replace(`/packings/${id}/invoice`);
-    }
-  }, [packing, id, router]);
 
   if (!packing) return <div className="p-6">Cargando…</div>;
 
@@ -95,6 +88,25 @@ export default function ViewPacking() {
           </div>
         )}
       </div>
+
+      {/* ✅ Botones extra cuando pricing está DONE */}
+      {packing.pricing_status === "DONE" && (
+        <div className="mt-6 flex justify-end gap-4">
+          <a
+            href={`/api/export/${id}/excel`}
+            className="px-4 py-2 bg-black text-white rounded"
+          >
+            Exportar Excel
+          </a>
+
+          <button
+            onClick={() => router.push(`/packings/${id}/invoice`)}
+            className="px-4 py-2 border rounded"
+          >
+            Ver Factura / Resumen
+          </button>
+        </div>
+      )}
 
       {/* TABLA */}
       <div className="border rounded p-4">
