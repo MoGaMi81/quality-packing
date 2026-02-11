@@ -154,7 +154,7 @@ export async function GET(
     .from("packing_lines")
     .select(`
       box_no,
-      species_name,
+      description_en,
       pricing_key,
       size,
       form,
