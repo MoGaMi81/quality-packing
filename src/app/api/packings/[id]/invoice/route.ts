@@ -10,26 +10,27 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const invoice = decodeURIComponent(params.id);
+  const packingId = decodeURIComponent(params.id);
 
-  const { data, error } = await supabase
-    .from("packings")
-    .select(`
-      invoice,
-      created_at,
-      clients (
-        name
-      ),
-      packing_lines (
-        pricing_key,
-        species_name,
-        form,
-        lbs,
-        price
-      )
-    `)
-    .eq("invoice", invoice)
-    .single();
+const { data, error } = await supabase
+  .from("packings")
+  .select(`
+    id,
+    invoice_no,
+    created_at,
+    clients (
+      name
+    ),
+    packing_lines (
+      pricing_key,
+      species_name,
+      form,
+      lbs,
+      price
+    )
+  `)
+  .eq("id", packingId)
+  .single();
 
   if (error || !data) {
     return NextResponse.json({ error: "Packing not found" }, { status: 404 });
@@ -52,7 +53,7 @@ export async function GET(
 
   return NextResponse.json({
     header: {
-      invoice: data.invoice,
+      invoice: data.invoice_no,
       client_name: data.clients?.[0]?.name ?? "",
       date: data.created_at,
     },

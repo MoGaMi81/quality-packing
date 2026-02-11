@@ -133,17 +133,16 @@ export async function GET(
 ) {
   const invoice = decodeURIComponent(params.id);
 
-  // 1️⃣ Header
   const { data: packing, error: e1 } = await supabase
     .from("packings")
     .select(`
       id,
-      invoice,
+      invoice_no,
       client_code,
       clients ( name ),
       created_at
     `)
-    .eq("invoice", invoice)
+    .eq("invoice_no", invoice)
     .single();
 
   if (e1 || !packing) {
@@ -177,7 +176,7 @@ export async function GET(
 
   // 4️⃣ Export
   const buffer = await wb.xlsx.writeBuffer();
-  const filename = `Packing_Invoice_${packing.invoice}.xlsx`;
+  const filename = `Packing_Invoice_${packing.invoice_no}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {
