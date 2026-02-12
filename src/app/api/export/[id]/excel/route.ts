@@ -19,7 +19,6 @@ export async function GET(
     .select(`
       id,
       invoice_no,
-      client_code,
       clients ( name ),
       created_at
     `)
@@ -30,6 +29,9 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const clientName =
+    (packing.clients as any)?.name ?? "";
+
   // ==============================
   // 2️⃣ LINES + SCIENTIFIC NAME
   // ==============================
@@ -37,7 +39,6 @@ export async function GET(
     .from("packing_lines")
     .select(`
       box_no,
-      code,
       description_en,
       size,
       form,
@@ -58,9 +59,14 @@ export async function GET(
   const wb = new ExcelJS.Workbook();
 
   // ============================================================
-  // 🟦 PACKING SHEET (FÍSICO)
+  // 🟦 PACKING SHEET
   // ============================================================
   const packingSheet = wb.addWorksheet("Packing");
+
+  packingSheet.addRow([`CLIENT: ${clientName}`]);
+  packingSheet.addRow([`INVOICE NO: ${packing.invoice_no}`]);
+  packingSheet.addRow([`DATE: ${packing.created_at?.slice(0, 10)}`]);
+  packingSheet.addRow([]);
 
   packingSheet.columns = [
     { header: "Box No.", key: "box", width: 10 },
@@ -101,23 +107,38 @@ export async function GET(
     });
   });
 
+  packingSheet.addRow([]);
+  packingSheet.addRow([`Total Boxes: ${boxes.length}`]);
+  packingSheet.addRow([
+    `Total Pounds: ${boxes
+      .reduce((s, b) => s + b.total_lbs, 0)
+      .toFixed(2)}`,
+  ]);
+
   // ============================================================
-  // 🟩 INVOICE SHEET (LÓGICA CORRECTA)
+  // 🟩 INVOICE SHEET
   // ============================================================
   const invoiceSheet = wb.addWorksheet("Invoice");
 
+  invoiceSheet.addRow([`CLIENT: ${clientName}`]);
+  invoiceSheet.addRow([`INVOICE NO: ${packing.invoice_no}`]);
+  invoiceSheet.addRow([`DATE: ${packing.created_at?.slice(0, 10)}`]);
+  invoiceSheet.addRow([`COUNTRY OF ORIGIN: MEXICO`]);
+  invoiceSheet.addRow([`PO NUMBER: __________________________`]);
+  invoiceSheet.addRow([]);
+
   invoiceSheet.columns = [
-    { header: "Boxes", key: "boxes", width: 10 },
+    { header: "Boxes", key: "boxes", width: 8 },
     { header: "Pounds", key: "lbs", width: 12 },
-    { header: "Description", key: "desc", width: 30 },
-    { header: "Size", key: "size", width: 12 },
+    { header: "Description", key: "desc", width: 28 },
+    { header: "Size", key: "size", width: 10 },
     { header: "Form", key: "form", width: 10 },
     { header: "Scientific Name", key: "sci", width: 22 },
     { header: "Price", key: "price", width: 10 },
     { header: "Amount", key: "amount", width: 14 },
   ];
 
-  // 1️⃣ Agrupar por caja real
+  // Agrupar por caja
   const invoiceBoxesMap = new Map<number, any>();
 
   lines?.forEach((l: any) => {
@@ -135,7 +156,6 @@ export async function GET(
   const simpleMap = new Map<string, any>();
   const combinedBoxes: any[] = [];
 
-  // 2️⃣ Separar simples y combinadas
   invoiceBoxesMap.forEach((box) => {
     if (box.is_combined) {
       combinedBoxes.push(box);
@@ -162,10 +182,10 @@ export async function GET(
     }
   });
 
-  // 3️⃣ Imprimir simples agrupadas
   let totalAmount = 0;
   let totalLbs = 0;
 
+  // Simples agrupadas
   simpleMap.forEach((g) => {
     const amount = g.pounds * g.price;
     totalAmount += amount;
@@ -183,7 +203,7 @@ export async function GET(
     });
   });
 
-  // 4️⃣ Imprimir combinadas EXACTAS
+  // Combinadas EXACTAS
   combinedBoxes.forEach((box) => {
     box.lines.forEach((l: any, index: number) => {
       const amount = l.pounds * l.price;
@@ -191,7 +211,7 @@ export async function GET(
       totalLbs += l.pounds;
 
       invoiceSheet.addRow({
-        boxes: index === 0 ? 1 : "", // solo la primera línea muestra 1
+        boxes: index === 0 ? 1 : "",
         lbs: l.pounds,
         desc: l.description_en,
         size: l.size,
@@ -203,7 +223,6 @@ export async function GET(
     });
   });
 
-  // Totales
   invoiceSheet.addRow([]);
   invoiceSheet.addRow({
     desc: "TOTAL",
@@ -211,11 +230,25 @@ export async function GET(
     amount: totalAmount,
   });
 
+  // Small / Large
+  let smallBoxes = 0;
+  let largeBoxes = 0;
+
+  boxes.forEach((b) => {
+    if (b.total_lbs < 70) smallBoxes++;
+    else largeBoxes++;
+  });
+
+  invoiceSheet.addRow([]);
+  invoiceSheet.addRow([`Small Boxes: ${smallBoxes}`]);
+  invoiceSheet.addRow([`Large Boxes: ${largeBoxes}`]);
+  invoiceSheet.addRow([`Total Boxes: ${boxes.length}`]);
+
   // ============================================================
-  // 📁 EXPORT
+  // EXPORT
   // ============================================================
   const buffer = await wb.xlsx.writeBuffer();
-  const filename = `Packing_Invoice ${packing.clients?.[0]?.name ?? ""} ${packing.invoice_no}.xlsx`;
+  const filename = `Packing_Invoice ${clientName} ${packing.invoice_no}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {
