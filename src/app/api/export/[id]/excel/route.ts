@@ -122,7 +122,37 @@ export async function GET(
   });
 
   // ==============================
-  // PACKING SHEET
+  // Agrupar cajas reales
+  // ==============================
+  const boxesMap = new Map<number, any>();
+
+  lines?.forEach((l) => {
+    if (!boxesMap.has(l.box_no)) {
+      boxesMap.set(l.box_no, {
+        box_no: l.box_no,
+        total_lbs: l.pounds,
+        lines: [l],
+      });
+    } else {
+      const b = boxesMap.get(l.box_no);
+      b.total_lbs += l.pounds;
+      b.lines.push(l);
+    }
+  });
+
+  const boxes = Array.from(boxesMap.values());
+
+  // Cálculo correcto de cajas chicas / grandes
+  let smallBoxes = 0;
+  let largeBoxes = 0;
+
+  boxes.forEach((b) => {
+    if (b.total_lbs < 70) smallBoxes++;
+    else largeBoxes++;
+  });
+
+  // ==============================
+  // PACKING SHEET (CORRECTO)
   // ==============================
   const packingSheet = wb.addWorksheet("Packing");
 
@@ -143,34 +173,25 @@ export async function GET(
     { header: "Box Weight (lbs)", key: "lbs", width: 18 },
   ];
 
-  // 🔹 Contadores
-  let smallBoxes = 0;
-  let largeBoxes = 0;
-  let totalLbsPacking = 0;
-
-  lines
-    ?.sort((a: any, b: any) => a.box_no - b.box_no)
-    .forEach((l: any) => {
+  // 🔹 Agregar líneas agrupadas por caja
+  boxes.forEach((b) => {
+    b.lines.forEach((l: any) => {
       packingSheet.addRow({
-        box: l.box_no,
+        box: b.box_no,
         desc: l.description_en,
         form: l.form,
         size: l.size,
         lbs: l.pounds,
       });
-
-      totalLbsPacking += l.pounds;
-
-      if (l.pounds < 70) smallBoxes++;
-      else largeBoxes++;
     });
+  });
 
   // 🔹 Resumen final
   packingSheet.addRow([]);
   packingSheet.addRow([`Small Boxes (<70 lbs): ${smallBoxes}`]);
   packingSheet.addRow([`Large Boxes (>=70 lbs): ${largeBoxes}`]);
-  packingSheet.addRow([`Total Boxes: ${smallBoxes + largeBoxes}`]);
-  packingSheet.addRow([`Total Pounds: ${totalLbsPacking.toFixed(2)}`]);
+  packingSheet.addRow([`Total Boxes: ${boxes.length}`]);
+  packingSheet.addRow([`Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`]);
 
   // 4️⃣ Export
   const buffer = await wb.xlsx.writeBuffer();
