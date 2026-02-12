@@ -10,7 +10,6 @@ const supabase = createClient(
 // ==============================
 // API: Export Excel
 // ==============================
-
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -96,12 +95,12 @@ export async function GET(
   });
 
   let totalAmount = 0;
-  let totalLbs = 0;
+  let totalLbsInvoice = 0;
 
   map.forEach((g) => {
     const amount = g.pounds * g.price;
     totalAmount += amount;
-    totalLbs += g.pounds;
+    totalLbsInvoice += g.pounds;
 
     invoiceSheet.addRow({
       boxes: g.boxes,
@@ -118,7 +117,7 @@ export async function GET(
   invoiceSheet.addRow([]);
   invoiceSheet.addRow({
     desc: "TOTAL",
-    lbs: totalLbs,
+    lbs: totalLbsInvoice,
     amount: totalAmount,
   });
 
@@ -127,6 +126,15 @@ export async function GET(
   // ==============================
   const packingSheet = wb.addWorksheet("Packing");
 
+  // 🔹 Encabezado profesional
+  packingSheet.addRow([`CLIENT: ${packing.clients?.[0]?.name ?? ""}`]);
+  packingSheet.addRow([`INVOICE NO: ${packing.invoice_no}`]);
+  packingSheet.addRow([`DATE: ${packing.created_at?.slice(0, 10)}`]);
+  packingSheet.addRow([`COUNTRY OF ORIGIN: MEXICO`]);
+  packingSheet.addRow([`PO NUMBER: __________________`]);
+  packingSheet.addRow([]);
+
+  // 🔹 Columnas
   packingSheet.columns = [
     { header: "Box No.", key: "box", width: 10 },
     { header: "Item Name", key: "desc", width: 30 },
@@ -134,6 +142,11 @@ export async function GET(
     { header: "Size", key: "size", width: 12 },
     { header: "Box Weight (lbs)", key: "lbs", width: 18 },
   ];
+
+  // 🔹 Contadores
+  let smallBoxes = 0;
+  let largeBoxes = 0;
+  let totalLbsPacking = 0;
 
   lines
     ?.sort((a: any, b: any) => a.box_no - b.box_no)
@@ -145,11 +158,23 @@ export async function GET(
         size: l.size,
         lbs: l.pounds,
       });
+
+      totalLbsPacking += l.pounds;
+
+      if (l.pounds < 70) smallBoxes++;
+      else largeBoxes++;
     });
+
+  // 🔹 Resumen final
+  packingSheet.addRow([]);
+  packingSheet.addRow([`Small Boxes (<70 lbs): ${smallBoxes}`]);
+  packingSheet.addRow([`Large Boxes (>=70 lbs): ${largeBoxes}`]);
+  packingSheet.addRow([`Total Boxes: ${smallBoxes + largeBoxes}`]);
+  packingSheet.addRow([`Total Pounds: ${totalLbsPacking.toFixed(2)}`]);
 
   // 4️⃣ Export
   const buffer = await wb.xlsx.writeBuffer();
-  const filename = `Packing_Invoice_${packing.invoice_no}.xlsx`;
+  const filename = `Packing_Invoice ${packing.clients?.[0]?.name ?? ""} ${packing.invoice_no}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {
