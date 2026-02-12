@@ -7,14 +7,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ==============================
-// API: Export Excel
-// ==============================
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  // 1️⃣ Header
+  // ==============================
+  // 1️⃣ HEADER
+  // ==============================
   const { data: packing, error: e1 } = await supabase
     .from("packings")
     .select(`
@@ -31,7 +30,9 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // 2️⃣ Lines + JOIN species
+  // ==============================
+  // 2️⃣ LINES + SCIENTIFIC NAME
+  // ==============================
   const { data: lines, error: e2 } = await supabase
     .from("packing_lines")
     .select(`
@@ -53,13 +54,64 @@ export async function GET(
     return NextResponse.json({ error: e2.message }, { status: 500 });
   }
 
-  // 3️⃣ Workbook
   const wb = new ExcelJS.Workbook();
 
-  // ==============================
-  // INVOICE SHEET
-  // ==============================
+  // ============================================================
+  // 🟦 PACKING SHEET (FÍSICO)
+  // ============================================================
+  const packingSheet = wb.addWorksheet("Packing");
+
+  packingSheet.columns = [
+    { header: "Box No.", key: "box", width: 10 },
+    { header: "Item Name", key: "desc", width: 30 },
+    { header: "Form", key: "form", width: 10 },
+    { header: "Size", key: "size", width: 12 },
+    { header: "Box Weight (lbs)", key: "lbs", width: 18 },
+  ];
+
+  // Agrupar cajas reales
+  const boxesMap = new Map<number, any>();
+
+  lines?.forEach((l: any) => {
+    if (!boxesMap.has(l.box_no)) {
+      boxesMap.set(l.box_no, {
+        box_no: l.box_no,
+        total_lbs: l.pounds,
+        lines: [l],
+      });
+    } else {
+      const b = boxesMap.get(l.box_no);
+      b.total_lbs += l.pounds;
+      b.lines.push(l);
+    }
+  });
+
+  const boxes = Array.from(boxesMap.values());
+
+  boxes.forEach((b) => {
+    b.lines.forEach((l: any) => {
+      packingSheet.addRow({
+        box: b.box_no,
+        desc: l.description_en,
+        form: l.form,
+        size: l.size,
+        lbs: l.pounds,
+      });
+    });
+  });
+
+  // ============================================================
+  // 🟩 INVOICE SHEET (COMERCIAL)
+  // ============================================================
   const invoiceSheet = wb.addWorksheet("Invoice");
+
+  // Encabezado superior
+  invoiceSheet.addRow([`CLIENT: ${packing.clients?.[0]?.name ?? ""}`]);
+  invoiceSheet.addRow([`INVOICE NO: ${packing.invoice_no}`]);
+  invoiceSheet.addRow([`DATE: ${packing.created_at?.slice(0, 10)}`]);
+  invoiceSheet.addRow([`COUNTRY OF ORIGIN: MEXICO`]);
+  invoiceSheet.addRow([`PO NUMBER: __________________`]);
+  invoiceSheet.addRow([]);
 
   invoiceSheet.columns = [
     { header: "Boxes", key: "boxes", width: 10 },
@@ -72,13 +124,14 @@ export async function GET(
     { header: "Amount", key: "amount", width: 14 },
   ];
 
-  const map = new Map<string, any>();
+  // Agrupar por producto (NO por caja)
+  const productMap = new Map<string, any>();
 
   lines?.forEach((l: any) => {
     const key = `${l.code}|${l.size}|${l.form}`;
 
-    if (!map.has(key)) {
-      map.set(key, {
+    if (!productMap.has(key)) {
+      productMap.set(key, {
         desc: l.description_en,
         sci: l.species?.scientific_name ?? "",
         size: l.size,
@@ -88,19 +141,19 @@ export async function GET(
         price: l.price,
       });
     } else {
-      const g = map.get(key);
+      const g = productMap.get(key);
       g.boxes += 1;
       g.pounds += l.pounds;
     }
   });
 
   let totalAmount = 0;
-  let totalLbsInvoice = 0;
+  let totalLbs = 0;
 
-  map.forEach((g) => {
+  productMap.forEach((g) => {
     const amount = g.pounds * g.price;
     totalAmount += amount;
-    totalLbsInvoice += g.pounds;
+    totalLbs += g.pounds;
 
     invoiceSheet.addRow({
       boxes: g.boxes,
@@ -117,32 +170,13 @@ export async function GET(
   invoiceSheet.addRow([]);
   invoiceSheet.addRow({
     desc: "TOTAL",
-    lbs: totalLbsInvoice,
+    lbs: totalLbs,
     amount: totalAmount,
   });
 
-  // ==============================
-  // Agrupar cajas reales
-  // ==============================
-  const boxesMap = new Map<number, any>();
-
-  lines?.forEach((l) => {
-    if (!boxesMap.has(l.box_no)) {
-      boxesMap.set(l.box_no, {
-        box_no: l.box_no,
-        total_lbs: l.pounds,
-        lines: [l],
-      });
-    } else {
-      const b = boxesMap.get(l.box_no);
-      b.total_lbs += l.pounds;
-      b.lines.push(l);
-    }
-  });
-
-  const boxes = Array.from(boxesMap.values());
-
-  // Cálculo correcto de cajas chicas / grandes
+  // ============================================================
+  // 📦 SMALL / LARGE BOXES (solo resultado final)
+  // ============================================================
   let smallBoxes = 0;
   let largeBoxes = 0;
 
@@ -151,50 +185,16 @@ export async function GET(
     else largeBoxes++;
   });
 
-  // ==============================
-  // PACKING SHEET (CORRECTO)
-  // ==============================
-  const packingSheet = wb.addWorksheet("Packing");
+  invoiceSheet.addRow([]);
+  invoiceSheet.addRow({ desc: "Small Boxes", boxes: smallBoxes });
+  invoiceSheet.addRow({ desc: "Large Boxes", boxes: largeBoxes });
+  invoiceSheet.addRow({ desc: "Total Boxes", boxes: boxes.length });
 
-  // 🔹 Encabezado profesional
-  packingSheet.addRow([`CLIENT: ${packing.clients?.[0]?.name ?? ""}`]);
-  packingSheet.addRow([`INVOICE NO: ${packing.invoice_no}`]);
-  packingSheet.addRow([`DATE: ${packing.created_at?.slice(0, 10)}`]);
-  packingSheet.addRow([`COUNTRY OF ORIGIN: MEXICO`]);
-  packingSheet.addRow([`PO NUMBER: __________________`]);
-  packingSheet.addRow([]);
-
-  // 🔹 Columnas
-  packingSheet.columns = [
-    { header: "Box No.", key: "box", width: 10 },
-    { header: "Item Name", key: "desc", width: 30 },
-    { header: "Form", key: "form", width: 10 },
-    { header: "Size", key: "size", width: 12 },
-    { header: "Box Weight (lbs)", key: "lbs", width: 18 },
-  ];
-
-  // 🔹 Agregar líneas agrupadas por caja
-  boxes.forEach((b) => {
-    b.lines.forEach((l: any) => {
-      packingSheet.addRow({
-        box: b.box_no,
-        desc: l.description_en,
-        form: l.form,
-        size: l.size,
-        lbs: l.pounds,
-      });
-    });
-  });
-
-  // 🔹 Resumen final
-  packingSheet.addRow([]);
-  packingSheet.addRow([`Small Boxes (<70 lbs): ${smallBoxes}`]);
-  packingSheet.addRow([`Large Boxes (>=70 lbs): ${largeBoxes}`]);
-  packingSheet.addRow([`Total Boxes: ${boxes.length}`]);
-  packingSheet.addRow([`Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`]);
-
-  // 4️⃣ Export
+  // ============================================================
+  // 📁 EXPORT
+  // ============================================================
   const buffer = await wb.xlsx.writeBuffer();
+
   const filename = `Packing_Invoice ${packing.clients?.[0]?.name ?? ""} ${packing.invoice_no}.xlsx`;
 
   return new NextResponse(buffer, {
