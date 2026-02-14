@@ -111,80 +111,147 @@ export async function GET(
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
-    // ============================================================
-  // 🟩 INVOICE SHEET (FORMATO REAL CORREGIDO + TS SAFE)
   // ============================================================
-  const invoiceSheet = wb.addWorksheet("Invoice");
+// 🟩 INVOICE SHEET (FORMATO REAL CORREGIDO + TS SAFE)
+// ============================================================
+const invoiceSheet = wb.addWorksheet("Invoice");
 
-  // 🔹 Column widths manual
-  invoiceSheet.getColumn(1).width = 2;
-  invoiceSheet.getColumn(2).width = 8;
-  invoiceSheet.getColumn(3).width = 12;
-  invoiceSheet.getColumn(4).width = 28;
-  invoiceSheet.getColumn(5).width = 10;
-  invoiceSheet.getColumn(6).width = 10;
-  invoiceSheet.getColumn(7).width = 22;
-  invoiceSheet.getColumn(8).width = 10;
-  invoiceSheet.getColumn(9).width = 14;
+// 🔹 AJUSTAR ANCHOS DE COLUMNAS (Paso 4)
+invoiceSheet.columns = [
+  { width: 3 },   // columna vacía
+  { width: 8 },   // Boxes
+  { width: 12 },  // Pounds
+  { width: 28 },  // Description
+  { width: 10 },  // Size
+  { width: 8 },   // Form
+  { width: 22 },  // Scientific
+  { width: 10 },  // Price
+  { width: 14 },  // Amount
+];
 
-  let row = 1;
+let row = 1;
 
-  // 🔹 HEADER
-  invoiceSheet.getCell(`A${row}`).value = `CLIENT: ${clientName}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `INVOICE NO: ${packing.invoice_no}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `DATE: ${packing.created_at?.slice(0, 10)}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `COUNTRY OF ORIGIN: MEXICO`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `PO NUMBER: __________________________`; row += 2;
+// 🔹 HEADER
+invoiceSheet.getCell(`A${row}`).value = `CLIENT: ${clientName}`; row++;
+invoiceSheet.getCell(`A${row}`).value = `INVOICE NO: ${packing.invoice_no}`; row++;
+invoiceSheet.getCell(`A${row}`).value = `DATE: ${packing.created_at?.slice(0, 10)}`; row++;
 
-  // 🔹 COLUMN HEADERS
-  invoiceSheet.getRow(row).values = ["", "Boxes", "Pounds", "Description", "Size", "Form", "Scientific Name", "Price", "Amount"];
-  invoiceSheet.getRow(row).font = { bold: true };
-  row++;
+// 🔹 COUNTRY OF ORIGIN EN AMARILLO (Paso 3)
+invoiceSheet.getCell(`A${row}`).value = `COUNTRY OF ORIGIN: MEXICO`;
+invoiceSheet.mergeCells(`A${row}:I${row}`);
+invoiceSheet.getCell(`A${row}`).alignment = { horizontal: "center" };
+invoiceSheet.getCell(`A${row}`).font = { bold: true, size: 14 };
+invoiceSheet.getCell(`A${row}`).fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFFFFF00" }, // amarillo
+};
+row++;
 
-  // 🔹 AGRUPAR CAJAS PARA FACTURA
-  const invoiceBoxesMap = new Map<number, { box_no: number; is_combined: boolean; lines: any[] }>();
-  lines?.forEach((l: any) => {
-    if (!invoiceBoxesMap.has(l.box_no)) {
-      invoiceBoxesMap.set(l.box_no, { box_no: l.box_no, is_combined: l.is_combined, lines: [l] });
-    } else {
-      invoiceBoxesMap.get(l.box_no)!.lines.push(l);
-    }
-  });
+invoiceSheet.getCell(`A${row}`).value = `PO NUMBER: __________________________`; row += 2;
 
-  const simpleMap = new Map<string, { desc: string; sci: string; size: string; form: string; boxes: number; pounds: number; price: number }>();
-  const combinedBoxes: { box_no: number; is_combined: boolean; lines: any[] }[] = [];
+// 🔹 COLUMN HEADERS (Paso 1)
+invoiceSheet.getRow(row).values = [
+  "",
+  "Boxes",
+  "Pounds",
+  "Description",
+  "Size",
+  "Form",
+  "Scientific Name",
+  "Price",
+  "Amount",
+];
 
-  invoiceBoxesMap.forEach((box) => {
-    if (box.is_combined) {
-      combinedBoxes.push(box);
-    } else {
-      box.lines.forEach((l: any) => {
-        const key = `${l.description_en}|${l.size}|${l.form}`;
-        if (!simpleMap.has(key)) {
-          simpleMap.set(key, { desc: l.description_en, sci: l.species?.scientific_name ?? "", size: l.size, form: l.form, boxes: 1, pounds: l.pounds, price: l.price });
-        } else {
-          const g = simpleMap.get(key)!;
-          g.boxes += 1;
-          g.pounds += l.pounds;
-        }
-      });
-    }
-  });
+const headerRow = invoiceSheet.getRow(row);
+headerRow.font = { bold: true };
+headerRow.alignment = { vertical: "middle", horizontal: "center" };
+headerRow.eachCell((cell) => {
+  cell.border = {
+    top: { style: "thin" },
+    left: { style: "thin" },
+    bottom: { style: "thin" },
+    right: { style: "thin" },
+  };
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFEFEFEF" }, // gris claro
+  };
+});
+row++;
 
-  let totalAmount = 0;
-  let totalLbs = 0;
-
-  function writeInvoiceRow(data: { boxes?: number | string; lbs: number; desc: string; size: string; form: string; sci: string; price: number; amount: number }) {
-    invoiceSheet.getRow(row).values = ["", data.boxes ?? "", data.lbs, data.desc, data.size, data.form, data.sci, data.price, data.amount];
-    invoiceSheet.getCell(`B${row}`).alignment = { horizontal: "center" };
-    invoiceSheet.getCell(`C${row}`).alignment = { horizontal: "right" };
-    invoiceSheet.getCell(`H${row}`).alignment = { horizontal: "right" };
-    invoiceSheet.getCell(`I${row}`).alignment = { horizontal: "right" };
-    invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
-    invoiceSheet.getCell(`H${row}`).numFmt = "0.00";
-    invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
-    row++;
+// ============================================================
+// 🔹 AGRUPAR CAJAS PARA FACTURA
+// ============================================================
+const invoiceBoxesMap = new Map<number, { box_no: number; is_combined: boolean; lines: any[] }>();
+lines?.forEach((l: any) => {
+  if (!invoiceBoxesMap.has(l.box_no)) {
+    invoiceBoxesMap.set(l.box_no, { box_no: l.box_no, is_combined: l.is_combined, lines: [l] });
+  } else {
+    invoiceBoxesMap.get(l.box_no)!.lines.push(l);
   }
+});
+
+const simpleMap = new Map<string, { desc: string; sci: string; size: string; form: string; boxes: number; pounds: number; price: number }>();
+const combinedBoxes: { box_no: number; is_combined: boolean; lines: any[] }[] = [];
+
+invoiceBoxesMap.forEach((box) => {
+  if (box.is_combined) {
+    combinedBoxes.push(box);
+  } else {
+    box.lines.forEach((l: any) => {
+      const key = `${l.description_en}|${l.size}|${l.form}`;
+      if (!simpleMap.has(key)) {
+        simpleMap.set(key, { desc: l.description_en, sci: l.species?.scientific_name ?? "", size: l.size, form: l.form, boxes: 1, pounds: l.pounds, price: l.price });
+      } else {
+        const g = simpleMap.get(key)!;
+        g.boxes += 1;
+        g.pounds += l.pounds;
+      }
+    });
+  }
+});
+
+let totalAmount = 0;
+let totalLbs = 0;
+
+// 🔹 FUNCION writeInvoiceRow (Paso 2)
+function writeInvoiceRow(data: any) {
+  const currentRow = invoiceSheet.getRow(row);
+
+  currentRow.values = [
+    "",
+    data.boxes ?? "",
+    data.lbs,
+    data.desc,
+    data.size,
+    data.form,
+    data.sci,
+    data.price,
+    data.amount,
+  ];
+
+  currentRow.getCell(2).alignment = { horizontal: "center" };
+  currentRow.getCell(3).alignment = { horizontal: "right" };
+  currentRow.getCell(8).alignment = { horizontal: "right" };
+  currentRow.getCell(9).alignment = { horizontal: "right" };
+
+  currentRow.getCell(3).numFmt = "0.00";
+  currentRow.getCell(8).numFmt = "0.00";
+  currentRow.getCell(9).numFmt = "0.00";
+
+  currentRow.eachCell((cell) => {
+    cell.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+  });
+
+  row++;
+}
 
   // 🔹 SIMPLES
   simpleMap.forEach((g) => {
@@ -204,19 +271,26 @@ export async function GET(
     });
     });
 
-      // 🔹 TOTAL
-  row++;
+  // 🔹 TOTAL
+row++;
 
-  invoiceSheet.getCell(`F${row}`).value = "TOTAL";
-  invoiceSheet.getCell(`F${row}`).font = { bold: true };
+invoiceSheet.getCell(`F${row}`).value = "TOTAL";
+invoiceSheet.getCell(`F${row}`).font = { bold: true };
 
-  invoiceSheet.getCell(`C${row}`).value = totalLbs;
-  invoiceSheet.getCell(`I${row}`).value = totalAmount;
+invoiceSheet.getCell(`C${row}`).value = totalLbs;
+invoiceSheet.getCell(`I${row}`).value = totalAmount;
 
-  invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
-  invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
-  invoiceSheet.getCell(`C${row}`).font = { bold: true };
-  invoiceSheet.getCell(`I${row}`).font = { bold: true };
+invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
+invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
+
+invoiceSheet.getCell(`C${row}`).font = { bold: true };
+invoiceSheet.getCell(`I${row}`).font = { bold: true };
+
+invoiceSheet.getRow(row).eachCell((cell) => {
+  cell.border = {
+    top: { style: "medium" },
+  };
+});
 
   row += 2;
 
