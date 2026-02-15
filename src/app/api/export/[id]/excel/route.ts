@@ -26,13 +26,15 @@ export async function GET(
   created_at
 `)
     .eq("id", params.id)
-    .single();
+    .maybeSingle();
 
   if (e1 || !packing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-const clientName = packing.clients?.[0]?.name ?? "";
+const clientName = (packing as any)?.clients?.[0]?.name
+  ?? (packing as any)?.clients?.name
+  ?? "";
 const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
 
 
