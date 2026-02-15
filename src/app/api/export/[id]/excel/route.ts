@@ -17,26 +17,19 @@ export async function GET(
   const { data: packing, error: e1 } = await supabase
     .from("packings")
     .select(`
-  id,
-  invoice_no,
-  client_code,
-  guide,
-  po_number,
-  clients ( name ),
-  created_at
-`)
+      id,
+      invoice_no,
+      clients ( name ),
+      created_at
+    `)
     .eq("id", params.id)
-    .maybeSingle();
+    .single();
 
   if (e1 || !packing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-const clientName = (packing as any)?.clients?.[0]?.name
-  ?? (packing as any)?.clients?.name
-  ?? "";
-const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
-
+  const clientName = (packing.clients as any)?.name ?? "";
 
   // ==============================
   // 2️⃣ LINES + SCIENTIFIC NAME
@@ -118,145 +111,89 @@ const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
-// ============================================================
-// 🧾 HEADER PROFESIONAL SEA LION STYLE
-// ============================================================
+  // ============================================================
+  // 🟩 INVOICE SHEET (FORMATO REAL CORREGIDO + TS SAFE)
+  // ============================================================
+  const invoiceSheet = wb.addWorksheet("Invoice");
 
-const invoiceSheet = wb.addWorksheet("Invoice");
-let row = 1;
+  // 🔹 Column widths manual
+  invoiceSheet.getColumn(1).width = 2;
+  invoiceSheet.getColumn(2).width = 8;
+  invoiceSheet.getColumn(3).width = 12;
+  invoiceSheet.getColumn(4).width = 28;
+  invoiceSheet.getColumn(5).width = 10;
+  invoiceSheet.getColumn(6).width = 10;
+  invoiceSheet.getColumn(7).width = 22;
+  invoiceSheet.getColumn(8).width = 10;
+  invoiceSheet.getColumn(9).width = 14;
 
-// Columnas visuales
-invoiceSheet.columns = Array(9).fill({ width: 18 });
+  let row = 1;
 
-// 🔹 VENDEDOR
-invoiceSheet.mergeCells("A1:E1");
-invoiceSheet.getCell("A1").value = "SOC. COOP. QUALITY FISH";
-invoiceSheet.getCell("A1").font = { size: 16, bold: true };
+  // 🔹 HEADER
+  invoiceSheet.getCell(`A${row}`).value = `CLIENT: ${clientName}`; row++;
+  invoiceSheet.getCell(`A${row}`).value = `INVOICE NO: ${packing.invoice_no}`; row++;
+  invoiceSheet.getCell(`A${row}`).value = `DATE: ${packing.created_at?.slice(0, 10)}`; row++;
+  invoiceSheet.getCell(`A${row}`).value = `COUNTRY OF ORIGIN: MEXICO`; row++;
+  invoiceSheet.getCell(`A${row}`).value = `PO NUMBER: __________________________`; row += 2;
 
-invoiceSheet.mergeCells("A2:E2");
-invoiceSheet.getCell("A2").value = "CALLE 21 S/N X 136 Y 138";
-
-invoiceSheet.mergeCells("A3:E3");
-invoiceSheet.getCell("A3").value = "CHELEM, YUCATAN, MEX.";
-
-invoiceSheet.mergeCells("A4:E4");
-invoiceSheet.getCell("A4").value = "RFC: QFI221111RI5";
-
-invoiceSheet.mergeCells("A5:E5");
-invoiceSheet.getCell("A5").value = "FDA: 1506224494";
-
-// 🔹 CLIENTE
-invoiceSheet.mergeCells("F1:I1");
-invoiceSheet.getCell("F1").value = clientName.toUpperCase();
-invoiceSheet.getCell("F1").font = { size: 18, bold: true };
-invoiceSheet.getCell("F1").alignment = { horizontal: "center" };
-
-invoiceSheet.mergeCells("F2:I2");
-invoiceSheet.getCell("F2").value =
-  "2000 BANKS ROAD SUITE 222 MARGATE, FL 33063";
-invoiceSheet.getCell("F2").alignment = { horizontal: "center" };
-
-invoiceSheet.mergeCells("F3:I3");
-invoiceSheet.getCell("F3").value = "TAX ID # 954376601";
-invoiceSheet.getCell("F3").alignment = { horizontal: "center" };
-
-// 🔹 DATOS
-invoiceSheet.getCell("F5").value = "AWB:";
-invoiceSheet.getCell("G5").value = packing.guide ?? "";
-
-invoiceSheet.getCell("F6").value = "INVOICE:";
-invoiceSheet.getCell("G6").value = packing.invoice_no;
-
-invoiceSheet.getCell("F7").value = "DATE:";
-invoiceSheet.getCell("G7").value = dateFormatted;
-
-invoiceSheet.getCell("F8").value = "PO #";
-invoiceSheet.getCell("G8").value = packing.po_number ?? "";
-
-// 🔹 COUNTRY
-invoiceSheet.mergeCells("A10:I10");
-invoiceSheet.getCell("A10").value = "COUNTRY OF ORIGIN: MEXICO";
-invoiceSheet.getCell("A10").alignment = { horizontal: "center" };
-invoiceSheet.getCell("A10").font = { bold: true };
-invoiceSheet.getCell("A10").fill = {
-  type: "pattern",
-  pattern: "solid",
-  fgColor: { argb: "FFFFFF00" },
-};
-
-row = 12;
-
-// ============================================================
-// 🔹 AGRUPAR CAJAS PARA FACTURA
-// ============================================================
-const invoiceBoxesMap = new Map<number, { box_no: number; is_combined: boolean; lines: any[] }>();
-lines?.forEach((l: any) => {
-  if (!invoiceBoxesMap.has(l.box_no)) {
-    invoiceBoxesMap.set(l.box_no, { box_no: l.box_no, is_combined: l.is_combined, lines: [l] });
-  } else {
-    invoiceBoxesMap.get(l.box_no)!.lines.push(l);
-  }
-});
-
-const simpleMap = new Map<string, { desc: string; sci: string; size: string; form: string; boxes: number; pounds: number; price: number }>();
-const combinedBoxes: { box_no: number; is_combined: boolean; lines: any[] }[] = [];
-
-invoiceBoxesMap.forEach((box) => {
-  if (box.is_combined) {
-    combinedBoxes.push(box);
-  } else {
-    box.lines.forEach((l: any) => {
-      const key = `${l.description_en}|${l.size}|${l.form}`;
-      if (!simpleMap.has(key)) {
-        simpleMap.set(key, { desc: l.description_en, sci: l.species?.scientific_name ?? "", size: l.size, form: l.form, boxes: 1, pounds: l.pounds, price: l.price });
-      } else {
-        const g = simpleMap.get(key)!;
-        g.boxes += 1;
-        g.pounds += l.pounds;
-      }
-    });
-  }
-});
-
-let totalAmount = 0;
-let totalLbs = 0;
-
-// 🔹 FUNCION writeInvoiceRow (Paso 2)
-function writeInvoiceRow(data: any) {
-  const currentRow = invoiceSheet.getRow(row);
-
-  currentRow.values = [
-    "",
-    data.boxes ?? "",
-    data.lbs,
-    data.desc,
-    data.size,
-    data.form,
-    data.sci,
-    data.price,
-    data.amount,
+  // 🔹 COLUMN HEADERS
+  invoiceSheet.getRow(row).values = ["", 
+    "Boxes", 
+    "Pounds", 
+    "Description", 
+    "Size", 
+    "Form", 
+    "Scientific Name", 
+    "Price", 
+    "Amount"
   ];
+  invoiceSheet.getRow(row).font = { bold: true };
+  row++;
 
-  currentRow.getCell(2).alignment = { horizontal: "center" };
-  currentRow.getCell(3).alignment = { horizontal: "right" };
-  currentRow.getCell(8).alignment = { horizontal: "right" };
-  currentRow.getCell(9).alignment = { horizontal: "right" };
-
-  currentRow.getCell(3).numFmt = "0.00";
-  currentRow.getCell(8).numFmt = "0.00";
-  currentRow.getCell(9).numFmt = "0.00";
-
-  currentRow.eachCell((cell) => {
-    cell.border = {
-      top: { style: "thin" },
-      left: { style: "thin" },
-      bottom: { style: "thin" },
-      right: { style: "thin" },
-    };
+  // 🔹 AGRUPAR CAJAS PARA FACTURA
+  const invoiceBoxesMap = new Map<number, { box_no: number; is_combined: boolean; lines: any[] }>();
+  lines?.forEach((l: any) => {
+    if (!invoiceBoxesMap.has(l.box_no)) {
+      invoiceBoxesMap.set(l.box_no, { box_no: l.box_no, is_combined: l.is_combined, lines: [l] });
+    } else {
+      invoiceBoxesMap.get(l.box_no)!.lines.push(l);
+    }
   });
 
-  row++;
-}
+  const simpleMap = new Map<string, { desc: string; sci: string; size: string; form: string; boxes: number; pounds: number; price: number }>();
+  const combinedBoxes: { box_no: number; is_combined: boolean; lines: any[] }[] = [];
+
+  invoiceBoxesMap.forEach((box) => {
+    if (box.is_combined) {
+      combinedBoxes.push(box);
+    } else {
+      box.lines.forEach((l: any) => {
+        const key = `${l.description_en}|${l.size}|${l.form}`;
+        if (!simpleMap.has(key)) {
+          simpleMap.set(key, { desc: l.description_en, sci: l.species?.scientific_name ?? "", size: l.size, form: l.form, boxes: 1, pounds: l.pounds, price: l.price });
+        } else {
+          const g = simpleMap.get(key)!;
+          g.boxes += 1;
+          g.pounds += l.pounds;
+        }
+      });
+    }
+  });
+
+  let totalAmount = 0;
+  let totalLbs = 0;
+
+  function writeInvoiceRow(data: { boxes?: number | string; lbs: number; desc: string; size: string; form: string; sci: string; price: number; amount: number }) {
+    invoiceSheet.getRow(row).values = ["", data.boxes ?? "", data.lbs, data.desc, data.size, data.form, data.sci, data.price, data.amount];
+    invoiceSheet.getCell(`B${row}`).alignment = { horizontal: "center" };
+    invoiceSheet.getCell(`C${row}`).alignment = { horizontal: "right" };
+    invoiceSheet.getCell(`H${row}`).alignment = { horizontal: "right" };
+    invoiceSheet.getCell(`I${row}`).alignment = { horizontal: "right" };
+    invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
+    invoiceSheet.getCell(`H${row}`).numFmt = "0.00";
+    invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
+    row++;
+  }
 
   // 🔹 SIMPLES
   simpleMap.forEach((g) => {
@@ -276,26 +213,19 @@ function writeInvoiceRow(data: any) {
     });
     });
 
-  // 🔹 TOTAL
-row++;
+      // 🔹 TOTAL
+  row++;
 
-invoiceSheet.getCell(`F${row}`).value = "TOTAL";
-invoiceSheet.getCell(`F${row}`).font = { bold: true };
+  invoiceSheet.getCell(`F${row}`).value = "TOTAL";
+  invoiceSheet.getCell(`F${row}`).font = { bold: true };
 
-invoiceSheet.getCell(`C${row}`).value = totalLbs;
-invoiceSheet.getCell(`I${row}`).value = totalAmount;
+  invoiceSheet.getCell(`C${row}`).value = totalLbs;
+  invoiceSheet.getCell(`I${row}`).value = totalAmount;
 
-invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
-invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
-
-invoiceSheet.getCell(`C${row}`).font = { bold: true };
-invoiceSheet.getCell(`I${row}`).font = { bold: true };
-
-invoiceSheet.getRow(row).eachCell((cell) => {
-  cell.border = {
-    top: { style: "medium" },
-  };
-});
+  invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
+  invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
+  invoiceSheet.getCell(`C${row}`).font = { bold: true };
+  invoiceSheet.getCell(`I${row}`).font = { bold: true };
 
   row += 2;
 
