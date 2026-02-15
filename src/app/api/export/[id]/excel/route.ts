@@ -111,44 +111,98 @@ export async function GET(
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
-  // ============================================================
-  // 🟩 INVOICE SHEET (FORMATO REAL CORREGIDO + TS SAFE)
-  // ============================================================
-  const invoiceSheet = wb.addWorksheet("Invoice");
+ // ============================================================
+// 🟩 INVOICE SHEET (FORMATO MEJORADO – SEGURO)
+// ============================================================
+const invoiceSheet = wb.addWorksheet("Invoice");
 
-  // 🔹 Column widths manual
-  invoiceSheet.getColumn(1).width = 2;
-  invoiceSheet.getColumn(2).width = 8;
-  invoiceSheet.getColumn(3).width = 12;
-  invoiceSheet.getColumn(4).width = 28;
-  invoiceSheet.getColumn(5).width = 10;
-  invoiceSheet.getColumn(6).width = 10;
-  invoiceSheet.getColumn(7).width = 22;
-  invoiceSheet.getColumn(8).width = 10;
-  invoiceSheet.getColumn(9).width = 14;
+// 🔹 Column widths manual (seguro para TS)
+invoiceSheet.getColumn(1).width = 2;
+invoiceSheet.getColumn(2).width = 10;
+invoiceSheet.getColumn(3).width = 14;
+invoiceSheet.getColumn(4).width = 30;
+invoiceSheet.getColumn(5).width = 12;
+invoiceSheet.getColumn(6).width = 12;
+invoiceSheet.getColumn(7).width = 22;
+invoiceSheet.getColumn(8).width = 12;
+invoiceSheet.getColumn(9).width = 14;
 
-  let row = 1;
+let row = 1;
 
-  // 🔹 HEADER
-  invoiceSheet.getCell(`A${row}`).value = `CLIENT: ${clientName}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `INVOICE NO: ${packing.invoice_no}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `DATE: ${packing.created_at?.slice(0, 10)}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `COUNTRY OF ORIGIN: MEXICO`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `PO NUMBER: __________________________`; row += 2;
+// ============================================================
+// 🧾 HEADER PROFESIONAL (SIN TOCAR LÓGICA)
+// ============================================================
 
-  // 🔹 COLUMN HEADERS
-  invoiceSheet.getRow(row).values = ["", 
-    "Boxes", 
-    "Pounds", 
-    "Description", 
-    "Size", 
-    "Form", 
-    "Scientific Name", 
-    "Price", 
-    "Amount"
-  ];
-  invoiceSheet.getRow(row).font = { bold: true };
-  row++;
+// 🔹 VENDEDOR
+invoiceSheet.mergeCells("A1:E1");
+invoiceSheet.getCell("A1").value = "SOC. COOP. QUALITY FISH";
+invoiceSheet.getCell("A1").font = { size: 14, bold: true };
+
+invoiceSheet.mergeCells("A2:E2");
+invoiceSheet.getCell("A2").value = "CALLE 21 S/N X 136 Y 138";
+
+invoiceSheet.mergeCells("A3:E3");
+invoiceSheet.getCell("A3").value = "CHELEM, YUCATAN, MEX.";
+
+invoiceSheet.mergeCells("A4:E4");
+invoiceSheet.getCell("A4").value = "RFC: QFI221111RI5";
+
+invoiceSheet.mergeCells("A5:E5");
+invoiceSheet.getCell("A5").value = "FDA: 1506224494";
+
+// 🔹 CLIENTE
+invoiceSheet.mergeCells("F1:I1");
+invoiceSheet.getCell("F1").value = String(clientName).toUpperCase();
+invoiceSheet.getCell("F1").font = { size: 16, bold: true };
+invoiceSheet.getCell("F1").alignment = { horizontal: "center" };
+
+// 🔹 DATOS FACTURA
+invoiceSheet.getCell("F3").value = "INVOICE:";
+invoiceSheet.getCell("G3").value = packing.invoice_no;
+
+invoiceSheet.getCell("F4").value = "DATE:";
+invoiceSheet.getCell("G4").value = packing.created_at?.slice(0, 10);
+
+// 🔹 COUNTRY
+invoiceSheet.mergeCells("A7:I7");
+invoiceSheet.getCell("A7").value = "COUNTRY OF ORIGIN: MEXICO";
+invoiceSheet.getCell("A7").alignment = { horizontal: "center" };
+invoiceSheet.getCell("A7").font = { bold: true };
+invoiceSheet.getCell("A7").fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFFFFF00" },
+};
+
+row = 9;
+
+// ============================================================
+// 🔹 COLUMN HEADERS
+// ============================================================
+const headerRow = invoiceSheet.getRow(row);
+headerRow.values = [
+  "",
+  "Boxes",
+  "Pounds",
+  "Description",
+  "Size",
+  "Form",
+  "Scientific Name",
+  "Price",
+  "Amount",
+];
+
+headerRow.font = { bold: true };
+headerRow.alignment = { vertical: "middle" };
+
+// Línea inferior estilo profesional
+headerRow.eachCell((cell) => {
+  cell.border = {
+    bottom: { style: "medium" },
+  };
+});
+
+row++;
 
   // 🔹 AGRUPAR CAJAS PARA FACTURA
   const invoiceBoxesMap = new Map<number, { box_no: number; is_combined: boolean; lines: any[] }>();
