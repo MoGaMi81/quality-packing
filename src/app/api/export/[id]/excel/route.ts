@@ -19,6 +19,7 @@ export async function GET(
     .select(`
       id,
       invoice_no,
+      guide,
       clients ( name ),
       created_at
     `)
@@ -112,69 +113,78 @@ export async function GET(
   ]);
 
  // ============================================================
-// 🟩 INVOICE SHEET (FORMATO MEJORADO – SEGURO)
+// 🧾 INVOICE HEADER – FORMATO SEA LION REAL
 // ============================================================
+
 const invoiceSheet = wb.addWorksheet("Invoice");
 
-// 🔹 Column widths manual (seguro para TS)
-invoiceSheet.getColumn(1).width = 2;
-invoiceSheet.getColumn(2).width = 10;
-invoiceSheet.getColumn(3).width = 14;
-invoiceSheet.getColumn(4).width = 30;
-invoiceSheet.getColumn(5).width = 12;
-invoiceSheet.getColumn(6).width = 12;
-invoiceSheet.getColumn(7).width = 22;
-invoiceSheet.getColumn(8).width = 12;
-invoiceSheet.getColumn(9).width = 14;
+// Tamaño carta
+invoiceSheet.pageSetup.paperSize = 9;
+invoiceSheet.pageSetup.orientation = "portrait";
+
+// Column widths reales (9 columnas tabla)
+invoiceSheet.getColumn(1).width = 14;  // Boxes
+invoiceSheet.getColumn(2).width = 14;  // Pounds
+invoiceSheet.getColumn(3).width = 34;  // Description
+invoiceSheet.getColumn(4).width = 10;  // Size
+invoiceSheet.getColumn(5).width = 10;  // Form
+invoiceSheet.getColumn(6).width = 24;  // Scientific
+invoiceSheet.getColumn(7).width = 12;  // Price
+invoiceSheet.getColumn(8).width = 14;  // Amount
 
 let row = 1;
 
 // ============================================================
-// 🧾 HEADER PROFESIONAL (SIN TOCAR LÓGICA)
+// 🔹 BLOQUE SUPERIOR DIVIDIDO EN 2 MITADES
 // ============================================================
 
-// 🔹 VENDEDOR
-invoiceSheet.mergeCells("A1:E1");
+// División vertical
+invoiceSheet.mergeCells("A1:D8");
+invoiceSheet.mergeCells("E1:H8");
+
+// 🔹 VENDEDOR (IZQUIERDA)
 invoiceSheet.getCell("A1").value = "SOC. COOP. QUALITY FISH";
-invoiceSheet.getCell("A1").font = { size: 14, bold: true };
+invoiceSheet.getCell("A1").font = { size: 16, bold: true };
 
-invoiceSheet.mergeCells("A2:E2");
-invoiceSheet.getCell("A2").value = "CALLE 21 S/N X 136 Y 138";
+invoiceSheet.getCell("A3").value = "CALLE 21 S/N X 136 Y 138";
+invoiceSheet.getCell("A4").value = "CHELEM, YUCATAN, MEX.";
+invoiceSheet.getCell("A5").value = "RFC: QFI221111RI5";
+invoiceSheet.getCell("A6").value = "FDA: 1506224494";
 
-invoiceSheet.mergeCells("A3:E3");
-invoiceSheet.getCell("A3").value = "CHELEM, YUCATAN, MEX.";
+// 🔹 CLIENTE (DERECHA)
+invoiceSheet.getCell("E1").value = clientName.toUpperCase();
+invoiceSheet.getCell("E1").font = { size: 18, bold: true };
+invoiceSheet.getCell("E1").alignment = { horizontal: "center" };
 
-invoiceSheet.mergeCells("A4:E4");
-invoiceSheet.getCell("A4").value = "RFC: QFI221111RI5";
+invoiceSheet.getCell("E3").value = "DIRECCIÓN DEL CLIENTE AQUÍ";
+invoiceSheet.getCell("E4").value = "CIUDAD, ESTADO, ZIP";
+invoiceSheet.getCell("E5").value = "TAX ID # __________";
 
-invoiceSheet.mergeCells("A5:E5");
-invoiceSheet.getCell("A5").value = "FDA: 1506224494";
+invoiceSheet.getCell("E6").value = `AWB: ${packing.guide ?? ""}`;
+invoiceSheet.getCell("E7").value = `INVOICE: ${packing.invoice_no}`;
+invoiceSheet.getCell("E8").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
+invoiceSheet.getCell("E9").value = `PO #: ${""}`;
 
-// 🔹 CLIENTE
-invoiceSheet.mergeCells("F1:I1");
-invoiceSheet.getCell("F1").value = String(clientName).toUpperCase();
-invoiceSheet.getCell("F1").font = { size: 16, bold: true };
-invoiceSheet.getCell("F1").alignment = { horizontal: "center" };
+// Línea divisoria vertical
+invoiceSheet.getColumn(5).border = {
+  left: { style: "medium" }
+};
 
-// 🔹 DATOS FACTURA
-invoiceSheet.getCell("F3").value = "INVOICE:";
-invoiceSheet.getCell("G3").value = packing.invoice_no;
+// ============================================================
+// 🔹 COUNTRY OF ORIGIN
+// ============================================================
 
-invoiceSheet.getCell("F4").value = "DATE:";
-invoiceSheet.getCell("G4").value = packing.created_at?.slice(0, 10);
-
-// 🔹 COUNTRY
-invoiceSheet.mergeCells("A7:I7");
-invoiceSheet.getCell("A7").value = "COUNTRY OF ORIGIN: MEXICO";
-invoiceSheet.getCell("A7").alignment = { horizontal: "center" };
-invoiceSheet.getCell("A7").font = { bold: true };
-invoiceSheet.getCell("A7").fill = {
+invoiceSheet.mergeCells("A10:H10");
+invoiceSheet.getCell("A10").value = "COUNTRY OF ORIGIN: MEXICO";
+invoiceSheet.getCell("A10").alignment = { horizontal: "center" };
+invoiceSheet.getCell("A10").font = { bold: true, size: 14 };
+invoiceSheet.getCell("A10").fill = {
   type: "pattern",
   pattern: "solid",
   fgColor: { argb: "FFFFFF00" },
 };
 
-row = 9;
+row = 12;
 
 // ============================================================
 // 🔹 COLUMN HEADERS
