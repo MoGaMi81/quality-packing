@@ -17,11 +17,14 @@ export async function GET(
   const { data: packing, error: e1 } = await supabase
     .from("packings")
     .select(`
-      id,
-      invoice_no,
-      clients ( name ),
-      created_at
-    `)
+  id,
+  invoice_no,
+  client_code,
+  guide,
+  po_number,
+  clients ( name ),
+  created_at
+`)
     .eq("id", params.id)
     .single();
 
@@ -29,7 +32,9 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const clientName = (packing.clients as any)?.name ?? "";
+const clientName = packing.clients?.[0]?.name ?? "";
+const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
+
 
   // ==============================
   // 2️⃣ LINES + SCIENTIFIC NAME
@@ -111,75 +116,73 @@ export async function GET(
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
-  // ============================================================
-// 🟩 INVOICE SHEET (FORMATO REAL CORREGIDO + TS SAFE)
 // ============================================================
+// 🧾 HEADER PROFESIONAL SEA LION STYLE
+// ============================================================
+
 const invoiceSheet = wb.addWorksheet("Invoice");
-
-// 🔹 AJUSTAR ANCHOS DE COLUMNAS (Paso 4)
-invoiceSheet.columns = [
-  { width: 3 },   // columna vacía
-  { width: 8 },   // Boxes
-  { width: 12 },  // Pounds
-  { width: 28 },  // Description
-  { width: 10 },  // Size
-  { width: 8 },   // Form
-  { width: 22 },  // Scientific
-  { width: 10 },  // Price
-  { width: 14 },  // Amount
-];
-
 let row = 1;
 
-// 🔹 HEADER
-invoiceSheet.getCell(`A${row}`).value = `CLIENT: ${clientName}`; row++;
-invoiceSheet.getCell(`A${row}`).value = `INVOICE NO: ${packing.invoice_no}`; row++;
-invoiceSheet.getCell(`A${row}`).value = `DATE: ${packing.created_at?.slice(0, 10)}`; row++;
+// Columnas visuales
+invoiceSheet.columns = Array(9).fill({ width: 18 });
 
-// 🔹 COUNTRY OF ORIGIN EN AMARILLO (Paso 3)
-invoiceSheet.getCell(`A${row}`).value = `COUNTRY OF ORIGIN: MEXICO`;
-invoiceSheet.mergeCells(`A${row}:I${row}`);
-invoiceSheet.getCell(`A${row}`).alignment = { horizontal: "center" };
-invoiceSheet.getCell(`A${row}`).font = { bold: true, size: 14 };
-invoiceSheet.getCell(`A${row}`).fill = {
+// 🔹 VENDEDOR
+invoiceSheet.mergeCells("A1:E1");
+invoiceSheet.getCell("A1").value = "SOC. COOP. QUALITY FISH";
+invoiceSheet.getCell("A1").font = { size: 16, bold: true };
+
+invoiceSheet.mergeCells("A2:E2");
+invoiceSheet.getCell("A2").value = "CALLE 21 S/N X 136 Y 138";
+
+invoiceSheet.mergeCells("A3:E3");
+invoiceSheet.getCell("A3").value = "CHELEM, YUCATAN, MEX.";
+
+invoiceSheet.mergeCells("A4:E4");
+invoiceSheet.getCell("A4").value = "RFC: QFI221111RI5";
+
+invoiceSheet.mergeCells("A5:E5");
+invoiceSheet.getCell("A5").value = "FDA: 1506224494";
+
+// 🔹 CLIENTE
+invoiceSheet.mergeCells("F1:I1");
+invoiceSheet.getCell("F1").value = clientName.toUpperCase();
+invoiceSheet.getCell("F1").font = { size: 18, bold: true };
+invoiceSheet.getCell("F1").alignment = { horizontal: "center" };
+
+invoiceSheet.mergeCells("F2:I2");
+invoiceSheet.getCell("F2").value =
+  "2000 BANKS ROAD SUITE 222 MARGATE, FL 33063";
+invoiceSheet.getCell("F2").alignment = { horizontal: "center" };
+
+invoiceSheet.mergeCells("F3:I3");
+invoiceSheet.getCell("F3").value = "TAX ID # 954376601";
+invoiceSheet.getCell("F3").alignment = { horizontal: "center" };
+
+// 🔹 DATOS
+invoiceSheet.getCell("F5").value = "AWB:";
+invoiceSheet.getCell("G5").value = packing.guide ?? "";
+
+invoiceSheet.getCell("F6").value = "INVOICE:";
+invoiceSheet.getCell("G6").value = packing.invoice_no;
+
+invoiceSheet.getCell("F7").value = "DATE:";
+invoiceSheet.getCell("G7").value = dateFormatted;
+
+invoiceSheet.getCell("F8").value = "PO #";
+invoiceSheet.getCell("G8").value = packing.po_number ?? "";
+
+// 🔹 COUNTRY
+invoiceSheet.mergeCells("A10:I10");
+invoiceSheet.getCell("A10").value = "COUNTRY OF ORIGIN: MEXICO";
+invoiceSheet.getCell("A10").alignment = { horizontal: "center" };
+invoiceSheet.getCell("A10").font = { bold: true };
+invoiceSheet.getCell("A10").fill = {
   type: "pattern",
   pattern: "solid",
-  fgColor: { argb: "FFFFFF00" }, // amarillo
+  fgColor: { argb: "FFFFFF00" },
 };
-row++;
 
-invoiceSheet.getCell(`A${row}`).value = `PO NUMBER: __________________________`; row += 2;
-
-// 🔹 COLUMN HEADERS (Paso 1)
-invoiceSheet.getRow(row).values = [
-  "",
-  "Boxes",
-  "Pounds",
-  "Description",
-  "Size",
-  "Form",
-  "Scientific Name",
-  "Price",
-  "Amount",
-];
-
-const headerRow = invoiceSheet.getRow(row);
-headerRow.font = { bold: true };
-headerRow.alignment = { vertical: "middle", horizontal: "center" };
-headerRow.eachCell((cell) => {
-  cell.border = {
-    top: { style: "thin" },
-    left: { style: "thin" },
-    bottom: { style: "thin" },
-    right: { style: "thin" },
-  };
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFEFEFEF" }, // gris claro
-  };
-});
-row++;
+row = 12;
 
 // ============================================================
 // 🔹 AGRUPAR CAJAS PARA FACTURA
