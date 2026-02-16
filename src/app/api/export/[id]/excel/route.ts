@@ -115,7 +115,6 @@ export async function GET(
   ]);
 
   const invoiceSheet = wb.addWorksheet("Invoice", {
-  properties: { tabColor: { argb: "FFC0000" } }
 });
 
 
