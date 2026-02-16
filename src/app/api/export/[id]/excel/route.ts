@@ -32,7 +32,10 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const clientName = (packing.clients as any)?.name ?? "";
+  const clientName =
+  Array.isArray(packing.clients)
+    ? packing.clients[0]?.name ?? ""
+    : (packing.clients as any)?.name ?? "";
 
   // ==============================
   // 2️⃣ LINES + SCIENTIFIC NAME
@@ -207,11 +210,6 @@ for (let r = 1; r <= 12; r++) {
 }
 
 row = 14;
-
-// Línea divisoria vertical
-invoiceSheet.getColumn(5).border = {
-  left: { style: "medium" }
-};
 
 // ============================================================
 // 🔹 COLUMN HEADERS
