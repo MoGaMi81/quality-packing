@@ -11,6 +11,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  
   // ==============================
   // 1️⃣ HEADER
   // ==============================
@@ -20,6 +21,7 @@ export async function GET(
       id,
       invoice_no,
       guide,
+      po_number,
       clients ( name ),
       created_at
     `)
@@ -112,11 +114,14 @@ export async function GET(
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
+  const invoiceSheet = wb.addWorksheet("Invoice", {
+  properties: { tabColor: { argb: "FFC0000" } }
+});
+
+
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION REAL CORREGIDO
 // ============================================================
-
-const invoiceSheet = wb.addWorksheet("Invoice");
 
 // Tamaño carta
 invoiceSheet.pageSetup.paperSize = 9;
