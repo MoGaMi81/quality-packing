@@ -15,22 +15,16 @@ export async function GET(
   // 1️⃣ HEADER
   // ==============================
   const { data: packing, error: e1 } = await supabase
-  .from("packings")
-  .select(`
-    id,
-    invoice_no,
-    po_number,
-    guide,
-    created_at,
-    clients (
-      name,
-      address,
-      city_state_zip,
-      tax_id
-    )
-  `)
-  .eq("id", params.id)
-  .single();
+    .from("packings")
+    .select(`
+      id,
+      invoice_no,
+      guide,
+      clients ( name ),
+      created_at
+    `)
+    .eq("id", params.id)
+    .single();
 
   if (e1 || !packing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -118,7 +112,7 @@ export async function GET(
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
-// ============================================================
+ // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION REAL
 // ============================================================
 
@@ -162,18 +156,39 @@ invoiceSheet.getCell("E1").value = clientName.toUpperCase();
 invoiceSheet.getCell("E1").font = { size: 18, bold: true };
 invoiceSheet.getCell("E1").alignment = { horizontal: "center" };
 
-// Dirección y Tax ID dinámicos desde tabla clients
-const client = Array.isArray(packing.clients) ? packing.clients[0] : packing.clients;
+invoiceSheet.getCell("E3").value = "DIRECCIÓN DEL CLIENTE AQUÍ";
+invoiceSheet.getCell("E4").value = "CIUDAD, ESTADO, ZIP";
+invoiceSheet.getCell("E5").value = "TAX ID # __________";
 
-invoiceSheet.getCell("E3").value = client?.address ?? "ADDRESS HERE";
-invoiceSheet.getCell("E4").value = client?.city_state_zip ?? "CITY, STATE, ZIP";
-invoiceSheet.getCell("E5").value = `TAX ID # ${client?.tax_id ?? "__________"}`;
-
-// Datos de operación
 invoiceSheet.getCell("E6").value = `AWB: ${packing.guide ?? ""}`;
 invoiceSheet.getCell("E7").value = `INVOICE: ${packing.invoice_no}`;
 invoiceSheet.getCell("E8").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
-invoiceSheet.getCell("E9").value = `PO #: ${packing.po_number ?? ""}`;
+invoiceSheet.getCell("E9").value = `PO #: ${""}`;
+
+// 🔹 ALTURA FILAS HEADER
+for (let r = 1; r <= 8; r++) {
+  invoiceSheet.getRow(r).height = 22;
+}
+
+// 🔹 BORDE EXTERIOR BLOQUE SUPERIOR
+for (let r = 1; r <= 8; r++) {
+  for (let c = 1; c <= 9; c++) {
+    invoiceSheet.getCell(r, c).border = {
+      top: r === 1 ? { style: "medium" } : undefined,
+      bottom: r === 8 ? { style: "medium" } : undefined,
+      left: c === 1 ? { style: "medium" } : undefined,
+      right: c === 9 ? { style: "medium" } : undefined,
+    };
+  }
+}
+
+// 🔹 LINEA DIVISORIA CENTRAL (E | F)
+for (let r = 1; r <= 8; r++) {
+  invoiceSheet.getCell(r, 5).border = {
+    right: { style: "medium" },
+  };
+}
+
 
 // Línea divisoria vertical
 invoiceSheet.getColumn(5).border = {
@@ -182,17 +197,29 @@ invoiceSheet.getColumn(5).border = {
 
 // 🔹 COUNTRY OF ORIGIN (SOLO MITAD DERECHA)
 invoiceSheet.mergeCells("F9:I9");
+
 invoiceSheet.getCell("F9").value = "COUNTRY OF ORIGIN: MEXICO";
-invoiceSheet.getCell("F9").alignment = { horizontal: "center", vertical: "middle" };
-invoiceSheet.getCell("F9").font = { bold: true, size: 12 };
+
+invoiceSheet.getCell("F9").alignment = {
+  horizontal: "center",
+  vertical: "middle",
+};
+
+invoiceSheet.getCell("F9").font = {
+  bold: true,
+  size: 12,
+};
+
 invoiceSheet.getCell("F9").fill = {
   type: "pattern",
   pattern: "solid",
   fgColor: { argb: "FFFFFF00" },
 };
+
 invoiceSheet.getRow(9).height = 22;
 
 row = 12;
+
 // ============================================================
 // 🔹 COLUMN HEADERS
 // ============================================================
