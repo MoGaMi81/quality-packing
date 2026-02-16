@@ -112,8 +112,8 @@ export async function GET(
     `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
   ]);
 
- // ============================================================
-// 🧾 INVOICE HEADER – FORMATO SEA LION REAL
+// ============================================================
+// 🧾 INVOICE HEADER – FORMATO SEA LION REAL CORREGIDO
 // ============================================================
 
 const invoiceSheet = wb.addWorksheet("Invoice");
@@ -122,73 +122,87 @@ const invoiceSheet = wb.addWorksheet("Invoice");
 invoiceSheet.pageSetup.paperSize = 9;
 invoiceSheet.pageSetup.orientation = "portrait";
 
-// Column widths reales (9 columnas tabla)
-invoiceSheet.getColumn(1).width = 14;  // Boxes
-invoiceSheet.getColumn(2).width = 14;  // Pounds
-invoiceSheet.getColumn(3).width = 34;  // Description
-invoiceSheet.getColumn(4).width = 10;  // Size
-invoiceSheet.getColumn(5).width = 10;  // Form
-invoiceSheet.getColumn(6).width = 24;  // Scientific
-invoiceSheet.getColumn(7).width = 12;  // Price
-invoiceSheet.getColumn(8).width = 14;  // Amount
+// Columnas A–H para header dividido
+for (let i = 1; i <= 8; i++) {
+  invoiceSheet.getColumn(i).width = 18;
+}
 
 let row = 1;
 
 // ============================================================
-// 🔹 BLOQUE SUPERIOR DIVIDIDO EN 2 MITADES
+// 🔹 VENDEDOR (A–D)
 // ============================================================
 
-// División vertical
-invoiceSheet.mergeCells("A1:D8");
-invoiceSheet.mergeCells("E1:H8");
+// 1A:5D → espacio logo
+invoiceSheet.mergeCells("A1:D5");
 
-// 🔹 VENDEDOR (IZQUIERDA)
-invoiceSheet.getCell("A1").value = "SOC. COOP. QUALITY FISH";
-invoiceSheet.getCell("A1").font = { size: 16, bold: true };
+// 6A:7D → Nombre
+invoiceSheet.mergeCells("A6:D7");
+invoiceSheet.getCell("A6").value = "SOC. COOP. QUALITY FISH";
+invoiceSheet.getCell("A6").font = { size: 18, bold: true };
 
-invoiceSheet.getCell("A3").value = "CALLE 21 S/N X 136 Y 138";
-invoiceSheet.getCell("A4").value = "CHELEM, YUCATAN, MEX.";
-invoiceSheet.getCell("A5").value = "RFC: QFI221111RI5";
-invoiceSheet.getCell("A6").value = "FDA: 1506224494";
+// 8A:12D → Dirección + RFC + FDA
+invoiceSheet.mergeCells("A8:D12");
+invoiceSheet.getCell("A8").value =
+  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
+invoiceSheet.getCell("A8").alignment = { wrapText: true };
 
-// 🔹 CLIENTE (DERECHA)
+// ============================================================
+// 🔹 CLIENTE (E–H)
+// ============================================================
+
+const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
+
+// 1E:3H → Cliente
+invoiceSheet.mergeCells("E1:H3");
 invoiceSheet.getCell("E1").value = clientName.toUpperCase();
-invoiceSheet.getCell("E1").font = { size: 18, bold: true };
-invoiceSheet.getCell("E1").alignment = { horizontal: "center" };
+invoiceSheet.getCell("E1").font = { size: 20, bold: true };
+invoiceSheet.getCell("E1").alignment = { horizontal: "center", vertical: "middle" };
 
-invoiceSheet.getCell("E3").value = "DIRECCIÓN DEL CLIENTE AQUÍ";
-invoiceSheet.getCell("E4").value = "CIUDAD, ESTADO, ZIP";
-invoiceSheet.getCell("E5").value = "TAX ID # __________";
+// 4E:7H → Dirección cliente (temporal fija)
+invoiceSheet.mergeCells("E4:H7");
+invoiceSheet.getCell("E4").value =
+  "2000 BANKS ROAD SUITE 222\nMARGATE, FL 33063";
+invoiceSheet.getCell("E4").alignment = { wrapText: true };
 
-invoiceSheet.getCell("E6").value = `AWB: ${packing.guide ?? ""}`;
-invoiceSheet.getCell("E7").value = `INVOICE: ${packing.invoice_no}`;
-invoiceSheet.getCell("E8").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
-invoiceSheet.getCell("E9").value = `PO #: ${""}`;
+// 8E:8H → TAX ID
+invoiceSheet.mergeCells("E8:H8");
+invoiceSheet.getCell("E8").value = "TAX ID # 954376601";
 
-// 🔹 ALTURA FILAS HEADER
-for (let r = 1; r <= 8; r++) {
-  invoiceSheet.getRow(r).height = 22;
-}
+// 9E:9H → AWB
+invoiceSheet.mergeCells("E9:H9");
+invoiceSheet.getCell("E9").value = `AWB: ${packing.guide ?? ""}`;
 
-// 🔹 BORDE EXTERIOR BLOQUE SUPERIOR
-for (let r = 1; r <= 8; r++) {
-  for (let c = 1; c <= 9; c++) {
-    invoiceSheet.getCell(r, c).border = {
-      top: r === 1 ? { style: "medium" } : undefined,
-      bottom: r === 8 ? { style: "medium" } : undefined,
-      left: c === 1 ? { style: "medium" } : undefined,
-      right: c === 9 ? { style: "medium" } : undefined,
-    };
-  }
-}
+// 10E:10H → INVOICE
+invoiceSheet.mergeCells("E10:H10");
+invoiceSheet.getCell("E10").value = `INVOICE: ${packing.invoice_no}`;
 
-// 🔹 LINEA DIVISORIA CENTRAL (E | F)
-for (let r = 1; r <= 8; r++) {
-  invoiceSheet.getCell(r, 5).border = {
+// 11E:11H → DATE
+invoiceSheet.mergeCells("E11:H11");
+invoiceSheet.getCell("E11").value = `DATE: ${dateFormatted}`;
+
+// 12E:12H → COUNTRY
+invoiceSheet.mergeCells("E12:H12");
+invoiceSheet.getCell("E12").value = "COUNTRY OF ORIGIN: MEXICO";
+invoiceSheet.getCell("E12").alignment = { horizontal: "center" };
+invoiceSheet.getCell("E12").font = { bold: true };
+invoiceSheet.getCell("E12").fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFFFFF00" },
+};
+
+// ============================================================
+// 🔹 LÍNEA DIVISORIA CENTRAL ENTRE A–D y E–H
+// ============================================================
+
+for (let r = 1; r <= 12; r++) {
+  invoiceSheet.getCell(r, 4).border = {
     right: { style: "medium" },
   };
 }
 
+row = 14;
 
 // Línea divisoria vertical
 invoiceSheet.getColumn(5).border = {
