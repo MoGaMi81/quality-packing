@@ -385,10 +385,6 @@ invoiceSheet.getCell("B57").value = boxes.length;
 // 57C → texto total
 invoiceSheet.getCell("C57").value = "TOTAL BOXES";
 
-  invoiceSheet.getCell(`A${row}`).value = `Small Boxes: ${smallBoxes}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `Large Boxes: ${largeBoxes}`; row++;
-  invoiceSheet.getCell(`A${row}`).value = `Total Boxes: ${boxes.length}`;
-
   // ============================================================
   // 📁 EXPORT
   // ============================================================
