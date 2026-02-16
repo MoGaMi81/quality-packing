@@ -143,20 +143,30 @@ let row = 1;
 
 // 1A:5D → Espacio Logo
 invoiceSheet.mergeCells("A1:D5");
+invoiceSheet.getCell("A1").alignment = {
+  vertical: "middle",
+  horizontal: "left",
+};
 
 // 6A:7D → Nombre
 invoiceSheet.mergeCells("A6:D7");
-invoiceSheet.getCell("A6").value = "SOC. COOP. QUALITY FISH";
-invoiceSheet.getCell("A6").font = { size: 18, bold: true };
-invoiceSheet.getCell("A6").alignment = { vertical: "middle" };
+const vendorCell = invoiceSheet.getCell("A6");
+vendorCell.value = "SOC. COOP. QUALITY FISH";
+vendorCell.font = { size: 20, bold: true };
+vendorCell.alignment = {
+  vertical: "middle",
+  horizontal: "left",
+};
 
 // 8A:12D → Dirección
 invoiceSheet.mergeCells("A8:D12");
-invoiceSheet.getCell("A8").value =
+const vendorInfo = invoiceSheet.getCell("A8");
+vendorInfo.value =
   "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
-invoiceSheet.getCell("A8").alignment = {
+vendorInfo.alignment = {
   wrapText: true,
   vertical: "top",
+  horizontal: "left",
 };
 
 // ============================================================
@@ -167,21 +177,25 @@ const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
 
 // 1E:3H → Cliente
 invoiceSheet.mergeCells("E1:H3");
-invoiceSheet.getCell("E1").value = clientName.toUpperCase();
-invoiceSheet.getCell("E1").font = { size: 20, bold: true };
-invoiceSheet.getCell("E1").alignment = {
+const clientCell = invoiceSheet.getCell("E1");
+clientCell.value = clientName.toUpperCase();
+clientCell.font = { size: 22, bold: true };
+clientCell.alignment = {
   horizontal: "center",
   vertical: "middle",
 };
 
 // 4E:7H → Dirección cliente
 invoiceSheet.mergeCells("E4:H7");
-invoiceSheet.getCell("E4").value =
+const clientAddress = invoiceSheet.getCell("E4");
+clientAddress.value =
   "2000 BANKS ROAD SUITE 222\nMARGATE, FL 33063";
-invoiceSheet.getCell("E4").alignment = {
+clientAddress.alignment = {
   wrapText: true,
   vertical: "top",
+  horizontal: "center",
 };
+
 
 // 8E → TAX ID
 invoiceSheet.getCell("E8").value = "TAX ID # 954376601";
@@ -213,20 +227,21 @@ invoiceSheet.getCell("E12").fill = {
 // 📐 ALTURA EXACTA SEGÚN FORMATO
 // ============================================================
 
-// 1–7 → 15
-for (let r = 1; r <= 7; r++) {
-  invoiceSheet.getRow(r).height = 15;
+// 1–3 cliente grande
+for (let r = 1; r <= 3; r++) {
+  invoiceSheet.getRow(r).height = 28;
 }
 
-// 8–9 → 24
-for (let r = 8; r <= 9; r++) {
-  invoiceSheet.getRow(r).height = 24;
+// 4–7 dirección
+for (let r = 4; r <= 7; r++) {
+  invoiceSheet.getRow(r).height = 22;
 }
 
-// 10–12 → 16
-for (let r = 10; r <= 12; r++) {
-  invoiceSheet.getRow(r).height = 16;
+// 8–12 datos
+for (let r = 8; r <= 12; r++) {
+  invoiceSheet.getRow(r).height = 20;
 }
+
 
 // Línea divisoria vertical entre vendedor y cliente
 for (let r = 1; r <= 12; r++) {
