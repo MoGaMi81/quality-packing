@@ -214,29 +214,6 @@ invoiceSheet.getColumn(5).border = {
   left: { style: "medium" }
 };
 
-// 🔹 COUNTRY OF ORIGIN (SOLO MITAD DERECHA)
-invoiceSheet.mergeCells("F9:I9");
-
-invoiceSheet.getCell("F9").value = "COUNTRY OF ORIGIN: MEXICO";
-
-invoiceSheet.getCell("F9").alignment = {
-  horizontal: "center",
-  vertical: "middle",
-};
-
-invoiceSheet.getCell("F9").font = {
-  bold: true,
-  size: 12,
-};
-
-invoiceSheet.getCell("F9").fill = {
-  type: "pattern",
-  pattern: "solid",
-  fgColor: { argb: "FFFFFF00" },
-};
-
-invoiceSheet.getRow(9).height = 22;
-
 row = 12;
 
 // ============================================================
