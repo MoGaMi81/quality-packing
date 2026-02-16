@@ -122,10 +122,18 @@ const invoiceSheet = wb.addWorksheet("Invoice");
 invoiceSheet.pageSetup.paperSize = 9;
 invoiceSheet.pageSetup.orientation = "portrait";
 
-// Columnas A–H para header
-for (let i = 1; i <= 8; i++) {
-  invoiceSheet.getColumn(i).width = 18;
-}
+// ============================================================
+// 📏 COLUMNAS EXACTAS FORMATO ORIGINAL
+// ============================================================
+
+invoiceSheet.getColumn("A").width = 4.18;
+invoiceSheet.getColumn("B").width = 6.41;
+invoiceSheet.getColumn("C").width = 36.86;
+invoiceSheet.getColumn("D").width = 4.86;
+invoiceSheet.getColumn("E").width = 6.18;
+invoiceSheet.getColumn("F").width = 28.86;
+invoiceSheet.getColumn("G").width = 6.18;
+invoiceSheet.getColumn("H").width = 12.18;
 
 let row = 1;
 
@@ -201,9 +209,23 @@ invoiceSheet.getCell("E12").fill = {
   fgColor: { argb: "FFFFFF00" },
 };
 
-// Altura filas header
-for (let r = 1; r <= 12; r++) {
-  invoiceSheet.getRow(r).height = 22;
+// ============================================================
+// 📐 ALTURA EXACTA SEGÚN FORMATO
+// ============================================================
+
+// 1–7 → 15
+for (let r = 1; r <= 7; r++) {
+  invoiceSheet.getRow(r).height = 15;
+}
+
+// 8–9 → 24
+for (let r = 8; r <= 9; r++) {
+  invoiceSheet.getRow(r).height = 24;
+}
+
+// 10–12 → 16
+for (let r = 10; r <= 12; r++) {
+  invoiceSheet.getRow(r).height = 16;
 }
 
 // Línea divisoria vertical entre vendedor y cliente
@@ -307,23 +329,36 @@ row++;
     });
     });
 
-      // 🔹 TOTAL
-  row++;
+      // ============================================================
+// 📊 BLOQUE FINAL EXACTO FORMATO ORIGINAL
+// ============================================================
 
-  invoiceSheet.getCell(`F${row}`).value = "TOTAL";
-  invoiceSheet.getCell(`F${row}`).font = { bold: true };
+// 50A → total cajas
+invoiceSheet.getCell("A50").value = boxes.length;
 
-  invoiceSheet.getCell(`C${row}`).value = totalLbs;
-  invoiceSheet.getCell(`I${row}`).value = totalAmount;
+// 50B → total lbs
+invoiceSheet.getCell("B50").value = totalLbs;
+invoiceSheet.getCell("B50").numFmt = "#,##0.00";
 
-  invoiceSheet.getCell(`C${row}`).numFmt = "0.00";
-  invoiceSheet.getCell(`I${row}`).numFmt = "0.00";
-  invoiceSheet.getCell(`C${row}`).font = { bold: true };
-  invoiceSheet.getCell(`I${row}`).font = { bold: true };
+// 50C → LBS
+invoiceSheet.getCell("C50").value = "LBS";
 
-  row += 2;
+// 50G-50H → total dólares
+invoiceSheet.mergeCells("G50:H50");
+invoiceSheet.getCell("G50").value = totalAmount;
+invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
 
-  // 🔹 SMALL / LARGE
+// 52G-52H → repetir total dólares
+invoiceSheet.mergeCells("G52:H52");
+invoiceSheet.getCell("G52").value = totalAmount;
+invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
+
+// 53A-53H → dólares en letras (temporal)
+invoiceSheet.mergeCells("A53:H53");
+invoiceSheet.getCell("A53").value = `$ ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+invoiceSheet.getCell("A53").font = { italic: true };
+
+ // 🔹 SMALL / LARGE
   let smallBoxes = 0;
   let largeBoxes = 0;
 
@@ -331,6 +366,24 @@ row++;
     if (b.total_lbs < 70) smallBoxes++;
     else largeBoxes++;
   });
+
+// 54B → cajas grandes (110)
+invoiceSheet.getCell("B54").value = largeBoxes;
+
+// 54C → texto grandes
+invoiceSheet.getCell("C54").value = "BOXES 110 LBS";
+
+// 55B → cajas chicas (55)
+invoiceSheet.getCell("B55").value = smallBoxes;
+
+// 55C → texto chicas
+invoiceSheet.getCell("C55").value = "BOXES 55 LBS";
+
+// 57B → total cajas general
+invoiceSheet.getCell("B57").value = boxes.length;
+
+// 57C → texto total
+invoiceSheet.getCell("C57").value = "TOTAL BOXES";
 
   invoiceSheet.getCell(`A${row}`).value = `Small Boxes: ${smallBoxes}`; row++;
   invoiceSheet.getCell(`A${row}`).value = `Large Boxes: ${largeBoxes}`; row++;
