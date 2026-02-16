@@ -54,7 +54,7 @@ export async function GET(
         scientific_name
       )
     `)
-    .eq("packing_id", packing.id)
+    .eq("id", packing.id)
     .order("box_no");
 
   if (e2) {
