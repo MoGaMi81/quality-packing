@@ -232,6 +232,7 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
 
 row = 13;
 
+
 invoiceSheet.getCell("A13").value = "Boxes";
 invoiceSheet.getCell("B13").value = "Pounds";
 invoiceSheet.getCell("C13").value = "Description";
@@ -669,7 +670,7 @@ cell53.font = {
 const text = cell53.value?.toString() ?? "";
 
 // 75 caracteres aprox por línea en ancho A:H
-const approxLines = Math.ceil(text.length / 75);
+const approxLines = Math.ceil(text.length / 65);
 
 // Altura mínima 18.3 y crece según texto
 row53.height = Math.max(18.3, 18.3 * approxLines);
