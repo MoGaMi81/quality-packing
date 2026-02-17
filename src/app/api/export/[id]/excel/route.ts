@@ -232,7 +232,6 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
 
 row = 13;
 
-
 invoiceSheet.getCell("A13").value = "Boxes";
 invoiceSheet.getCell("B13").value = "Pounds";
 invoiceSheet.getCell("C13").value = "Description";
@@ -394,18 +393,6 @@ for (let r = 1; r <= 13; r++) {
 }
 
 
-// Marco cliente E1:H8
-for (let r = 1; r <= 8; r++) {
-  for (let c = 5; c <= 8; c++) {
-    invoiceSheet.getCell(r, c).border = {
-      top: { style: "thin" },
-      left: { style: "thin" },
-      bottom: { style: "thin" },
-      right: { style: "thin" },
-    };
-  }
-}
-
 // Marco AWB E9:H9
 for (let c = 5; c <= 8; c++) {
   invoiceSheet.getCell(9, c).border = {
@@ -427,7 +414,7 @@ for (let r = 1; r <= 13; r++) {
   }
 }
 
-row = 15;
+row = 14;
 
   // ============================================================
 // 🔹 AGRUPAR CAJAS PARA FACTURA (RESTORED)
@@ -651,8 +638,10 @@ setOuterBorder(invoiceSheet, 52, 52, 1, 8);
 // ============================================================
 
 invoiceSheet.mergeCells("A53:H53");
+
 const row53 = invoiceSheet.getRow(53);
 const cell53 = invoiceSheet.getCell("A53");
+
 cell53.value = formatAmountInWords(totalAmount);
 
 cell53.alignment = {
@@ -660,23 +649,22 @@ cell53.alignment = {
   vertical: "middle",
   wrapText: true,
 };
+
 cell53.font = {
-  name: "seaford",
+  name: "Seaford",
   bold: true,
   size: 14,
 };
 
-// 🔹 Ajuste dinámico realista de altura
+// 🔹 cálculo más conservador
 const text = cell53.value?.toString() ?? "";
-
-// 75 caracteres aprox por línea en ancho A:H
 const approxLines = Math.ceil(text.length / 65);
 
-// Altura mínima 18.3 y crece según texto
-row53.height = Math.max(18.3, 18.3 * approxLines);
+// mínimo real 22 puntos (más seguro que 18.3)
+row53.height = Math.max(22, 22 * approxLines);
 
-// 🔹 Borde externo limpio
 setOuterBorder(invoiceSheet, 53, 53, 1, 8);
+
 
 
     // 54B → cajas grandes (110) 
