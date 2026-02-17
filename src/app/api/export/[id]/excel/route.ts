@@ -208,39 +208,52 @@ invoiceSheet.getColumn("H").width = 12.18;
 
 let row = 1;
 
+function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: number, endCol: number) {
+  for (let c = startCol; c <= endCol; c++) {
+    sheet.getCell(startRow, c).border = { top: { style: "thin" } };
+    sheet.getCell(endRow, c).border = { bottom: { style: "thin" } };
+  }
+
+  for (let r = startRow; r <= endRow; r++) {
+    sheet.getCell(r, startCol).border = {
+      ...sheet.getCell(r, startCol).border,
+      left: { style: "thin" },
+    };
+    sheet.getCell(r, endCol).border = {
+      ...sheet.getCell(r, endCol).border,
+      right: { style: "thin" },
+    };
+  }
+}
+
 // ============================================================
 // 🔹 FUENTES HEADER
 // ============================================================
-const headerFontBig = { name: "Seafood", size: 20, bold: true };
-const headerFontMedium = { name: "Seafood", size: 14, bold: true };
-const headerFontAWBNumber = { name: "Seafood", size: 18, bold: true };
-const headerFontSmallBold = { name: "Seafood", size: 13, bold: true };
+const headerFontBig = { name: "Seaford", size: 20, bold: true };
+const headerFontMedium = { name: "Seaford", size: 14, bold: true };
+const headerFontAWBNumber = { name: "Seaford", size: 18, bold: true };
+const headerFfontAWBLabel = { name: "Seaford", size: 13, bold: true };
 
 // ============================================================
 // 🔹 VENDEDOR (A–D)
 // ============================================================
 invoiceSheet.mergeCells("A1:D5");
-
 invoiceSheet.mergeCells("A6:D7");
-const vendorCell = invoiceSheet.getCell("A6");
-vendorCell.value = "SOC. COOP. QUALITY FISH";
-vendorCell.font = headerFontBig;
-vendorCell.value = vendorCell.value?.toString().toUpperCase();
-
 invoiceSheet.mergeCells("A8:D12");
+
+const vendorCell = invoiceSheet.getCell("A6");
+vendorCell.value = "SOC. COOP. QUALITY FISH".toUpperCase();
+vendorCell.font = headerFontBig;
+vendorCell.alignment = { horizontal: "center", vertical: "middle" };
+
 const vendorInfo = invoiceSheet.getCell("A8");
 vendorInfo.value =
-  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
-vendorInfo.alignment = { wrapText: true };
+  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494".toUpperCase();
+vendorInfo.font = headerFontMedium;
+vendorInfo.alignment = { wrapText: true, vertical: "top", horizontal: "left" };
 
-// Mayúsculas + fuente medium en dirección vendedor
-for (let r = 8; r <= 12; r++) {
-  const cell = invoiceSheet.getCell(`A${r}`);
-  if (cell.value) {
-    cell.value = cell.value.toString().toUpperCase();
-    cell.font = headerFontMedium;
-  }
-}
+// BORDE EXTERNO
+setOuterBorder(invoiceSheet, 1, 13, 1, 4);
 
 // ============================================================
 // 🔹 CLIENTE (E–H)
@@ -252,26 +265,28 @@ if (!clientData) {
 
 // 1E:3H → Cliente
 invoiceSheet.mergeCells("E1:H3");
+invoiceSheet.mergeCells("E4:H7");
+
 const clientCell = invoiceSheet.getCell("E1");
-clientCell.value = clientData.name?.toUpperCase() ?? packing.client_name ?? "";
+clientCell.value = (clientData.name ?? "").toUpperCase();
 clientCell.font = headerFontBig;
 clientCell.alignment = { horizontal: "center", vertical: "middle" };
 
-// 4E:7H → Dirección cliente
-invoiceSheet.mergeCells("E4:H7");
 const clientAddress = invoiceSheet.getCell("E4");
 clientAddress.value =
-  `${clientData.address ?? ""}\n${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`;
-clientAddress.alignment = { wrapText: true, vertical: "top", horizontal: "center" };
+  `${clientData.address ?? ""}\n${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`.toUpperCase();
+clientAddress.font = headerFontMedium;
+clientAddress.alignment = { wrapText: true, vertical: "top", horizontal: "left" };
 
-// Mayúsculas + fuente medium en dirección cliente
-for (let r = 4; r <= 7; r++) {
-  const cell = invoiceSheet.getCell(`E${r}`);
-  if (cell.value) {
-    cell.value = cell.value.toString().toUpperCase();
-    cell.font = headerFontMedium;
-  }
-}
+// TAX ID (E8:H8)
+invoiceSheet.mergeCells("E8:H8");
+const taxCell = invoiceSheet.getCell("E8");
+taxCell.value = `TAX ID # ${clientData.tax_id ?? ""}`.toUpperCase();
+taxCell.font = headerFontMedium;
+taxCell.alignment = { horizontal: "left", vertical: "middle" };
+
+// BORDE EXTERNO CLIENTE
+setOuterBorder(invoiceSheet, 1, 8, 5, 8);
 
 // TAX ID
 invoiceSheet.getCell("E8").value = `TAX ID # ${clientData.tax_id ?? ""}`;
@@ -279,44 +294,63 @@ invoiceSheet.getCell("E8").font = headerFontMedium;
 invoiceSheet.getCell("E8").value = invoiceSheet.getCell("E8").value?.toString().toUpperCase();
 
 // AWB
+invoiceSheet.mergeCells("F9:H9");
+
 invoiceSheet.getCell("E9").value = "AWB";
-invoiceSheet.getCell("E9").font = headerFontSmallBold;
-invoiceSheet.getCell("E9").alignment = { horizontal: "left" };
+invoiceSheet.getCell("E9").font = headerFfontAWBLabel;
+invoiceSheet.getCell("E9").alignment = { horizontal: "left", vertical: "middle" };
 
 invoiceSheet.getCell("F9").value = packing.guide ?? "";
 invoiceSheet.getCell("F9").font = headerFontAWBNumber;
-invoiceSheet.getCell("F9").alignment = { horizontal: "right" };
+invoiceSheet.getCell("F9").alignment = { horizontal: "right", vertical: "middle" };
+
+setOuterBorder(invoiceSheet, 9, 9, 5, 8);
 
 // INVOICE
+invoiceSheet.mergeCells("E10:F10");
+invoiceSheet.mergeCells("G10:H10");
+
 invoiceSheet.getCell("E10").value = "INVOICE";
 invoiceSheet.getCell("E10").font = headerFontMedium;
-invoiceSheet.getCell("E10").alignment = { horizontal: "left" };
+invoiceSheet.getCell("E10").alignment = { horizontal: "left", vertical: "middle" };
 
 invoiceSheet.getCell("G10").value = packing.invoice_no;
 invoiceSheet.getCell("G10").font = headerFontMedium;
-invoiceSheet.getCell("G10").alignment = { horizontal: "right" };
+invoiceSheet.getCell("G10").alignment = { horizontal: "right", vertical: "middle" };
+
+setOuterBorder(invoiceSheet, 10, 10, 5, 8);
+
 
 // DATE
+invoiceSheet.mergeCells("E11:F11");
+invoiceSheet.mergeCells("G11:H11");
+
 invoiceSheet.getCell("E11").value = "DATE";
 invoiceSheet.getCell("E11").font = headerFontMedium;
-invoiceSheet.getCell("E11").alignment = { horizontal: "left" };
+invoiceSheet.getCell("E11").alignment = { horizontal: "left", vertical: "middle" };
 
 invoiceSheet.getCell("G11").value = dateFormatted;
 invoiceSheet.getCell("G11").font = headerFontMedium;
-invoiceSheet.getCell("G11").alignment = { horizontal: "right" };
+invoiceSheet.getCell("G11").alignment = { horizontal: "right", vertical: "middle" };
+
+setOuterBorder(invoiceSheet, 11, 11, 5, 8);
+
 
 // COUNTRY OF ORIGIN
 invoiceSheet.mergeCells("E12:H12");
+
 const countryCell = invoiceSheet.getCell("E12");
 countryCell.value = "COUNTRY OF ORIGIN: MEXICO";
 countryCell.font = headerFontMedium;
-countryCell.alignment = { horizontal: "left" };
+countryCell.alignment = { horizontal: "left", vertical: "middle" };
 countryCell.fill = {
   type: "pattern",
   pattern: "solid",
   fgColor: { argb: "FFFFFF00" },
 };
-countryCell.value = countryCell.value?.toString().toUpperCase();
+
+setOuterBorder(invoiceSheet, 12, 12, 5, 8);
+
 
 // ============================================================
 // 🔹 MARCOS Y FONDO
