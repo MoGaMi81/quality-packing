@@ -185,100 +185,188 @@ export async function GET(
 }
 
   // ============================================================
-  // 🧾 INVOICE
-  // ============================================================
+// 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
+// ============================================================
 
-  const invoiceSheet = wb.addWorksheet("Invoice");
+const invoiceSheet = wb.addWorksheet("Invoice");
 
-  invoiceSheet.pageSetup.paperSize = 9;
-  invoiceSheet.pageSetup.orientation = "portrait";
+// Tamaño carta
+invoiceSheet.pageSetup.paperSize = 9;
+invoiceSheet.pageSetup.orientation = "portrait";
 
-  // Columnas exactas
-  invoiceSheet.getColumn("A").width = 4.18;
-  invoiceSheet.getColumn("B").width = 6.41;
-  invoiceSheet.getColumn("C").width = 36.86;
-  invoiceSheet.getColumn("D").width = 4.86;
-  invoiceSheet.getColumn("E").width = 6.18;
-  invoiceSheet.getColumn("F").width = 28.86;
-  invoiceSheet.getColumn("G").width = 6.18;
-  invoiceSheet.getColumn("H").width = 12.18;
+// ============================================================
+// 📏 COLUMNAS EXACTAS FORMATO ORIGINAL
+// ============================================================
+invoiceSheet.getColumn("A").width = 4.18;
+invoiceSheet.getColumn("B").width = 6.41;
+invoiceSheet.getColumn("C").width = 36.86;
+invoiceSheet.getColumn("D").width = 4.86;
+invoiceSheet.getColumn("E").width = 6.18;
+invoiceSheet.getColumn("F").width = 28.86;
+invoiceSheet.getColumn("G").width = 6.18;
+invoiceSheet.getColumn("H").width = 12.18;
 
-  let row = 1;
+let row = 1;
 
-  // ============================================================
-  // 🔹 VENDEDOR
-  // ============================================================
+// ============================================================
+// 🔹 FUENTES HEADER
+// ============================================================
+const headerFontBig = { name: "Seafood", size: 20, bold: true };
+const headerFontMedium = { name: "Seafood", size: 14, bold: true };
+const headerFontAWBNumber = { name: "Seafood", size: 18, bold: true };
+const headerFontSmallBold = { name: "Seafood", size: 13, bold: true };
 
-  invoiceSheet.mergeCells("A1:D5");
+// ============================================================
+// 🔹 VENDEDOR (A–D)
+// ============================================================
+invoiceSheet.mergeCells("A1:D5");
 
-  invoiceSheet.mergeCells("A6:D7");
-  invoiceSheet.getCell("A6").value = "SOC. COOP. QUALITY FISH";
-  invoiceSheet.getCell("A6").font = { size: 20, bold: true };
+invoiceSheet.mergeCells("A6:D7");
+const vendorCell = invoiceSheet.getCell("A6");
+vendorCell.value = "SOC. COOP. QUALITY FISH";
+vendorCell.font = headerFontBig;
+vendorCell.value = vendorCell.value?.toString().toUpperCase();
 
-  invoiceSheet.mergeCells("A8:D12");
-  invoiceSheet.getCell("A8").value =
-    "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
-  invoiceSheet.getCell("A8").alignment = { wrapText: true };
+invoiceSheet.mergeCells("A8:D12");
+const vendorInfo = invoiceSheet.getCell("A8");
+vendorInfo.value =
+  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
+vendorInfo.alignment = { wrapText: true };
 
-  // ============================================================
-  // 🔹 CLIENTE
-  // ============================================================
+// Mayúsculas + fuente medium en dirección vendedor
+for (let r = 8; r <= 12; r++) {
+  const cell = invoiceSheet.getCell(`A${r}`);
+  if (cell.value) {
+    cell.value = cell.value.toString().toUpperCase();
+    cell.font = headerFontMedium;
+  }
+}
 
-  const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
+// ============================================================
+// 🔹 CLIENTE (E–H)
+// ============================================================
+const dateFormatted = packing?.created_at?.slice(0, 10) ?? "";
+if (!clientData) {
+  throw new Error("Client not found");
+}
 
-  invoiceSheet.mergeCells("E1:H3");
-  invoiceSheet.getCell("E1").value = clientName.toUpperCase();
-  invoiceSheet.getCell("E1").font = { size: 22, bold: true };
-  invoiceSheet.getCell("E1").alignment = {
-    horizontal: "center",
-    vertical: "middle",
+// 1E:3H → Cliente
+invoiceSheet.mergeCells("E1:H3");
+const clientCell = invoiceSheet.getCell("E1");
+clientCell.value = clientData.name?.toUpperCase() ?? packing.client_name ?? "";
+clientCell.font = headerFontBig;
+clientCell.alignment = { horizontal: "center", vertical: "middle" };
+
+// 4E:7H → Dirección cliente
+invoiceSheet.mergeCells("E4:H7");
+const clientAddress = invoiceSheet.getCell("E4");
+clientAddress.value =
+  `${clientData.address ?? ""}\n${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`;
+clientAddress.alignment = { wrapText: true, vertical: "top", horizontal: "center" };
+
+// Mayúsculas + fuente medium en dirección cliente
+for (let r = 4; r <= 7; r++) {
+  const cell = invoiceSheet.getCell(`E${r}`);
+  if (cell.value) {
+    cell.value = cell.value.toString().toUpperCase();
+    cell.font = headerFontMedium;
+  }
+}
+
+// TAX ID
+invoiceSheet.getCell("E8").value = `TAX ID # ${clientData.tax_id ?? ""}`;
+invoiceSheet.getCell("E8").font = headerFontMedium;
+invoiceSheet.getCell("E8").value = invoiceSheet.getCell("E8").value?.toString().toUpperCase();
+
+// AWB
+invoiceSheet.getCell("E9").value = "AWB";
+invoiceSheet.getCell("E9").font = headerFontSmallBold;
+invoiceSheet.getCell("E9").alignment = { horizontal: "left" };
+
+invoiceSheet.getCell("F9").value = packing.guide ?? "";
+invoiceSheet.getCell("F9").font = headerFontAWBNumber;
+invoiceSheet.getCell("F9").alignment = { horizontal: "right" };
+
+// INVOICE
+invoiceSheet.getCell("E10").value = "INVOICE";
+invoiceSheet.getCell("E10").font = headerFontMedium;
+invoiceSheet.getCell("E10").alignment = { horizontal: "left" };
+
+invoiceSheet.getCell("G10").value = packing.invoice_no;
+invoiceSheet.getCell("G10").font = headerFontMedium;
+invoiceSheet.getCell("G10").alignment = { horizontal: "right" };
+
+// DATE
+invoiceSheet.getCell("E11").value = "DATE";
+invoiceSheet.getCell("E11").font = headerFontMedium;
+invoiceSheet.getCell("E11").alignment = { horizontal: "left" };
+
+invoiceSheet.getCell("G11").value = dateFormatted;
+invoiceSheet.getCell("G11").font = headerFontMedium;
+invoiceSheet.getCell("G11").alignment = { horizontal: "right" };
+
+// COUNTRY OF ORIGIN
+invoiceSheet.mergeCells("E12:H12");
+const countryCell = invoiceSheet.getCell("E12");
+countryCell.value = "COUNTRY OF ORIGIN: MEXICO";
+countryCell.font = headerFontMedium;
+countryCell.alignment = { horizontal: "left" };
+countryCell.fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFFFFF00" },
+};
+countryCell.value = countryCell.value?.toString().toUpperCase();
+
+// ============================================================
+// 🔹 MARCOS Y FONDO
+// ============================================================
+// Marco vendedor A1:D13
+for (let r = 1; r <= 13; r++) {
+  for (let c = 1; c <= 8; c++) {
+    invoiceSheet.getCell(r, c).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFFFFFF" },
+    };
+  }
+}
+
+
+// Marco cliente E1:H8
+for (let r = 1; r <= 8; r++) {
+  for (let c = 5; c <= 8; c++) {
+    invoiceSheet.getCell(r, c).border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+  }
+}
+
+// Marco AWB E9:H9
+for (let c = 5; c <= 8; c++) {
+  invoiceSheet.getCell(9, c).border = {
+    top: { style: "thin" },
+    left: { style: "thin" },
+    bottom: { style: "thin" },
+    right: { style: "thin" },
   };
+}
 
-  invoiceSheet.mergeCells("E4:H7");
-  invoiceSheet.getCell("E4").value =
-    `${clientAddressLine1}\n${clientAddressLine2}`;
-  invoiceSheet.getCell("E4").alignment = {
-    wrapText: true,
-    vertical: "top",
-    horizontal: "center",
-  };
+// Fondo blanco header completo
+for (let r = 1; r <= 13; r++) {
+  for (let c = 1; c <= 8; c++) {
+    invoiceSheet.getCell(r, c).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFFFFFF" },
+    };
+  }
+}
 
-  invoiceSheet.getCell("E8").value = `TAX ID # ${clientTaxId}`;
-  invoiceSheet.getCell("E9").value = `AWB: ${packing.guide ?? ""}`;
-  invoiceSheet.getCell("E10").value = `INVOICE: ${packing.invoice_no}`;
-  invoiceSheet.getCell("E11").value = `DATE: ${dateFormatted}`;
-
-  invoiceSheet.mergeCells("E12:H12");
-  invoiceSheet.getCell("E12").value = "COUNTRY OF ORIGIN: MEXICO";
-  invoiceSheet.getCell("E12").alignment = { horizontal: "center" };
-  invoiceSheet.getCell("E12").font = { bold: true };
-  invoiceSheet.getCell("E12").fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFFFFF00" },
-  };
-
-  // ============================================================
-  // 🔹 HEADERS A14:H14
-  // ============================================================
-
-  row = 14;
-
-  invoiceSheet.getRow(row).values = [
-    "Boxes",
-    "Pounds",
-    "Description",
-    "Size",
-    "Form",
-    "Scientific Name",
-    "Price",
-    "Amount",
-  ];
-
-  invoiceSheet.getRow(row).font = { bold: true };
-  invoiceSheet.getRow(row).alignment = { horizontal: "center" };
-
-  row++;
+row = 14;
 
   // ============================================================
 // 🔹 AGRUPAR CAJAS PARA FACTURA (RESTORED)
