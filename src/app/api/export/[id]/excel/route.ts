@@ -281,6 +281,20 @@ for (let col = 1; col <= 8; col++) {
 
 invoiceSheet.getRow(13).height = 24;
 
+const headerRow = invoiceSheet.getRow(13);
+
+headerRow.height = 26; // altura fija segura
+
+for (let col = 1; col <= 8; col++) {
+  const cell = invoiceSheet.getCell(13, col);
+
+  cell.alignment = {
+    horizontal: "center",
+    vertical: "middle",
+    wrapText: false,
+  };
+}
+
 // ============================================================
 // 🔹 FUENTES HEADER
 // ============================================================
@@ -649,18 +663,38 @@ for (let r = 13; r <= 49; r++) {
   }
 }
 
-
 setOuterBorder(invoiceSheet, 13, 50, 1, 8);
 
   invoiceSheet.mergeCells("G52:H52");
-  invoiceSheet.getCell("G52").value = totalAmount;
-  invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
-  const row52 = invoiceSheet.getRow(52);
 
-  row52.font = {
-    name: "seaford",
-    bold: true,
-  };
+const cell52 = invoiceSheet.getCell("G52");
+
+cell52.value = totalAmount;
+cell52.numFmt = '"$"#,##0.00';
+
+cell52.font = {
+  name: "Seaford",
+  bold: true,
+};
+
+cell52.alignment = {
+  horizontal: "right",
+  vertical: "middle",
+};
+
+// 🔹 BORDE SOLO EN G52:H52
+invoiceSheet.getCell("G52").border = {
+  top: { style: "thin" },
+  left: { style: "thin" },
+  bottom: { style: "thin" },
+};
+
+invoiceSheet.getCell("H52").border = {
+  top: { style: "thin" },
+  right: { style: "thin" },
+  bottom: { style: "thin" },
+};
+
 setOuterBorder(invoiceSheet, 52, 52, 1, 8);
 
 
@@ -701,10 +735,20 @@ setOuterBorder(invoiceSheet, 53, 53, 1, 8);
     invoiceSheet.getCell("B54").value = largeBoxes; 
     // 54C → texto grandes 
     invoiceSheet.getCell("C54").value = "BOXES 110 LBS"; 
+    for (let c = 1; c <= 8; c++) {
+  invoiceSheet.getCell(54, c).border = {};
+}
+
     // 55B → cajas chicas (55) 
     invoiceSheet.getCell("B55").value = smallBoxes; 
     // 55C → texto chicas 
     invoiceSheet.getCell("C55").value = "BOXES 55 LBS"; 
+    for (let c = 1; c <= 8; c++) {
+  invoiceSheet.getCell(55, c).border = {
+    bottom: { style: "double" },
+  };
+}
+
     // 56B → total cajas general 
     invoiceSheet.getCell("B56").value = boxes.length; 
     // 56C → texto total 
@@ -712,6 +756,10 @@ setOuterBorder(invoiceSheet, 53, 53, 1, 8);
 
     for (let r = 54; r <= 56; r++) {
   const currentRow = invoiceSheet.getRow(r);
+  for (let c = 1; c <= 8; c++) {
+  invoiceSheet.getCell(56, c).border = {};
+}
+
 
   currentRow.font = {
     name: "seaford",
