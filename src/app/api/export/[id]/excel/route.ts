@@ -237,11 +237,12 @@ setOuterBorder(invoiceSheet, 13, 50, 1, 8);
 
 
 // ============================================================
-// 🔹 COLUMN HEADERS (A14:H14)
+// 🔹 COLUMN HEADERS (A13:H13)
 // ============================================================
 
 row = 13;
 
+// Valores
 invoiceSheet.getCell("A13").value = "Boxes";
 invoiceSheet.getCell("B13").value = "Pounds";
 invoiceSheet.getCell("C13").value = "Description";
@@ -251,49 +252,37 @@ invoiceSheet.getCell("F13").value = "Scientific Name";
 invoiceSheet.getCell("G13").value = "Price";
 invoiceSheet.getCell("H13").value = "Amount";
 
-for (let col = 1; col <= 8; col++) {
-  const cell = invoiceSheet.getCell(13, col);
-  cell.font = { bold: true };
-  cell.alignment = { vertical: "middle", horizontal: "center" };
-  cell.border = {
-    bottom: { style: "medium" },
-  };
-}
-
-row = 14;
-
-for (let col = 1; col <= 8; col++) {
-  const cell = invoiceSheet.getCell(13, col);
-
-  cell.font = { bold: true };
-  cell.alignment = { vertical: "middle", horizontal: "center" };
-
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFD9EAF7" }, // azul más fuerte
-  };
-
-  cell.border = {
-    bottom: { style: "medium" },
-  };
-}
-
-invoiceSheet.getRow(13).height = 24;
-
+// Estilo completo aplicado UNA sola vez
 const headerRow = invoiceSheet.getRow(13);
-
-headerRow.height = 26; // altura fija segura
+headerRow.height = 30; // altura suficiente para que no se corte
 
 for (let col = 1; col <= 8; col++) {
   const cell = invoiceSheet.getCell(13, col);
+
+  cell.font = {
+    bold: true,
+  };
 
   cell.alignment = {
     horizontal: "center",
     vertical: "middle",
     wrapText: false,
   };
+
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFD9EAF7" }, // azul header
+  };
+
+  cell.border = {
+    bottom: { style: "medium" },
+  };
 }
+
+// 👇 Aquí comienzan los items
+row = 14;
+
 
 // ============================================================
 // 🔹 FUENTES HEADER
@@ -695,8 +684,6 @@ invoiceSheet.getCell("H52").border = {
   bottom: { style: "thin" },
 };
 
-setOuterBorder(invoiceSheet, 52, 52, 1, 8);
-
 
  // ============================================================
 // FILA 53 – MONTO EN LETRAS
@@ -744,9 +731,7 @@ setOuterBorder(invoiceSheet, 53, 53, 1, 8);
     // 55C → texto chicas 
     invoiceSheet.getCell("C55").value = "BOXES 55 LBS"; 
     for (let c = 1; c <= 8; c++) {
-  invoiceSheet.getCell(55, c).border = {
-    bottom: { style: "double" },
-  };
+  invoiceSheet.getCell(55, c).border = {};
 }
 
     // 56B → total cajas general 
@@ -754,20 +739,11 @@ setOuterBorder(invoiceSheet, 53, 53, 1, 8);
     // 56C → texto total 
     invoiceSheet.getCell("C56").value = "TOTAL BOXES";
 
-    for (let r = 54; r <= 56; r++) {
-  const currentRow = invoiceSheet.getRow(r);
+  
   for (let c = 1; c <= 8; c++) {
   invoiceSheet.getCell(56, c).border = {};
 }
 
-
-  currentRow.font = {
-    name: "seaford",
-    bold: true,
-  };
-
-  setOuterBorder(invoiceSheet, r, r, 1, 8);
-}
 
  // ============================================================
 // EXPORT
