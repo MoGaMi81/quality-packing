@@ -633,7 +633,7 @@ setOuterBorder(invoiceSheet, 13, 50, 1, 8);
 setOuterBorder(invoiceSheet, 52, 52, 1, 8);
 
 
-  // ============================================================
+ // ============================================================
 // FILA 53 – MONTO EN LETRAS
 // ============================================================
 
@@ -651,21 +651,20 @@ cell53.alignment = {
 };
 
 cell53.font = {
-  name: "Seaford",
+  name: "Seaford", // corrige a la fuente que definiste
   bold: true,
   size: 14,
 };
 
 // 🔹 cálculo más conservador
 const text = cell53.value?.toString() ?? "";
-const approxLines = Math.ceil(text.length / 65);
+const approxLines = Math.ceil(text.length / 45); // reduce divisor para más espacio
 
-// mínimo real 22 puntos (más seguro que 18.3)
-row53.height = Math.max(22, 22 * approxLines);
+// mínimo real 28 puntos (más seguro que 22)
+row53.height = Math.max(28, 22 * approxLines);
 
+// Bordes exteriores
 setOuterBorder(invoiceSheet, 53, 53, 1, 8);
-
-
 
     // 54B → cajas grandes (110) 
     invoiceSheet.getCell("B54").value = largeBoxes; 
