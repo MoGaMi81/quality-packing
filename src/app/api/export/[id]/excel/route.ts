@@ -232,14 +232,14 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
 
 row = 13;
 
-invoiceSheet.getCell("A14").value = "Boxes";
-invoiceSheet.getCell("B14").value = "Pounds";
-invoiceSheet.getCell("C14").value = "Description";
-invoiceSheet.getCell("D14").value = "Size";
-invoiceSheet.getCell("E14").value = "Form";
-invoiceSheet.getCell("F14").value = "Scientific Name";
-invoiceSheet.getCell("G14").value = "Price";
-invoiceSheet.getCell("H14").value = "Amount";
+invoiceSheet.getCell("A13").value = "Boxes";
+invoiceSheet.getCell("B13").value = "Pounds";
+invoiceSheet.getCell("C13").value = "Description";
+invoiceSheet.getCell("D13").value = "Size";
+invoiceSheet.getCell("E13").value = "Form";
+invoiceSheet.getCell("F13").value = "Scientific Name";
+invoiceSheet.getCell("G13").value = "Price";
+invoiceSheet.getCell("H13").value = "Amount";
 
 for (let col = 1; col <= 8; col++) {
   const cell = invoiceSheet.getCell(14, col);
