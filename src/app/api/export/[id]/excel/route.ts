@@ -201,7 +201,7 @@ invoiceSheet.getColumn("A").width = 4.18;
 invoiceSheet.getColumn("B").width = 6.41;
 invoiceSheet.getColumn("C").width = 36.86;
 invoiceSheet.getColumn("D").width = 4.86;
-invoiceSheet.getColumn("E").width = 6.20;
+invoiceSheet.getColumn(5).width = 6.18;
 invoiceSheet.getColumn("F").width = 28.86;
 invoiceSheet.getColumn("G").width = 6.18;
 invoiceSheet.getColumn("H").width = 12.18;
@@ -609,19 +609,12 @@ const totalBoxes = invoiceBoxesMap.size;
 
   invoiceSheet.mergeCells("A53:H53");
 
-invoiceSheet.getCell("A53").value = formatAmountInWords(totalAmount);
+  const text = invoiceSheet.getCell("A53").value?.toString() ?? "";
+  const approxLines = Math.ceil(text.length / 90);
 
-invoiceSheet.getCell("A53").alignment = {
-  horizontal: "left",
-  vertical: "middle",
-};
-
-invoiceSheet.getCell("A53").font = {
-  bold: true,
-};
-
-invoiceSheet.getRow(53).height = 20;
-
+  const row53 = invoiceSheet.getRow(53);
+  row53.font = { name: "seaford", size: 14 };
+  row53.height = 18.3 * approxLines;
 
     // 54B → cajas grandes (110) 
     invoiceSheet.getCell("B54").value = largeBoxes; 
