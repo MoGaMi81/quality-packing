@@ -242,7 +242,7 @@ invoiceSheet.getCell("G13").value = "Price";
 invoiceSheet.getCell("H13").value = "Amount";
 
 for (let col = 1; col <= 8; col++) {
-  const cell = invoiceSheet.getCell(14, col);
+  const cell = invoiceSheet.getCell(13, col);
   cell.font = { bold: true };
   cell.alignment = { vertical: "middle", horizontal: "center" };
   cell.border = {
