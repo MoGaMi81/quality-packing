@@ -227,7 +227,7 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
 }
 
 // ============================================================
-// 🔹 COLUMN HEADERS (A14:H14)
+// 🔹 COLUMN HEADERS (A13:H13)
 // ============================================================
 
 row = 13;
@@ -243,14 +243,20 @@ invoiceSheet.getCell("H13").value = "Amount";
 
 for (let col = 1; col <= 8; col++) {
   const cell = invoiceSheet.getCell(13, col);
+
   cell.font = { bold: true };
-  cell.alignment = { vertical: "middle", horizontal: "center" };
+  cell.alignment = { horizontal: "center", vertical: "middle" };
+
   cell.border = {
     bottom: { style: "medium" },
   };
 }
 
+invoiceSheet.getRow(13).height = 22;
+
+// 👇 Los items comienzan aquí
 row = 14;
+
 
 // ============================================================
 // 🔹 FUENTES HEADER
