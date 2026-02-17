@@ -597,7 +597,7 @@ row50.font = {
 };
 setOuterBorder(invoiceSheet, 50, 50, 1, 8);
 
-for (let r = 13; r <= 50; r++) {
+for (let r = 13; r <= 49; r++) {
   for (let c = 1; c <= 8; c++) {
     const cell = invoiceSheet.getCell(r, c);
 
