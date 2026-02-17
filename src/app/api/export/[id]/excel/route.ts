@@ -589,7 +589,6 @@ invoiceBoxesMap.forEach((b) => {
 });
 const totalBoxes = invoiceBoxesMap.size;
 
-
   // ============================================================
   // 📊 BLOQUE FINAL
   // ============================================================
@@ -603,18 +602,42 @@ const totalBoxes = invoiceBoxesMap.size;
   invoiceSheet.getCell("G50").value = totalAmount;
   invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
 
+  const row50 = invoiceSheet.getRow(50);
+
+row50.font = {
+  name: "seaford",
+  bold: true,
+};
+
+setOuterBorder(invoiceSheet, 50, 50, 1, 8);
+
+
   invoiceSheet.mergeCells("G52:H52");
   invoiceSheet.getCell("G52").value = totalAmount;
   invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
 
   invoiceSheet.mergeCells("A53:H53");
 
-  const text = invoiceSheet.getCell("A53").value?.toString() ?? "";
-  const approxLines = Math.ceil(text.length / 90);
+invoiceSheet.getCell("A53").value = formatAmountInWords(totalAmount);
 
-  const row53 = invoiceSheet.getRow(53);
-  row53.font = { name: "seaford", size: 14 };
-  row53.height = 18.3 * approxLines;
+invoiceSheet.getCell("A53").alignment = {
+  horizontal: "left",
+  vertical: "middle",
+};
+
+invoiceSheet.getCell("A53").font = {
+  name: "seaford",
+  bold: true,
+  size: 14,
+};
+
+// Altura base ajustable
+const text = invoiceSheet.getCell("A53").value?.toString() ?? "";
+const approxLines = Math.ceil(text.length / 90);
+invoiceSheet.getRow(53).height = 18.3 * approxLines;
+
+// BORDE EXTERNO
+setOuterBorder(invoiceSheet, 53, 53, 1, 8);
 
     // 54B → cajas grandes (110) 
     invoiceSheet.getCell("B54").value = largeBoxes; 
@@ -628,6 +651,17 @@ const totalBoxes = invoiceBoxesMap.size;
     invoiceSheet.getCell("B56").value = boxes.length; 
     // 56C → texto total 
     invoiceSheet.getCell("C56").value = "TOTAL BOXES";
+
+    for (let r = 54; r <= 56; r++) {
+  const currentRow = invoiceSheet.getRow(r);
+
+  currentRow.font = {
+    name: "seaford",
+    bold: true,
+  };
+
+  setOuterBorder(invoiceSheet, r, r, 1, 8);
+}
 
  // ============================================================
 // EXPORT
