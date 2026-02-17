@@ -253,7 +253,7 @@ vendorInfo.font = headerFontMedium;
 vendorInfo.alignment = { wrapText: true, vertical: "top", horizontal: "left" };
 
 // BORDE EXTERNO
-setOuterBorder(invoiceSheet, 1, 13, 1, 4);
+setOuterBorder(invoiceSheet, 1, 12, 1, 4);
 
 // ============================================================
 // 🔹 CLIENTE (E–H)
