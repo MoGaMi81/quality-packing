@@ -601,43 +601,82 @@ const totalBoxes = invoiceBoxesMap.size;
   invoiceSheet.mergeCells("G50:H50");
   invoiceSheet.getCell("G50").value = totalAmount;
   invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
-
   const row50 = invoiceSheet.getRow(50);
 
 row50.font = {
   name: "seaford",
   bold: true,
 };
-
 setOuterBorder(invoiceSheet, 50, 50, 1, 8);
 
+for (let r = 13; r <= 50; r++) {
+  for (let c = 1; c <= 8; c++) {
+    const cell = invoiceSheet.getCell(r, c);
+
+    // fondo azul muy claro
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF2F8FF" }, // azul claro
+    };
+
+    // líneas internas azul suave
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFB7D7F0" } },
+      left: { style: "thin", color: { argb: "FFB7D7F0" } },
+      bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+      right: { style: "thin", color: { argb: "FFB7D7F0" } },
+    };
+  }
+}
+
+
+setOuterBorder(invoiceSheet, 13, 50, 1, 8);
 
   invoiceSheet.mergeCells("G52:H52");
   invoiceSheet.getCell("G52").value = totalAmount;
   invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
+  const row52 = invoiceSheet.getRow(52);
 
-  invoiceSheet.mergeCells("A53:H53");
+  row52.font = {
+    name: "seaford",
+    bold: true,
+  };
+setOuterBorder(invoiceSheet, 52, 52, 1, 8);
 
-invoiceSheet.getCell("A53").value = formatAmountInWords(totalAmount);
 
-invoiceSheet.getCell("A53").alignment = {
+  // ============================================================
+// FILA 53 – MONTO EN LETRAS
+// ============================================================
+
+invoiceSheet.mergeCells("A53:H53");
+const row53 = invoiceSheet.getRow(53);
+const cell53 = invoiceSheet.getCell("A53");
+cell53.value = formatAmountInWords(totalAmount);
+
+cell53.alignment = {
   horizontal: "left",
   vertical: "middle",
+  wrapText: true,
 };
-
-invoiceSheet.getCell("A53").font = {
+cell53.font = {
   name: "seaford",
   bold: true,
   size: 14,
 };
 
-// Altura base ajustable
-const text = invoiceSheet.getCell("A53").value?.toString() ?? "";
-const approxLines = Math.ceil(text.length / 90);
-invoiceSheet.getRow(53).height = 18.3 * approxLines;
+// 🔹 Ajuste dinámico realista de altura
+const text = cell53.value?.toString() ?? "";
 
-// BORDE EXTERNO
+// 75 caracteres aprox por línea en ancho A:H
+const approxLines = Math.ceil(text.length / 75);
+
+// Altura mínima 18.3 y crece según texto
+row53.height = Math.max(18.3, 18.3 * approxLines);
+
+// 🔹 Borde externo limpio
 setOuterBorder(invoiceSheet, 53, 53, 1, 8);
+
 
     // 54B → cajas grandes (110) 
     invoiceSheet.getCell("B54").value = largeBoxes; 
