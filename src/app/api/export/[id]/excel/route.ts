@@ -230,7 +230,7 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
 // 🔹 COLUMN HEADERS (A14:H14)
 // ============================================================
 
-row = 14;
+row = 13;
 
 invoiceSheet.getCell("A14").value = "Boxes";
 invoiceSheet.getCell("B14").value = "Pounds";
@@ -250,7 +250,7 @@ for (let col = 1; col <= 8; col++) {
   };
 }
 
-row = 15;
+row = 14;
 
 // ============================================================
 // 🔹 FUENTES HEADER
