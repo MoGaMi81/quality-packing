@@ -231,31 +231,165 @@ export async function GET(
   // 🔹 DATOS
   // ============================================================
 
-  let totalAmount = 0;
-  let totalLbs = 0;
+  // ============================================================
+// 🔹 AGRUPAR CAJAS PARA FACTURA (RESTORED)
+// ============================================================
 
-  lines?.forEach((l: any) => {
+const invoiceBoxesMap = new Map<
+  number,
+  { box_no: number; is_combined: boolean; lines: any[]; total_lbs: number }
+>();
+
+lines?.forEach((l: any) => {
+  if (!invoiceBoxesMap.has(l.box_no)) {
+    invoiceBoxesMap.set(l.box_no, {
+      box_no: l.box_no,
+      is_combined: l.is_combined,
+      lines: [l],
+      total_lbs: l.pounds,
+    });
+  } else {
+    const box = invoiceBoxesMap.get(l.box_no)!;
+    box.lines.push(l);
+    box.total_lbs += l.pounds;
+  }
+});
+
+const simpleMap = new Map<
+  string,
+  {
+    desc: string;
+    sci: string;
+    size: string;
+    form: string;
+    boxes: number;
+    pounds: number;
+    price: number;
+  }
+>();
+
+const combinedBoxes: any[] = [];
+
+invoiceBoxesMap.forEach((box) => {
+  if (box.is_combined) {
+    combinedBoxes.push(box);
+  } else {
+    box.lines.forEach((l: any) => {
+      const key = `${l.description_en}|${l.size}|${l.form}|${l.price}`;
+      if (!simpleMap.has(key)) {
+        simpleMap.set(key, {
+          desc: l.description_en,
+          sci: l.species?.scientific_name ?? "",
+          size: l.size,
+          form: l.form,
+          boxes: 1,
+          pounds: l.pounds,
+          price: l.price,
+        });
+      } else {
+        const g = simpleMap.get(key)!;
+        g.boxes += 1;
+        g.pounds += l.pounds;
+      }
+    });
+  }
+});
+
+let totalAmount = 0;
+let totalLbs = 0;
+
+// ============================================================
+// 🔹 WRITE ROW FUNCTION (A–H CORRECT)
+// ============================================================
+
+function writeInvoiceRow(data: {
+  boxes?: number | string;
+  lbs: number;
+  desc: string;
+  size: string;
+  form: string;
+  sci: string;
+  price: number;
+  amount: number;
+}) {
+  invoiceSheet.getRow(row).values = [
+    data.boxes ?? "",
+    data.lbs,
+    data.desc,
+    data.size,
+    data.form,
+    data.sci,
+    data.price,
+    data.amount,
+  ];
+
+  invoiceSheet.getCell(`A${row}`).alignment = { horizontal: "center" };
+  invoiceSheet.getCell(`B${row}`).alignment = { horizontal: "right" };
+  invoiceSheet.getCell(`G${row}`).alignment = { horizontal: "right" };
+  invoiceSheet.getCell(`H${row}`).alignment = { horizontal: "right" };
+
+  invoiceSheet.getCell(`B${row}`).numFmt = "#,##0.00";
+  invoiceSheet.getCell(`G${row}`).numFmt = '"$"#,##0.00';
+  invoiceSheet.getCell(`H${row}`).numFmt = '"$"#,##0.00';
+
+  row++;
+}
+
+// ============================================================
+// 🔹 SIMPLES AGRUPADOS
+// ============================================================
+
+simpleMap.forEach((g) => {
+  const amount = g.pounds * g.price;
+  totalAmount += amount;
+  totalLbs += g.pounds;
+
+  writeInvoiceRow({
+    boxes: g.boxes,
+    lbs: g.pounds,
+    desc: g.desc,
+    size: g.size,
+    form: g.form,
+    sci: g.sci,
+    price: g.price,
+    amount,
+  });
+});
+
+// ============================================================
+// 🔹 COMBINADAS (BOX BY BOX)
+// ============================================================
+
+combinedBoxes.forEach((box) => {
+  box.lines.forEach((l: any, index: number) => {
     const amount = l.pounds * l.price;
     totalAmount += amount;
     totalLbs += l.pounds;
 
-    invoiceSheet.getRow(row).values = [
-      1,
-      l.pounds,
-      l.description_en,
-      l.size,
-      l.form,
-      l.species?.scientific_name ?? "",
-      l.price,
+    writeInvoiceRow({
+      boxes: index === 0 ? 1 : "",
+      lbs: l.pounds,
+      desc: l.description_en,
+      size: l.size,
+      form: l.form,
+      sci: l.species?.scientific_name ?? "",
+      price: l.price,
       amount,
-    ];
-
-    invoiceSheet.getCell(`B${row}`).numFmt = "#,##0.00";
-    invoiceSheet.getCell(`G${row}`).numFmt = '"$"#,##0.00';
-    invoiceSheet.getCell(`H${row}`).numFmt = '"$"#,##0.00';
-
-    row++;
+    });
   });
+});
+
+// ============================================================
+// 🔹 SMALL / LARGE BOXES
+// ============================================================
+
+let smallBoxes = 0;
+let largeBoxes = 0;
+
+invoiceBoxesMap.forEach((b) => {
+  if (b.total_lbs < 70) smallBoxes++;
+  else largeBoxes++;
+});
 
   // ============================================================
   // 📊 BLOQUE FINAL
