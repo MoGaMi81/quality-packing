@@ -210,21 +210,31 @@ let row = 1;
 
 function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: number, endCol: number) {
   for (let c = startCol; c <= endCol; c++) {
-    sheet.getCell(startRow, c).border = { top: { style: "thin" } };
-    sheet.getCell(endRow, c).border = { bottom: { style: "thin" } };
+    sheet.getCell(startRow, c).border = {
+      ...sheet.getCell(startRow, c).border,
+      top: { style: "medium" },
+    };
+    sheet.getCell(endRow, c).border = {
+      ...sheet.getCell(endRow, c).border,
+      bottom: { style: "medium" },
+    };
   }
 
   for (let r = startRow; r <= endRow; r++) {
     sheet.getCell(r, startCol).border = {
       ...sheet.getCell(r, startCol).border,
-      left: { style: "thin" },
+      left: { style: "medium" },
     };
     sheet.getCell(r, endCol).border = {
       ...sheet.getCell(r, endCol).border,
-      right: { style: "thin" },
+      right: { style: "medium" },
     };
   }
 }
+
+// aplicar
+setOuterBorder(invoiceSheet, 13, 50, 1, 8);
+
 
 // ============================================================
 // 🔹 COLUMN HEADERS (A14:H14)
@@ -251,6 +261,25 @@ for (let col = 1; col <= 8; col++) {
 }
 
 row = 14;
+
+for (let col = 1; col <= 8; col++) {
+  const cell = invoiceSheet.getCell(13, col);
+
+  cell.font = { bold: true };
+  cell.alignment = { vertical: "middle", horizontal: "center" };
+
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFD9EAF7" }, // azul más fuerte
+  };
+
+  cell.border = {
+    bottom: { style: "medium" },
+  };
+}
+
+invoiceSheet.getRow(13).height = 24;
 
 // ============================================================
 // 🔹 FUENTES HEADER
@@ -581,6 +610,8 @@ const totalBoxes = invoiceBoxesMap.size;
   // 📊 BLOQUE FINAL
   // ============================================================
 
+  invoiceSheet.getRow(49).height = 6;
+
   invoiceSheet.getCell("A50").value = boxes.length;
   invoiceSheet.getCell("B50").value = totalLbs;
   invoiceSheet.getCell("B50").numFmt = "#,##0.00";
@@ -645,7 +676,7 @@ const cell53 = invoiceSheet.getCell("A53");
 cell53.value = formatAmountInWords(totalAmount);
 
 cell53.alignment = {
-  horizontal: "left",
+  horizontal: "center",
   vertical: "middle",
   wrapText: true,
 };
@@ -661,7 +692,7 @@ const text = cell53.value?.toString() ?? "";
 const approxLines = Math.ceil(text.length / 45); // reduce divisor para más espacio
 
 // mínimo real 28 puntos (más seguro que 22)
-row53.height = Math.max(28, 22 * approxLines);
+row53.height = Math.max(30, 22 * approxLines);
 
 // Bordes exteriores
 setOuterBorder(invoiceSheet, 53, 53, 1, 8);
