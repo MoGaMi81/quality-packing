@@ -11,37 +11,54 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  // ==============================
-  // 1️⃣ HEADER
-  // ==============================
-  const { data: packing, error: e1 } = await supabase
-  .from("packings")
-  .select(`
-    id,
-    invoice_no,
-    guide,
-    po_number,
-    created_at,
-    clients (
-      name,
-      address,
-      city_state_zip,
-      tax_id
-    )
-  `)
-  .eq("id", params.id)
-  .single();
 
+  // ============================================================
+  // 1️⃣ PACKING
+  // ============================================================
+
+  const { data: packing, error: e1 } = await supabase
+    .from("packings")
+    .select(`
+      id,
+      invoice_no,
+      guide,
+      client_code,
+      client_name,
+      created_at
+    `)
+    .eq("id", params.id)
+    .single();
 
   if (e1 || !packing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const clientName = (packing.clients as any)?.name ?? "";
+  // ============================================================
+  // 2️⃣ CLIENTE REAL DESDE clients
+  // ============================================================
 
-  // ==============================
-  // 2️⃣ LINES + SCIENTIFIC NAME
-  // ==============================
+  const { data: clientData } = await supabase
+    .from("clients")
+    .select("name, address, city, state, zip, tax_id")
+    .eq("code", packing.client_code)
+    .single();
+
+  const clientName =
+    clientData?.name ?? packing.client_name ?? "";
+
+  const clientAddressLine1 =
+    clientData?.address ?? "";
+
+  const clientAddressLine2 = clientData
+    ? `${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`
+    : "";
+
+  const clientTaxId = clientData?.tax_id ?? "";
+
+  // ============================================================
+  // 3️⃣ LÍNEAS
+  // ============================================================
+
   const { data: lines, error: e2 } = await supabase
     .from("packing_lines")
     .select(`
@@ -68,6 +85,7 @@ export async function GET(
   // ============================================================
   // 🟦 PACKING SHEET
   // ============================================================
+
   const packingSheet = wb.addWorksheet("Packing");
 
   packingSheet.addRow([`CLIENT: ${clientName}`]);
@@ -83,8 +101,8 @@ export async function GET(
     { header: "Box Weight (lbs)", key: "lbs", width: 18 },
   ];
 
-  // Agrupar cajas reales
   const boxesMap = new Map<number, any>();
+
   lines?.forEach((l: any) => {
     if (!boxesMap.has(l.box_no)) {
       boxesMap.set(l.box_no, {
@@ -113,346 +131,164 @@ export async function GET(
     });
   });
 
-  packingSheet.addRow([]);
-  packingSheet.addRow([`Total Boxes: ${boxes.length}`]);
-  packingSheet.addRow([
-    `Total Pounds: ${boxes.reduce((s, b) => s + b.total_lbs, 0).toFixed(2)}`,
-  ]);
+  // ============================================================
+  // 🧾 INVOICE
+  // ============================================================
 
-// ============================================================
-// 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
-// ============================================================
+  const invoiceSheet = wb.addWorksheet("Invoice");
 
-const invoiceSheet = wb.addWorksheet("Invoice");
+  invoiceSheet.pageSetup.paperSize = 9;
+  invoiceSheet.pageSetup.orientation = "portrait";
 
-// Tamaño carta
-invoiceSheet.pageSetup.paperSize = 9;
-invoiceSheet.pageSetup.orientation = "portrait";
+  // Columnas exactas
+  invoiceSheet.getColumn("A").width = 4.18;
+  invoiceSheet.getColumn("B").width = 6.41;
+  invoiceSheet.getColumn("C").width = 36.86;
+  invoiceSheet.getColumn("D").width = 4.86;
+  invoiceSheet.getColumn("E").width = 6.18;
+  invoiceSheet.getColumn("F").width = 28.86;
+  invoiceSheet.getColumn("G").width = 6.18;
+  invoiceSheet.getColumn("H").width = 12.18;
 
-// ============================================================
-// 📏 COLUMNAS EXACTAS FORMATO ORIGINAL
-// ============================================================
-invoiceSheet.getColumn("A").width = 4.18;
-invoiceSheet.getColumn("B").width = 6.41;
-invoiceSheet.getColumn("C").width = 36.86;
-invoiceSheet.getColumn("D").width = 4.86;
-invoiceSheet.getColumn("E").width = 6.18;
-invoiceSheet.getColumn("F").width = 28.86;
-invoiceSheet.getColumn("G").width = 6.18;
-invoiceSheet.getColumn("H").width = 12.18;
+  let row = 1;
 
-let row = 1;
+  // ============================================================
+  // 🔹 VENDEDOR
+  // ============================================================
 
-// ============================================================
-// 🔹 VENDEDOR (A–D)
-// ============================================================
+  invoiceSheet.mergeCells("A1:D5");
 
-// 1A:5D → Espacio Logo
-invoiceSheet.mergeCells("A1:D5");
-invoiceSheet.getCell("A1").alignment = {
-  vertical: "middle",
-  horizontal: "left",
-};
+  invoiceSheet.mergeCells("A6:D7");
+  invoiceSheet.getCell("A6").value = "SOC. COOP. QUALITY FISH";
+  invoiceSheet.getCell("A6").font = { size: 20, bold: true };
 
-// 6A:7D → Nombre
-invoiceSheet.mergeCells("A6:D7");
-const vendorCell = invoiceSheet.getCell("A6");
-vendorCell.value = "SOC. COOP. QUALITY FISH";
-vendorCell.font = { size: 20, bold: true };
-vendorCell.alignment = {
-  vertical: "middle",
-  horizontal: "left",
-};
+  invoiceSheet.mergeCells("A8:D12");
+  invoiceSheet.getCell("A8").value =
+    "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
+  invoiceSheet.getCell("A8").alignment = { wrapText: true };
 
-// 8A:12D → Dirección
-invoiceSheet.mergeCells("A8:D12");
-const vendorInfo = invoiceSheet.getCell("A8");
-vendorInfo.value =
-  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
-vendorInfo.alignment = {
-  wrapText: true,
-  vertical: "top",
-  horizontal: "left",
-};
+  // ============================================================
+  // 🔹 CLIENTE
+  // ============================================================
 
-// ============================================================
-// 🔹 CLIENTE (E–H)
-// ============================================================
-const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
-const client = Array.isArray(packing.clients) ? packing.clients[0] : packing.clients;
+  const dateFormatted = packing.created_at?.slice(0, 10) ?? "";
 
-// 1E:3H → Cliente
-invoiceSheet.mergeCells("E1:H3");
-const clientCell = invoiceSheet.getCell("E1");
-clientCell.value = client?.name?.toUpperCase() ?? "";
-clientCell.font = { size: 22, bold: true };
-clientCell.alignment = {
-  horizontal: "center",
-  vertical: "middle",
-};
-
-// 4E:7H → Dirección cliente
-invoiceSheet.mergeCells("E4:H7");
-const clientAddress = invoiceSheet.getCell("E4");
-clientAddress.value =
-  `${client?.address ?? "ADDRESS HERE"}\n${client?.city_state_zip ?? "CITY, STATE, ZIP"}`;
-clientAddress.alignment = {
-  wrapText: true,
-  vertical: "top",
-  horizontal: "center",
-};
-
-// 8E → TAX ID
-invoiceSheet.getCell("E8").value = `TAX ID # ${client?.tax_id ?? "__________"}`;
-
-// 9E → AWB
-invoiceSheet.getCell("E9").value = `AWB: ${packing.guide ?? ""}`;
-
-// 10E → INVOICE
-invoiceSheet.getCell("E10").value = `INVOICE: ${packing.invoice_no}`;
-
-// 11E → DATE
-invoiceSheet.getCell("E11").value = `DATE: ${dateFormatted}`;
-
-// 12E:12H → COUNTRY OF ORIGIN (SOLO MITAD DERECHA)
-invoiceSheet.mergeCells("E12:H12");
-invoiceSheet.getCell("E12").value = "COUNTRY OF ORIGIN: MEXICO";
-invoiceSheet.getCell("E12").alignment = {
-  horizontal: "center",
-  vertical: "middle",
-};
-invoiceSheet.getCell("E12").font = { bold: true };
-invoiceSheet.getCell("E12").fill = {
-  type: "pattern",
-  pattern: "solid",
-  fgColor: { argb: "FFFFFF00" },
-};
-
-// ============================================================
-// 📐 ALTURA EXACTA SEGÚN FORMATO
-// ============================================================
-
-// 1–3 cliente grande
-for (let r = 1; r <= 3; r++) {
-  invoiceSheet.getRow(r).height = 28;
-}
-
-// 4–7 dirección
-for (let r = 4; r <= 7; r++) {
-  invoiceSheet.getRow(r).height = 22;
-}
-
-// 8–12 datos
-for (let r = 8; r <= 12; r++) {
-  invoiceSheet.getRow(r).height = 20;
-}
-
-// Línea divisoria vertical entre vendedor y cliente
-for (let r = 1; r <= 12; r++) {
-  invoiceSheet.getCell(r, 4).border = {
-    right: { style: "medium" },
+  invoiceSheet.mergeCells("E1:H3");
+  invoiceSheet.getCell("E1").value = clientName.toUpperCase();
+  invoiceSheet.getCell("E1").font = { size: 22, bold: true };
+  invoiceSheet.getCell("E1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
   };
-}
 
-// Borde exterior completo A1:H12
-for (let r = 1; r <= 12; r++) {
-  for (let c = 1; c <= 8; c++) {
-    const cell = invoiceSheet.getCell(r, c);
-    cell.border = {
-      top: r === 1 ? { style: "medium" } : undefined,
-      bottom: r === 12 ? { style: "medium" } : undefined,
-      left: c === 1 ? { style: "medium" } : undefined,
-      right: c === 8 ? { style: "medium" } : undefined,
-    };
-  }
-}
-
-row = 14;
-
-
-// ============================================================
-// 🔹 COLUMN HEADERS (A14:H14 CORRECTO)
-// ============================================================
-
-row = 14;
-
-const headerRow = invoiceSheet.getRow(row);
-
-headerRow.values = [
-  "Boxes",          // A
-  "Pounds",         // B
-  "Description",    // C
-  "Size",           // D
-  "Form",           // E
-  "Scientific Name",// F
-  "Price",          // G
-  "Amount",         // H
-];
-
-headerRow.font = { bold: true };
-headerRow.alignment = { vertical: "middle", horizontal: "center" };
-
-// Línea inferior profesional
-headerRow.eachCell((cell) => {
-  cell.border = {
-    bottom: { style: "medium" },
+  invoiceSheet.mergeCells("E4:H7");
+  invoiceSheet.getCell("E4").value =
+    `${clientAddressLine1}\n${clientAddressLine2}`;
+  invoiceSheet.getCell("E4").alignment = {
+    wrapText: true,
+    vertical: "top",
+    horizontal: "center",
   };
-});
 
-row++;
+  invoiceSheet.getCell("E8").value = `TAX ID # ${clientTaxId}`;
+  invoiceSheet.getCell("E9").value = `AWB: ${packing.guide ?? ""}`;
+  invoiceSheet.getCell("E10").value = `INVOICE: ${packing.invoice_no}`;
+  invoiceSheet.getCell("E11").value = `DATE: ${dateFormatted}`;
 
-  // 🔹 AGRUPAR CAJAS PARA FACTURA
-  const invoiceBoxesMap = new Map<number, { box_no: number; is_combined: boolean; lines: any[] }>();
-  lines?.forEach((l: any) => {
-    if (!invoiceBoxesMap.has(l.box_no)) {
-      invoiceBoxesMap.set(l.box_no, { box_no: l.box_no, is_combined: l.is_combined, lines: [l] });
-    } else {
-      invoiceBoxesMap.get(l.box_no)!.lines.push(l);
-    }
-  });
+  invoiceSheet.mergeCells("E12:H12");
+  invoiceSheet.getCell("E12").value = "COUNTRY OF ORIGIN: MEXICO";
+  invoiceSheet.getCell("E12").alignment = { horizontal: "center" };
+  invoiceSheet.getCell("E12").font = { bold: true };
+  invoiceSheet.getCell("E12").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFFFF00" },
+  };
 
-  const simpleMap = new Map<string, { desc: string; sci: string; size: string; form: string; boxes: number; pounds: number; price: number }>();
-  const combinedBoxes: { box_no: number; is_combined: boolean; lines: any[] }[] = [];
+  // ============================================================
+  // 🔹 HEADERS A14:H14
+  // ============================================================
 
-  invoiceBoxesMap.forEach((box) => {
-    if (box.is_combined) {
-      combinedBoxes.push(box);
-    } else {
-      box.lines.forEach((l: any) => {
-        const key = `${l.description_en}|${l.size}|${l.form}`;
-        if (!simpleMap.has(key)) {
-          simpleMap.set(key, { desc: l.description_en, sci: l.species?.scientific_name ?? "", size: l.size, form: l.form, boxes: 1, pounds: l.pounds, price: l.price });
-        } else {
-          const g = simpleMap.get(key)!;
-          g.boxes += 1;
-          g.pounds += l.pounds;
-        }
-      });
-    }
-  });
+  row = 14;
+
+  invoiceSheet.getRow(row).values = [
+    "Boxes",
+    "Pounds",
+    "Description",
+    "Size",
+    "Form",
+    "Scientific Name",
+    "Price",
+    "Amount",
+  ];
+
+  invoiceSheet.getRow(row).font = { bold: true };
+  invoiceSheet.getRow(row).alignment = { horizontal: "center" };
+
+  row++;
+
+  // ============================================================
+  // 🔹 DATOS
+  // ============================================================
 
   let totalAmount = 0;
   let totalLbs = 0;
 
-  function writeInvoiceRow(data: {
-  boxes?: number | string;
-  lbs: number;
-  desc: string;
-  size: string;
-  form: string;
-  sci: string;
-  price: number;
-  amount: number;
-}) {
-  invoiceSheet.getRow(row).values = [
-    data.boxes ?? "",  // A
-    data.lbs,          // B
-    data.desc,         // C
-    data.size,         // D
-    data.form,         // E
-    data.sci,          // F
-    data.price,        // G
-    data.amount,       // H
-  ];
-
-  invoiceSheet.getCell(`A${row}`).alignment = { horizontal: "center" };
-  invoiceSheet.getCell(`B${row}`).alignment = { horizontal: "right" };
-  invoiceSheet.getCell(`G${row}`).alignment = { horizontal: "right" };
-  invoiceSheet.getCell(`H${row}`).alignment = { horizontal: "right" };
-
-  invoiceSheet.getCell(`B${row}`).numFmt = "#,##0.00";
-  invoiceSheet.getCell(`G${row}`).numFmt = '"$"#,##0.00';
-  invoiceSheet.getCell(`H${row}`).numFmt = '"$"#,##0.00';
-
-  row++;
-}
-
-  // 🔹 SIMPLES
-  simpleMap.forEach((g) => {
-    const amount = g.pounds * g.price;
+  lines?.forEach((l: any) => {
+    const amount = l.pounds * l.price;
     totalAmount += amount;
-    totalLbs += g.pounds;
-    writeInvoiceRow({ boxes: g.boxes, lbs: g.pounds, desc: g.desc, size: g.size, form: g.form, sci: g.sci, price: g.price, amount });
+    totalLbs += l.pounds;
+
+    invoiceSheet.getRow(row).values = [
+      1,
+      l.pounds,
+      l.description_en,
+      l.size,
+      l.form,
+      l.species?.scientific_name ?? "",
+      l.price,
+      amount,
+    ];
+
+    invoiceSheet.getCell(`B${row}`).numFmt = "#,##0.00";
+    invoiceSheet.getCell(`G${row}`).numFmt = '"$"#,##0.00';
+    invoiceSheet.getCell(`H${row}`).numFmt = '"$"#,##0.00';
+
+    row++;
   });
 
-  // 🔹 COMBINADAS
-  combinedBoxes.forEach((box) => {
-    box.lines.forEach((l: any, index: number) => {
-      const amount = l.pounds * l.price;
-      totalAmount += amount;
-      totalLbs += l.pounds;
-      writeInvoiceRow({ boxes: index === 0 ? 1 : "", lbs: l.pounds, desc: l.description_en, size: l.size, form: l.form, sci: l.species?.scientific_name ?? "", price: l.price, amount });
-    });
-    });
+  // ============================================================
+  // 📊 BLOQUE FINAL
+  // ============================================================
 
-      // ============================================================
-// 📊 BLOQUE FINAL EXACTO FORMATO ORIGINAL
-// ============================================================
+  invoiceSheet.getCell("A50").value = boxes.length;
+  invoiceSheet.getCell("B50").value = totalLbs;
+  invoiceSheet.getCell("B50").numFmt = "#,##0.00";
+  invoiceSheet.getCell("C50").value = "LBS";
 
-// 50A → total cajas
-invoiceSheet.getCell("A50").value = boxes.length;
+  invoiceSheet.mergeCells("G50:H50");
+  invoiceSheet.getCell("G50").value = totalAmount;
+  invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
 
-// 50B → total lbs
-invoiceSheet.getCell("B50").value = totalLbs;
-invoiceSheet.getCell("B50").numFmt = "#,##0.00";
+  invoiceSheet.mergeCells("G52:H52");
+  invoiceSheet.getCell("G52").value = totalAmount;
+  invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
 
-// 50C → LBS
-invoiceSheet.getCell("C50").value = "LBS";
-
-// 50G-50H → total dólares
-invoiceSheet.mergeCells("G50:H50");
-invoiceSheet.getCell("G50").value = totalAmount;
-invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
-
-// 52G-52H → repetir total dólares
-invoiceSheet.mergeCells("G52:H52");
-invoiceSheet.getCell("G52").value = totalAmount;
-invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
-
-// 53A-53H → dólares en letras (temporal)
-invoiceSheet.mergeCells("A53:H53");
-invoiceSheet.getCell("A53").value =
-  `$ ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
-invoiceSheet.getCell("A53").font = { italic: true };
-
- // 🔹 SMALL / LARGE
-  let smallBoxes = 0;
-  let largeBoxes = 0;
-
-  boxes.forEach((b: any) => {
-    if (b.total_lbs < 70) smallBoxes++;
-    else largeBoxes++;
-  });
-
-// 54B → cajas grandes (110)
-invoiceSheet.getCell("B54").value = largeBoxes;
-
-// 54C → texto grandes
-invoiceSheet.getCell("C54").value = "BOXES 110 LBS";
-
-// 55B → cajas chicas (55)
-invoiceSheet.getCell("B55").value = smallBoxes;
-
-// 55C → texto chicas
-invoiceSheet.getCell("C55").value = "BOXES 55 LBS";
-
-// 57B → total cajas general
-invoiceSheet.getCell("B56").value = boxes.length;
-
-// 57C → texto total
-invoiceSheet.getCell("C56").value = "TOTAL BOXES";
+  invoiceSheet.mergeCells("A53:H53");
+  invoiceSheet.getCell("A53").value =
+    `$ ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 
   // ============================================================
-  // 📁 EXPORT
+  // EXPORT
   // ============================================================
+
   const buffer = await wb.xlsx.writeBuffer();
-  const filename = `Packing_Invoice ${clientName} ${packing.invoice_no}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": `attachment; filename="Packing_Invoice_${packing.invoice_no}.xlsx"`,
     },
   });
 }
