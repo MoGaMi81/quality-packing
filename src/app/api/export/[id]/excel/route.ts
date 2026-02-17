@@ -423,19 +423,22 @@ const totalBoxes = invoiceBoxesMap.size;
     // 56C → texto total 
     invoiceSheet.getCell("C56").value = "TOTAL BOXES";
 
-  // ============================================================
-  // EXPORT
-  // ============================================================
+ // ============================================================
+// EXPORT
+// ============================================================
 
-  const filename = `Packing_Invoice ${clientName} ${packing.invoice_no}.xlsx`;
+const safeClient =
+  clientName?.toUpperCase().replace(/[^A-Z0-9]/g, "_") || "CLIENT";
 
-  const buffer = await wb.xlsx.writeBuffer();
+const filename = `Packing_Invoice_${safeClient}_${packing.invoice_no}.xlsx`;
 
-  return new NextResponse(buffer, {
-    headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="Packing_Invoice_${packing.invoice_no}.xlsx"`,
-    },
-  });
+const buffer = await wb.xlsx.writeBuffer();
+
+return new NextResponse(buffer, {
+  headers: {
+    "Content-Type":
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+  },
+});
 }
