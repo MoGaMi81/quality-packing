@@ -7,6 +7,50 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+function numberToWords(num: number): string {
+  const a = [
+    "", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN",
+    "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN",
+    "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN",
+    "EIGHTEEN", "NINETEEN"
+  ];
+
+  const b = [
+    "", "", "TWENTY", "THIRTY", "FORTY", "FIFTY",
+    "SIXTY", "SEVENTY", "EIGHTY", "NINETY"
+  ];
+
+  if (num === 0) return "ZERO";
+
+  if (num < 20) return a[num];
+
+  if (num < 100)
+    return b[Math.floor(num / 10)] + (num % 10 ? " " + a[num % 10] : "");
+
+  if (num < 1000)
+    return (
+      a[Math.floor(num / 100)] +
+      " HUNDRED" +
+      (num % 100 ? " " + numberToWords(num % 100) : "")
+    );
+
+  if (num < 1000000)
+    return (
+      numberToWords(Math.floor(num / 1000)) +
+      " THOUSAND" +
+      (num % 1000 ? " " + numberToWords(num % 1000) : "")
+    );
+
+  if (num < 1000000000)
+    return (
+      numberToWords(Math.floor(num / 1000000)) +
+      " MILLION" +
+      (num % 1000000 ? " " + numberToWords(num % 1000000) : "")
+    );
+
+  return "";
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -130,6 +174,15 @@ export async function GET(
       });
     });
   });
+
+  function formatAmountInWords(amount: number): string {
+  const dollars = Math.floor(amount);
+  const cents = Math.round((amount - dollars) * 100);
+
+  return `${numberToWords(dollars)} DOLLARS AND ${cents
+    .toString()
+    .padStart(2, "0")}/100 USD`;
+}
 
   // ============================================================
   // 🧾 INVOICE
@@ -407,8 +460,20 @@ const totalBoxes = invoiceBoxesMap.size;
   invoiceSheet.getCell("G52").numFmt = '"$"#,##0.00';
 
   invoiceSheet.mergeCells("A53:H53");
-  invoiceSheet.getCell("A53").value =
-    `$ ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+
+invoiceSheet.getCell("A53").value = formatAmountInWords(totalAmount);
+
+invoiceSheet.getCell("A53").alignment = {
+  horizontal: "left",
+  vertical: "middle",
+};
+
+invoiceSheet.getCell("A53").font = {
+  bold: true,
+};
+
+invoiceSheet.getRow(53).height = 20;
+
 
     // 54B → cajas grandes (110) 
     invoiceSheet.getCell("B54").value = largeBoxes; 
