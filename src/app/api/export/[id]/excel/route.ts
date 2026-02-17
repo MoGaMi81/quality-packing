@@ -228,10 +228,6 @@ export async function GET(
   row++;
 
   // ============================================================
-  // 🔹 DATOS
-  // ============================================================
-
-  // ============================================================
 // 🔹 AGRUPAR CAJAS PARA FACTURA (RESTORED)
 // ============================================================
 
@@ -390,6 +386,8 @@ invoiceBoxesMap.forEach((b) => {
   if (b.total_lbs < 70) smallBoxes++;
   else largeBoxes++;
 });
+const totalBoxes = invoiceBoxesMap.size;
+
 
   // ============================================================
   // 📊 BLOQUE FINAL
@@ -412,9 +410,24 @@ invoiceBoxesMap.forEach((b) => {
   invoiceSheet.getCell("A53").value =
     `$ ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 
+    // 54B → cajas grandes (110) 
+    invoiceSheet.getCell("B54").value = largeBoxes; 
+    // 54C → texto grandes 
+    invoiceSheet.getCell("C54").value = "BOXES 110 LBS"; 
+    // 55B → cajas chicas (55) 
+    invoiceSheet.getCell("B55").value = smallBoxes; 
+    // 55C → texto chicas 
+    invoiceSheet.getCell("C55").value = "BOXES 55 LBS"; 
+    // 56B → total cajas general 
+    invoiceSheet.getCell("B56").value = boxes.length; 
+    // 56C → texto total 
+    invoiceSheet.getCell("C56").value = "TOTAL BOXES";
+
   // ============================================================
   // EXPORT
   // ============================================================
+
+  const filename = `Packing_Invoice ${clientName} ${packing.invoice_no}.xlsx`;
 
   const buffer = await wb.xlsx.writeBuffer();
 
