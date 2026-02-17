@@ -227,6 +227,32 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
 }
 
 // ============================================================
+// 🔹 COLUMN HEADERS (A14:H14)
+// ============================================================
+
+row = 14;
+
+invoiceSheet.getCell("A14").value = "Boxes";
+invoiceSheet.getCell("B14").value = "Pounds";
+invoiceSheet.getCell("C14").value = "Description";
+invoiceSheet.getCell("D14").value = "Size";
+invoiceSheet.getCell("E14").value = "Form";
+invoiceSheet.getCell("F14").value = "Scientific Name";
+invoiceSheet.getCell("G14").value = "Price";
+invoiceSheet.getCell("H14").value = "Amount";
+
+for (let col = 1; col <= 8; col++) {
+  const cell = invoiceSheet.getCell(14, col);
+  cell.font = { bold: true };
+  cell.alignment = { vertical: "middle", horizontal: "center" };
+  cell.border = {
+    bottom: { style: "medium" },
+  };
+}
+
+row = 15;
+
+// ============================================================
 // 🔹 FUENTES HEADER
 // ============================================================
 const headerFontBig = { name: "Seaford", size: 20, bold: true };
