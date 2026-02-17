@@ -201,7 +201,7 @@ invoiceSheet.getColumn("A").width = 4.18;
 invoiceSheet.getColumn("B").width = 6.41;
 invoiceSheet.getColumn("C").width = 36.86;
 invoiceSheet.getColumn("D").width = 4.86;
-invoiceSheet.getColumn("E").width = 6.18;
+invoiceSheet.getColumn("E").width = 6.20;
 invoiceSheet.getColumn("F").width = 28.86;
 invoiceSheet.getColumn("G").width = 6.18;
 invoiceSheet.getColumn("H").width = 12.18;
@@ -400,7 +400,7 @@ for (let r = 1; r <= 13; r++) {
   }
 }
 
-row = 14;
+row = 15;
 
   // ============================================================
 // 🔹 AGRUPAR CAJAS PARA FACTURA (RESTORED)
