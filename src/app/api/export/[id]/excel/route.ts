@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
+import fs from "fs";
+import path from "path";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -184,11 +186,40 @@ export async function GET(
     .padStart(2, "0")}/100 USD`;
 }
 
-  // ============================================================
+// ============================================================
+// 🖼️ LOGO VENDEDOR (A1:D5)
+// ============================================================
+const invoiceSheet = wb.addWorksheet("Invoice");
+
+try {
+  const logoPath = path.join(process.cwd(), "public", "logo.png");
+
+  if (fs.existsSync(logoPath)) {
+    const logoBuffer = fs.readFileSync(logoPath);
+
+    const imageId = wb.addImage({
+      base64: logoBuffer.toString("base64"),
+      extension: "png",
+    });
+
+    invoiceSheet.mergeCells("A1:D5");
+
+    invoiceSheet.addImage(imageId, {
+      tl: { col: 0, row: 0 } as any,
+      br: { col: 4, row: 5 } as any,
+      editAs: "oneCell",
+    });
+  }
+} catch (error) {
+  console.log("Logo not loaded:", error);
+}
+
+
+
+// ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
 // ============================================================
 
-const invoiceSheet = wb.addWorksheet("Invoice");
 
 // Tamaño carta
 invoiceSheet.pageSetup.paperSize = 9;
@@ -231,9 +262,6 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
     };
   }
 }
-
-// aplicar
-setOuterBorder(invoiceSheet, 13, 50, 1, 8);
 
 
 // ============================================================
@@ -299,13 +327,24 @@ invoiceSheet.mergeCells("A1:D5");
 invoiceSheet.mergeCells("A6:D7");
 invoiceSheet.mergeCells("A8:D12");
 
+const accentBlue = { argb: "FF2F75B5" };
 const vendorCell = invoiceSheet.getCell("A6");
 vendorCell.value = "SOC. COOP. QUALITY FISH".toUpperCase();
-vendorCell.font = headerFontBig;
+vendorCell.font = {
+  name: "Seaford",
+  size: 20,
+  bold: true,
+  color: accentBlue,
+};
 vendorCell.alignment = { horizontal: "center", vertical: "middle" };
 
 const vendorInfo = invoiceSheet.getCell("A8");
-vendorInfo.value =
+vendorInfo.font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+  color: accentBlue,
+};
   "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494".toUpperCase();
 vendorInfo.font = headerFontMedium;
 vendorInfo.alignment = { wrapText: true, vertical: "top", horizontal: "left" };
@@ -324,23 +363,39 @@ if (!clientData) {
 // 1E:3H → Cliente
 invoiceSheet.mergeCells("E1:H3");
 invoiceSheet.mergeCells("E4:H7");
+const darkBlueText = { argb: "FF1F4E79" };
 
 const clientCell = invoiceSheet.getCell("E1");
 clientCell.value = (clientData.name ?? "").toUpperCase();
-clientCell.font = headerFontBig;
+clientCell.font = {
+  name: "Seaford",
+  size: 20,
+  bold: true,
+  color: darkBlueText,
+};
 clientCell.alignment = { horizontal: "center", vertical: "middle" };
 
 const clientAddress = invoiceSheet.getCell("E4");
 clientAddress.value =
   `${clientData.address ?? ""}\n${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`.toUpperCase();
-clientAddress.font = headerFontMedium;
+clientAddress.font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+  color: accentBlue,
+};
 clientAddress.alignment = { wrapText: true, vertical: "top", horizontal: "left" };
 
 // TAX ID (E8:H8)
 invoiceSheet.mergeCells("E8:H8");
 const taxCell = invoiceSheet.getCell("E8");
 taxCell.value = `TAX ID # ${clientData.tax_id ?? ""}`.toUpperCase();
-taxCell.font = headerFontMedium;
+taxCell.font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+  color: accentBlue,
+};
 taxCell.alignment = { horizontal: "left", vertical: "middle" };
 
 // BORDE EXTERNO CLIENTE
