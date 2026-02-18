@@ -55,6 +55,11 @@ function numberToWords(num: number): string {
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
+  const wb = new ExcelJS.Workbook();
+
+  // ✅ Crear hoja UNA sola vez
+  const invoiceSheet = wb.addWorksheet("Invoice");
+
 
   // ============================================================
   // 1️⃣ PACKING
@@ -124,7 +129,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: e2.message }, { status: 500 });
   }
 
-  const wb = new ExcelJS.Workbook();
 
   // ============================================================
   // 🟦 PACKING SHEET
@@ -185,41 +189,34 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // ============================================================
-// 🖼️ LOGO VENDEDOR (A1:D5)
-// ============================================================
-const invoiceSheet = wb.addWorksheet("Invoice");
+  // 🖼️ LOGO VENDEDOR (A1:D5)
+  // ============================================================
 
-// ============================================================
-// 🖼️ LOGO VENDEDOR (A1:D5)
-// ============================================================
+  try {
+    const logoUrl = new URL("/logo.png", req.url).toString();
 
-try {
-  const logoUrl = new URL("/logo.png", req.url).toString();
+    const response = await fetch(logoUrl);
 
-  const response = await fetch(logoUrl);
+    if (response.ok) {
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = Buffer.from(new Uint8Array(arrayBuffer)).toString("base64");
 
-  if (response.ok) {
-    const arrayBuffer = await response.arrayBuffer();
+      const imageId = wb.addImage({
+        base64,
+        extension: "png",
+      });
 
-    // Convertir a base64 manualmente
-    const base64 = Buffer.from(new Uint8Array(arrayBuffer)).toString("base64");
+      invoiceSheet.mergeCells("A1:D5");
 
-    const imageId = wb.addImage({
-      base64,
-      extension: "png",
-    });
-
-    invoiceSheet.mergeCells("A1:D5");
-
-    invoiceSheet.addImage(imageId, {
-      tl: { col: 0, row: 0 } as any,
-      br: { col: 4, row: 5 } as any,
-      editAs: "oneCell",
-    });
+      invoiceSheet.addImage(imageId, {
+        tl: { col: 0, row: 0 } as any,
+        br: { col: 4, row: 5 } as any,
+        editAs: "oneCell",
+      });
+    }
+  } catch (error) {
+    console.log("Logo not loaded:", error);
   }
-} catch (error) {
-  console.log("Logo not loaded:", error);
-}
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
