@@ -53,6 +53,16 @@ function numberToWords(num: number): string {
   return "";
 }
 
+function formatAmountInWords(amount: number): string {
+  const dollars = Math.floor(amount);
+  const cents = Math.round((amount - dollars) * 100);
+
+  return `${numberToWords(dollars)} DOLLARS AND ${cents
+    .toString()
+    .padStart(2, "0")}/100 USD`;
+}
+
+
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
   const wb = new ExcelJS.Workbook();
@@ -676,6 +686,7 @@ const totalBoxes = invoiceBoxesMap.size;
   invoiceSheet.getCell("B50").value = totalLbs;
   invoiceSheet.getCell("B50").numFmt = "#,##0.00";
   invoiceSheet.getCell("C50").value = "LBS";
+  invoiceSheet.getCell("A50").value = totalBoxes;
 
   invoiceSheet.mergeCells("G50:H50");
   invoiceSheet.getCell("G50").value = totalAmount;
