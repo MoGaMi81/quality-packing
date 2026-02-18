@@ -703,47 +703,61 @@ cell53.alignment = {
 };
 
 cell53.font = {
-  name: "Seaford", // corrige a la fuente que definiste
+  name: "Seaford",
   bold: true,
   size: 14,
 };
 
-// 🔹 cálculo más conservador
+// 🔹 cálculo altura
 const text = cell53.value?.toString() ?? "";
-const approxLines = Math.ceil(text.length / 45); // reduce divisor para más espacio
-
-// mínimo real 28 puntos (más seguro que 22)
+const approxLines = Math.ceil(text.length / 45);
 row53.height = Math.max(30, 22 * approxLines);
 
-// Bordes exteriores
+// 🔹 Borde externo
 setOuterBorder(invoiceSheet, 53, 53, 1, 8);
 
-    // 54B → cajas grandes (110) 
-    invoiceSheet.getCell("B54").value = largeBoxes; 
-    // 54C → texto grandes 
-    invoiceSheet.getCell("C54").value = "BOXES 110 LBS"; 
-    for (let c = 1; c <= 8; c++) {
+// 🔹 BORDE DOBLE INFERIOR FILA 53
+for (let c = 1; c <= 8; c++) {
+  invoiceSheet.getCell(53, c).border = {
+    ...invoiceSheet.getCell(53, c).border,
+    bottom: { style: "double" },
+  };
+}
+
+// ============================================================
+// FILA 54 – SIN BORDES
+// ============================================================
+
+invoiceSheet.getCell("B54").value = largeBoxes;
+invoiceSheet.getCell("C54").value = "BOXES 110 LBS";
+
+for (let c = 1; c <= 8; c++) {
   invoiceSheet.getCell(54, c).border = {};
 }
 
-    // 55B → cajas chicas (55) 
-    invoiceSheet.getCell("B55").value = smallBoxes; 
-    // 55C → texto chicas 
-    invoiceSheet.getCell("C55").value = "BOXES 55 LBS"; 
-    for (let c = 1; c <= 8; c++) {
-  invoiceSheet.getCell(55, c).border = {};
+// ============================================================
+// FILA 55 – DOBLE BORDE INFERIOR
+// ============================================================
+
+invoiceSheet.getCell("B55").value = smallBoxes;
+invoiceSheet.getCell("C55").value = "BOXES 55 LBS";
+
+for (let c = 1; c <= 8; c++) {
+  invoiceSheet.getCell(55, c).border = {
+    bottom: { style: "double" },
+  };
 }
 
-    // 56B → total cajas general 
-    invoiceSheet.getCell("B56").value = boxes.length; 
-    // 56C → texto total 
-    invoiceSheet.getCell("C56").value = "TOTAL BOXES";
+// ============================================================
+// FILA 56 – SIN BORDES
+// ============================================================
 
-  
-  for (let c = 1; c <= 8; c++) {
+invoiceSheet.getCell("B56").value = boxes.length;
+invoiceSheet.getCell("C56").value = "TOTAL BOXES";
+
+for (let c = 1; c <= 8; c++) {
   invoiceSheet.getCell(56, c).border = {};
 }
-
 
  // ============================================================
 // EXPORT
