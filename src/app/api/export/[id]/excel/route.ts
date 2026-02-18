@@ -742,7 +742,7 @@ for (let c = 1; c <= 8; c++) {
 invoiceSheet.getCell("B55").value = smallBoxes;
 invoiceSheet.getCell("C55").value = "BOXES 55 LBS";
 
-for (let c = 1; c <= 8; c++) {
+for (let c = 2; c <= 3; c++) {
   invoiceSheet.getCell(55, c).border = {
     bottom: { style: "double" },
   };
