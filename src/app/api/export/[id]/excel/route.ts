@@ -53,10 +53,8 @@ function numberToWords(num: number): string {
   return "";
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+
 
   // ============================================================
   // 1️⃣ PACKING
@@ -191,14 +189,23 @@ export async function GET(
 // ============================================================
 const invoiceSheet = wb.addWorksheet("Invoice");
 
-try {
-  const logoPath = path.join(process.cwd(), "public", "logo.png");
+// ============================================================
+// 🖼️ LOGO VENDEDOR (A1:D5)
+// ============================================================
 
-  if (fs.existsSync(logoPath)) {
-    const logoBuffer = fs.readFileSync(logoPath);
+try {
+  const logoUrl = new URL("/logo.png", req.url).toString();
+
+  const response = await fetch(logoUrl);
+
+  if (response.ok) {
+    const arrayBuffer = await response.arrayBuffer();
+
+    // Convertir a base64 manualmente
+    const base64 = Buffer.from(new Uint8Array(arrayBuffer)).toString("base64");
 
     const imageId = wb.addImage({
-      base64: logoBuffer.toString("base64"),
+      base64,
       extension: "png",
     });
 
@@ -213,8 +220,6 @@ try {
 } catch (error) {
   console.log("Logo not loaded:", error);
 }
-
-
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
