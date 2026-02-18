@@ -199,34 +199,26 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // ============================================================
-  // 🖼️ LOGO VENDEDOR (A1:D5)
-  // ============================================================
+// 🖼️ LOGO VENDEDOR (A1:D5)
+// ============================================================
 
-  try {
-    const logoUrl = new URL("/logo.png", req.url).toString();
+try {
+  const logoPath = path.join(process.cwd(), "public", "logo.png");
 
-    const response = await fetch(logoUrl);
+  if (fs.existsSync(logoPath)) {
 
-    if (response.ok) {
-      const arrayBuffer = await response.arrayBuffer();
-      const base64 = Buffer.from(new Uint8Array(arrayBuffer)).toString("base64");
+    const imageId = wb.addImage({
+      filename: logoPath,
+      extension: "png",
+    });
 
-      const imageId = wb.addImage({
-        base64,
-        extension: "png",
-      });
+    invoiceSheet.mergeCells("A1:D5");
 
-      invoiceSheet.mergeCells("A1:D5");
-
-      invoiceSheet.addImage(imageId, {
-        tl: { col: 0, row: 0 } as any,
-        br: { col: 4, row: 5 } as any,
-        editAs: "oneCell",
-      });
-    }
-  } catch (error) {
-    console.log("Logo not loaded:", error);
+    invoiceSheet.addImage(imageId, "A1:D5");
   }
+} catch (error) {
+  console.log("Logo not loaded:", error);
+}
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
@@ -351,15 +343,22 @@ vendorCell.font = {
 vendorCell.alignment = { horizontal: "center", vertical: "middle" };
 
 const vendorInfo = invoiceSheet.getCell("A8");
+
+vendorInfo.value =
+  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494".toUpperCase();
+
 vendorInfo.font = {
   name: "Seaford",
   size: 14,
   bold: true,
   color: accentBlue,
 };
-  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494".toUpperCase();
-vendorInfo.font = headerFontMedium;
-vendorInfo.alignment = { wrapText: true, vertical: "top", horizontal: "left" };
+
+vendorInfo.alignment = {
+  wrapText: true,
+  vertical: "top",
+  horizontal: "left",
+};
 
 // BORDE EXTERNO
 setOuterBorder(invoiceSheet, 1, 12, 1, 4);
