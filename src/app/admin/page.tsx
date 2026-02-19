@@ -29,7 +29,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card
-          title="Pricing"
+          title="Precio"
           desc="Packings pendientes de precios"
           onClick={() => router.push("/admin/pricing")}
         />

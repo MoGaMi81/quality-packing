@@ -331,6 +331,7 @@ invoiceSheet.mergeCells("A1:D5");
 invoiceSheet.mergeCells("A6:D7");
 invoiceSheet.mergeCells("A8:D12");
 
+const darkBlueText = { argb: "FF1F4E79" };
 const accentBlue = { argb: "FF2F75B5" };
 const vendorCell = invoiceSheet.getCell("A6");
 vendorCell.value = "SOC. COOP. QUALITY FISH".toUpperCase();
@@ -338,7 +339,7 @@ vendorCell.font = {
   name: "Seaford",
   size: 20,
   bold: true,
-  color: accentBlue,
+  color: darkBlueText,
 };
 vendorCell.alignment = { horizontal: "center", vertical: "middle" };
 
@@ -374,7 +375,6 @@ if (!clientData) {
 // 1E:3H → Cliente
 invoiceSheet.mergeCells("E1:H3");
 invoiceSheet.mergeCells("E4:H7");
-const darkBlueText = { argb: "FF1F4E79" };
 
 const clientCell = invoiceSheet.getCell("E1");
 clientCell.value = (clientData.name ?? "").toUpperCase();
