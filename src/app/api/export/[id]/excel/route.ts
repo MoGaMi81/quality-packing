@@ -332,7 +332,7 @@ try {
 
 invoiceSheet.addImage(imageId, {
   tl: { col: 0, row: 0 }, // A1
-  ext: { width: 110, height: 128 }, // 2.90 x 3.40 cm
+  ext: { width: 128, height: 110 }, // 2.90 x 3.40 cm
 });
   }
 } catch (error) {
