@@ -273,7 +273,7 @@ boxes.forEach((b) => {
 // ============================================================
 
 try {
-  const logoUrl = new URL("/imagen1.png", req.url).toString();
+  const logoUrl = new URL("/logo.png", req.url).toString();
 
   const response = await fetch(logoUrl);
 
@@ -296,6 +296,7 @@ try {
 } catch (error) {
   console.log("Logo fetch error:", error);
 }
+
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
