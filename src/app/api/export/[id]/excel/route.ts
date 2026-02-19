@@ -287,7 +287,7 @@ setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
 
-try {
+/*try {
   const logoUrl = new URL("/logo.jpeg", req.url).toString();
 
   const response = await fetch(logoUrl);
@@ -310,7 +310,7 @@ try {
   }
 } catch (error) {
   console.log("Logo fetch error:", error);
-}
+}*/
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
