@@ -141,53 +141,123 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
 
   // ============================================================
-  // 🟦 PACKING SHEET
-  // ============================================================
+// 🟦 PACKING SHEET
+// ============================================================
 
-  const packingSheet = wb.addWorksheet("Packing");
+const packingSheet = wb.addWorksheet("Packing");
 
-  packingSheet.addRow([`CLIENT: ${clientName}`]);
-  packingSheet.addRow([`INVOICE NO: ${packing.invoice_no}`]);
-  packingSheet.addRow([`DATE: ${packing.created_at?.slice(0, 10)}`]);
-  packingSheet.addRow([]);
+// Tamaño carta
+packingSheet.pageSetup.paperSize = 9;
+packingSheet.pageSetup.orientation = "portrait";
 
-  packingSheet.columns = [
-    { header: "Box No.", key: "box", width: 10 },
-    { header: "Item Name", key: "desc", width: 30 },
-    { header: "Form", key: "form", width: 10 },
-    { header: "Size", key: "size", width: 12 },
-    { header: "Box Weight (lbs)", key: "lbs", width: 18 },
-  ];
+// ============================================================
+// 🔹 HEADER (igual que invoice pero simplificado)
+// ============================================================
 
-  const boxesMap = new Map<number, any>();
+packingSheet.mergeCells("A1:E1");
+packingSheet.getCell("A1").value = `CLIENT: ${clientName}`;
+packingSheet.getCell("A1").font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+};
 
-  lines?.forEach((l: any) => {
-    if (!boxesMap.has(l.box_no)) {
-      boxesMap.set(l.box_no, {
-        box_no: l.box_no,
-        total_lbs: l.pounds,
-        lines: [l],
-      });
-    } else {
-      const b = boxesMap.get(l.box_no);
-      b.total_lbs += l.pounds;
-      b.lines.push(l);
-    }
-  });
+packingSheet.mergeCells("A2:E2");
+packingSheet.getCell("A2").value = `INVOICE NO: ${packing.invoice_no}`;
+packingSheet.getCell("A2").font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+};
 
-  const boxes = Array.from(boxesMap.values());
+packingSheet.mergeCells("A3:E3");
+packingSheet.getCell("A3").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
+packingSheet.getCell("A3").font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+};
 
-  boxes.forEach((b) => {
-    b.lines.forEach((l: any) => {
-      packingSheet.addRow({
-        box: b.box_no,
-        desc: l.description_en,
-        form: l.form,
-        size: l.size,
-        lbs: l.pounds,
-      });
+packingSheet.addRow([]);
+
+// ============================================================
+// 🔹 COLUMNAS
+// ============================================================
+
+packingSheet.columns = [
+  { header: "BOX NO.", key: "box", width: 12 },
+  { header: "DESCRIPTION", key: "desc", width: 32 },
+  { header: "FORM", key: "form", width: 12 },
+  { header: "SIZE", key: "size", width: 12 },
+  { header: "BOX WEIGHT (LBS)", key: "lbs", width: 20 },
+];
+
+// Estilo header
+const headerRowPacking = packingSheet.getRow(5);
+headerRowPacking.height = 26;
+
+headerRowPacking.eachCell((cell) => {
+  cell.font = { name: "Seaford", bold: true };
+  cell.alignment = { vertical: "middle", horizontal: "center" };
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFD9EAF7" },
+  };
+  cell.border = {
+    bottom: { style: "medium" },
+  };
+});
+
+// ============================================================
+// 🔹 AGRUPAR CAJAS (MISMA LÓGICA TUYA)
+// ============================================================
+
+const boxesMap = new Map<number, any>();
+
+lines?.forEach((l: any) => {
+  if (!boxesMap.has(l.box_no)) {
+    boxesMap.set(l.box_no, {
+      box_no: l.box_no,
+      total_lbs: l.pounds,
+      lines: [l],
+    });
+  } else {
+    const b = boxesMap.get(l.box_no);
+    b.total_lbs += l.pounds;
+    b.lines.push(l);
+  }
+});
+
+const boxes = Array.from(boxesMap.values());
+
+// ============================================================
+// 🔹 ITEMS
+// ============================================================
+
+boxes.forEach((b) => {
+  b.lines.forEach((l: any) => {
+    const row = packingSheet.addRow({
+      box: b.box_no,
+      desc: l.description_en,
+      form: l.form,
+      size: l.size,
+      lbs: l.pounds,
+    });
+
+    row.font = { name: "Seaford" };
+
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFB7D7F0" } },
+        left: { style: "thin", color: { argb: "FFB7D7F0" } },
+        bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+        right: { style: "thin", color: { argb: "FFB7D7F0" } },
+      };
     });
   });
+});
+
 
   function formatAmountInWords(amount: number): string {
   const dollars = Math.floor(amount);
