@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
-import fs from "fs";
+import * as fs from "fs";
 import path from "path";
 
 const supabase = createClient(
@@ -62,7 +62,7 @@ function formatAmountInWords(amount: number): string {
     .padStart(2, "0")}/100 USD`;
 }
 
-
+export const runtime = "nodejs";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
   const wb = new ExcelJS.Workbook();
@@ -201,19 +201,22 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 // ============================================================
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
-
 try {
   const logoPath = path.join(process.cwd(), "public", "logo.png");
 
   if (fs.existsSync(logoPath)) {
+    const fileBuffer = fs.readFileSync(logoPath);
+
+    // 👇 Formato correcto requerido por ExcelJS
+    const base64Image =
+      "data:image/png;base64," + fileBuffer.toString("base64");
 
     const imageId = wb.addImage({
-      filename: logoPath,
+      base64: base64Image,
       extension: "png",
     });
 
     invoiceSheet.mergeCells("A1:D5");
-
     invoiceSheet.addImage(imageId, "A1:D5");
   }
 } catch (error) {
