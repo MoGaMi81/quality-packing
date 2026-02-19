@@ -238,27 +238,29 @@ const boxes = Array.from(boxesMap.values());
 
 boxes.forEach((b) => {
   b.lines.forEach((l: any) => {
-    packingSheet.getCell(`A${row}`).value = b.box_no;
-    packingSheet.getCell(`B${row}`).value = l.pounds;
-    packingSheet.getCell(`C${row}`).value = l.description_en;
-    packingSheet.getCell(`D${row}`).value = l.size;
-    packingSheet.getCell(`E${row}`).value = l.form;
-    packingSheet.getCell(`F${row}`).value = l.scientific_name ?? "";
+    packingSheet.getCell(`A${packingRow}`).value = b.box_no;
+packingSheet.getCell(`B${packingRow}`).value = l.pounds;
+packingSheet.getCell(`C${packingRow}`).value = l.description_en;
+packingSheet.getCell(`D${packingRow}`).value = l.size;
+packingSheet.getCell(`E${packingRow}`).value = l.form;
+packingSheet.getCell(`F${packingRow}`).value =
+  l.species?.scientific_name ?? "";
 
-    for (let col = 1; col <= 8; col++) {
-      const cell = packingSheet.getCell(row, col);
+for (let col = 1; col <= 8; col++) {
+  const cell = packingSheet.getCell(packingRow, col);
 
-      cell.font = { name: "Seaford" };
+  cell.font = { name: "Seaford" };
 
-      cell.border = {
-        top: { style: "thin", color: { argb: "FFB7D7F0" } },
-        left: { style: "thin", color: { argb: "FFB7D7F0" } },
-        bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
-        right: { style: "thin", color: { argb: "FFB7D7F0" } },
-      };
-    }
+  cell.border = {
+    top: { style: "thin", color: { argb: "FFB7D7F0" } },
+    left: { style: "thin", color: { argb: "FFB7D7F0" } },
+    bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+    right: { style: "thin", color: { argb: "FFB7D7F0" } },
+  };
+}
 
-    row++;
+packingRow++;
+
   });
 });
 
@@ -278,16 +280,12 @@ setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
     .padStart(2, "0")}/100 USD`;
 }
 
-// ============================================================
-// 🖼️ LOGO VENDEDOR (A1:D5)
-// ============================================================
-
 
 // ============================================================
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
 
-/*try {
+try {
   const logoUrl = new URL("/logo.jpeg", req.url).toString();
 
   const response = await fetch(logoUrl);
@@ -310,7 +308,7 @@ setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
   }
 } catch (error) {
   console.log("Logo fetch error:", error);
-}*/
+}
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
@@ -376,8 +374,7 @@ invoiceSheet.getCell("F13").value = "Scientific Name";
 invoiceSheet.getCell("G13").value = "Price";
 invoiceSheet.getCell("H13").value = "Amount";
 
-// Estilo completo aplicado UNA sola vez
-headerRow.height = 30; // altura suficiente para que no se corte
+invoiceSheet.getRow(13).height = 30;
 
 for (let col = 1; col <= 8; col++) {
   const cell = invoiceSheet.getCell(13, col);
@@ -403,7 +400,6 @@ for (let col = 1; col <= 8; col++) {
   };
 }
 
-// 👇 Aquí comienzan los items
 row = 14;
 
 
@@ -772,11 +768,11 @@ const totalBoxes = invoiceBoxesMap.size;
 
   invoiceSheet.getRow(49).height = 6;
 
-  invoiceSheet.getCell("A50").value = boxes.length;
+  invoiceSheet.getCell("A50").value = totalBoxes;
   invoiceSheet.getCell("B50").value = totalLbs;
   invoiceSheet.getCell("B50").numFmt = "#,##0.00";
   invoiceSheet.getCell("C50").value = "LBS";
-  invoiceSheet.getCell("A50").value = totalBoxes;
+  
 
   invoiceSheet.mergeCells("G50:H50");
   invoiceSheet.getCell("G50").value = totalAmount;
