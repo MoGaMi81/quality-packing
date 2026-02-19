@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
-import * as fs from "fs";
+import fs from "fs";
 import path from "path";
 
 const supabase = createClient(
@@ -281,19 +281,22 @@ setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
 // ============================================================
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
+
+
 // ============================================================
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
 
 try {
-  const logoPath = path.join(process.cwd(), "public", "logo.png");
+  const logoUrl = new URL("/logo.jpeg", req.url).toString();
 
-  if (fs.existsSync(logoPath)) {
-    const fileBuffer = fs.readFileSync(logoPath);
+  const response = await fetch(logoUrl);
 
-    // 👇 Formato correcto requerido por ExcelJS
+  if (response.ok) {
+    const arrayBuffer = await response.arrayBuffer();
     const base64Image =
-      "data:image/png;base64," + fileBuffer.toString("base64");
+      "data:image/png;base64," +
+      Buffer.from(arrayBuffer).toString("base64");
 
     const imageId = wb.addImage({
       base64: base64Image,
@@ -302,11 +305,12 @@ try {
 
     invoiceSheet.mergeCells("A1:D5");
     invoiceSheet.addImage(imageId, "A1:D5");
+  } else {
+    console.log("Logo response not OK:", response.status);
   }
 } catch (error) {
-  console.log("Logo not loaded:", error);
+  console.log("Logo fetch error:", error);
 }
-
 
 // ============================================================
 // 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
