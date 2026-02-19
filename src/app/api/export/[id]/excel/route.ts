@@ -142,81 +142,101 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   const headerRow = packingSheet.getRow(13);
 
-  // ============================================================
+// ============================================================
 // 🟦 PACKING SHEET
 // ============================================================
 
-// Tamaño carta
 packingSheet.pageSetup.paperSize = 9;
 packingSheet.pageSetup.orientation = "portrait";
 
-// ============================================================
-// 📏 MISMAS COLUMNAS QUE INVOICE
-// ============================================================
-
-packingSheet.getColumn("A").width = 4.18;
-packingSheet.getColumn("B").width = 6.41;
-packingSheet.getColumn("C").width = 36.86;
-packingSheet.getColumn("D").width = 4.86;
-packingSheet.getColumn("E").width = 6.18;
-packingSheet.getColumn("F").width = 28.86;
-packingSheet.getColumn("G").width = 6.18;
-packingSheet.getColumn("H").width = 12.18;
+// Mismas columnas que invoice
+packingSheet.getColumn("A").width = 6;
+packingSheet.getColumn("B").width = 8;
+packingSheet.getColumn("C").width = 38;
+packingSheet.getColumn("D").width = 10;
+packingSheet.getColumn("E").width = 10;
+packingSheet.getColumn("F").width = 30;
 
 // ============================================================
-// 🔹 HEADER SUPERIOR
+// 🔷 HEADER SUPERIOR
 // ============================================================
 
-packingSheet.mergeCells("A1:H1");
+packingSheet.mergeCells("A1:F2");
 packingSheet.getCell("A1").value = clientName.toUpperCase();
-packingSheet.getCell("A1").font = { name: "Seaford", size: 18, bold: true };
+packingSheet.getCell("A1").font = {
+  name: "Seaford",
+  size: 22,
+  bold: true,
+};
+packingSheet.getCell("A1").alignment = {
+  horizontal: "left",
+  vertical: "middle",
+};
 
-packingSheet.mergeCells("A2:H2");
-packingSheet.getCell("A2").value = `PACKING LIST - INVOICE ${packing.invoice_no}`;
-packingSheet.getCell("A2").font = { name: "Seaford", size: 14, bold: true };
+packingSheet.mergeCells("A3:F3");
+packingSheet.getCell("A3").value =
+  `PACKING LIST - INVOICE ${packing.invoice_no}`;
+packingSheet.getCell("A3").font = {
+  name: "Seaford",
+  size: 18,
+  bold: true,
+};
+packingSheet.getCell("A3").alignment = {
+  horizontal: "left",
+  vertical: "middle",
+};
 
-packingSheet.mergeCells("A3:H3");
-packingSheet.getCell("A3").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
-packingSheet.getCell("A3").font = { name: "Seaford", size: 14, bold: true };
+packingSheet.mergeCells("A4:F4");
+packingSheet.getCell("A4").value =
+  `DATE: ${packing.created_at?.slice(0, 10)}`;
+packingSheet.getCell("A4").font = {
+  name: "Seaford",
+  size: 16,
+  bold: true,
+};
+packingSheet.getCell("A4").alignment = {
+  horizontal: "left",
+  vertical: "middle",
+};
+
 
 // ============================================================
-// 🔹 COLUMN HEADERS (FILA 13)
+// 🔷 TABLE HEADER
 // ============================================================
 
-packingSheet.getCell("A13").value = "BOX";
-packingSheet.getCell("B13").value = "LBS";
-packingSheet.getCell("C13").value = "DESCRIPTION";
-packingSheet.getCell("D13").value = "SIZE";
-packingSheet.getCell("E13").value = "FORM";
-packingSheet.getCell("F13").value = "SCIENTIFIC NAME";
-packingSheet.getCell("G13").value = "";
-packingSheet.getCell("H13").value = "";
+const startRow = 8;
+let packingRow = startRow + 1; // Items comienzan debajo del header
 
+packingSheet.getRow(startRow).height = 28;
 
-headerRow.height = 28;
+const headers = [
+  "BOX",
+  "LBS",
+  "DESCRIPTION",
+  "SIZE",
+  "FORM",
+  "SCIENTIFIC NAME",
+];
 
-for (let col = 1; col <= 8; col++) {
-  const cell = packingSheet.getCell(13, col);
-
+headers.forEach((h, i) => {
+  const cell = packingSheet.getCell(startRow, i + 1);
+  cell.value = h;
   cell.font = { name: "Seaford", bold: true };
   cell.alignment = { horizontal: "center", vertical: "middle" };
-
   cell.fill = {
     type: "pattern",
     pattern: "solid",
     fgColor: { argb: "FFD9EAF7" },
   };
-
   cell.border = {
+    top: { style: "medium" },
     bottom: { style: "medium" },
   };
-}
+});
 
 // ============================================================
-// 🔹 ITEMS DESDE FILA 14
+// 🔹 AGRUPAR BOXES
 // ============================================================
-
-let packingRow = 14;
 
 const boxesMap = new Map<number, any>();
 
@@ -236,31 +256,35 @@ lines?.forEach((l: any) => {
 
 const boxes = Array.from(boxesMap.values());
 
+// ============================================================
+// 🔹 ITEMS
+// ============================================================
+
 boxes.forEach((b) => {
   b.lines.forEach((l: any) => {
+
     packingSheet.getCell(`A${packingRow}`).value = b.box_no;
-packingSheet.getCell(`B${packingRow}`).value = l.pounds;
-packingSheet.getCell(`C${packingRow}`).value = l.description_en;
-packingSheet.getCell(`D${packingRow}`).value = l.size;
-packingSheet.getCell(`E${packingRow}`).value = l.form;
-packingSheet.getCell(`F${packingRow}`).value =
-  l.species?.scientific_name ?? "";
+    packingSheet.getCell(`B${packingRow}`).value = l.pounds;
+    packingSheet.getCell(`C${packingRow}`).value = l.description_en;
+    packingSheet.getCell(`D${packingRow}`).value = l.size;
+    packingSheet.getCell(`E${packingRow}`).value = l.form;
+    packingSheet.getCell(`F${packingRow}`).value =
+      l.species?.scientific_name ?? "";
 
-for (let col = 1; col <= 8; col++) {
-  const cell = packingSheet.getCell(packingRow, col);
+    for (let col = 1; col <= 6; col++) {
+      const cell = packingSheet.getCell(packingRow, col);
 
-  cell.font = { name: "Seaford" };
+      cell.font = { name: "Seaford" };
 
-  cell.border = {
-    top: { style: "thin", color: { argb: "FFB7D7F0" } },
-    left: { style: "thin", color: { argb: "FFB7D7F0" } },
-    bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
-    right: { style: "thin", color: { argb: "FFB7D7F0" } },
-  };
-}
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFB7D7F0" } },
+        left: { style: "thin", color: { argb: "FFB7D7F0" } },
+        bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+        right: { style: "thin", color: { argb: "FFB7D7F0" } },
+      };
+    }
 
-packingRow++;
-
+    packingRow++;
   });
 });
 
@@ -268,7 +292,7 @@ packingRow++;
 // 🔹 BORDE EXTERNO TABLA
 // ============================================================
 
-setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
+setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 6);
 
 
   function formatAmountInWords(amount: number): string {
@@ -302,12 +326,14 @@ try {
       Buffer.from(arrayBuffer).toString("base64");
 
     const imageId = wb.addImage({
-      base64: base64Image,
-      extension: "png",
-    });
+  base64: base64Image,
+  extension: "png",
+});
 
-    safeMerge(invoiceSheet, "A1:D5");
-    invoiceSheet.addImage(imageId, "A1:D5");
+invoiceSheet.addImage(imageId, {
+  tl: { col: 0, row: 0 }, // A1
+  ext: { width: 110, height: 128 }, // 2.90 x 3.40 cm
+});
   }
 } catch (error) {
   console.log("Logo fetch error:", error);
