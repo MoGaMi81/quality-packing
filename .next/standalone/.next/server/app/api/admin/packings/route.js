@@ -1,0 +1,10 @@
+"use strict";(()=>{var e={};e.id=985,e.ids=[985],e.modules={20399:e=>{e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},30517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},2941:(e,a,t)=>{t.r(a),t.d(a,{originalPathname:()=>k,patchFetch:()=>v,requestAsyncStorage:()=>l,routeModule:()=>g,serverHooks:()=>x,staticGenerationAsyncStorage:()=>h});var r={};t.r(r),t.d(r,{GET:()=>m,dynamic:()=>p,fetchCache:()=>d});var s=t(49303),n=t(88716),o=t(60670),i=t(87070),c=t(37857);let p="force-dynamic",d="force-no-store",u=(0,c.eI)("https://brbqdrsuxazbdlcasjhm.supabase.co",process.env.SUPABASE_SERVICE_ROLE_KEY);async function m(){let{data:e,error:a}=await u.from("packings").select(`
+    id,
+    invoice_no,
+    created_at,
+    pricing_status,
+    clients (
+    code,
+    name
+    )
+  `).eq("pricing_status","PENDING").order("created_at",{ascending:!1});return a?(console.error("ADMIN PACKINGS ERROR:",a),i.NextResponse.json({error:a.message},{status:500})):i.NextResponse.json({packings:e},{headers:{"Cache-Control":"no-store, no-cache, max-age=0, must-revalidate",Pragma:"no-cache",Expires:"0"}})}let g=new s.AppRouteRouteModule({definition:{kind:n.x.APP_ROUTE,page:"/api/admin/packings/route",pathname:"/api/admin/packings",filename:"route",bundlePath:"app/api/admin/packings/route"},resolvedPagePath:"C:\\Users\\logis\\OneDrive\\Desktop\\Proyecto\\Poyecto Web\\Packing List\\quality-packing\\src\\app\\api\\admin\\packings\\route.ts",nextConfigOutput:"standalone",userland:r}),{requestAsyncStorage:l,staticGenerationAsyncStorage:h,serverHooks:x}=g,k="/api/admin/packings/route";function v(){return(0,o.patchFetch)({serverHooks:x,staticGenerationAsyncStorage:h})}}};var a=require("../../../../webpack-runtime.js");a.C(e);var t=e=>a(a.s=e),r=a.X(0,[1633,5972,7857],()=>t(2941));module.exports=r})();

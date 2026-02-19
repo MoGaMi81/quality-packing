@@ -1,0 +1,86 @@
+[
+  {
+    "id": "e087184c-734f-4ee9-84ba-c5d14a6026bf",
+    "code": "SL",
+    "name": "SEA LION INTERNATIONAL",
+    "address": "2000 BANKS ROAD SUITE 222",
+    "city": "MARGATE",
+    "state": "FL",
+    "country": "USA",
+    "zip": "33063",
+    "tax_id": "954376601",
+    "is_active": true
+  },
+  {
+    "id": "c1d8756b-01cf-4444-9fda-a33acb7f7334",
+    "code": "HE",
+    "name": "HEADS OR TAILS SEAFOOD",
+    "address": "8020 NW 60 TH STREET",
+    "city": "MIAMI",
+    "state": "FL",
+    "country": "USA",
+    "zip": "33195",
+    "tax_id": "650567837",
+    "is_active": true
+  },
+  {
+    "id": "a9154948-3fcc-4de7-971f-5772a902335a",
+    "code": "SB",
+    "name": "STARBOARD SEAFOOD\r\n INTARIOS INC.",
+    "address": "33 UPTON ROAD",
+    "city": "SCARBOROUGH",
+    "state": "ONTARIOS",
+    "country": "CANADA",
+    "zip": "M1L2C1",
+    "tax_id": "896738564",
+    "is_active": true
+  },
+  {
+    "id": "c4c84b12-a61c-488a-a032-bf4add54d5d1",
+    "code": "GM",
+    "name": "GRANMAR PRODUCTS, INC.",
+    "address": "2731 N.W. 104 COURT",
+    "city": "MIAMI",
+    "state": "FL",
+    "country": "USA",
+    "zip": "33172",
+    "tax_id": "582101842",
+    "is_active": true
+  },
+  {
+    "id": "4fe83207-f332-4155-b4de-9c3eb702c2ad",
+    "code": "MA",
+    "name": "MAXIMUM SEAFOOD",
+    "address": "189 WESTCREEK DRIVE",
+    "city": "VAUGHAN",
+    "state": "ONTARIO",
+    "country": "CANADA",
+    "zip": "L4L 9N6",
+    "tax_id": "890154412",
+    "is_active": true
+  },
+  {
+    "id": "2bda95ca-0412-44b0-b774-40c501171d0b",
+    "code": "BS",
+    "name": "BROTHER SEAFOOD KING INC.",
+    "address": "195 DUFFIELD DRIVE",
+    "city": "MARKHAM",
+    "state": "ONTARIO",
+    "country": "CANADA",
+    "zip": "L6G 1C2",
+    "tax_id": "813894714",
+    "is_active": true
+  },
+  {
+    "id": "ce7d9ff8-0200-4622-974b-f0d1016c3de0",
+    "code": "TW",
+    "name": "Two Oceans LLC",
+    "address": "121 South Orange Ave,Suite 1581",
+    "city": "ORLANDO",
+    "state": "FL",
+    "country": "USA",
+    "zip": "32801",
+    "tax_id": "831994321",
+    "is_active": true
+  }
+]
