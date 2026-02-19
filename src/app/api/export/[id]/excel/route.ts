@@ -285,9 +285,14 @@ setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
 
+function safeMerge(sheet: any, range: string) {
+  if (!sheet._merges || !sheet._merges[range]) {
+    sheet.mergeCells(range);
+  }
+}
+
 try {
   const logoUrl = new URL("/logo.jpeg", req.url).toString();
-
   const response = await fetch(logoUrl);
 
   if (response.ok) {
@@ -301,10 +306,8 @@ try {
       extension: "png",
     });
 
-    invoiceSheet.mergeCells("A1:D5");
+    safeMerge(invoiceSheet, "A1:D5");
     invoiceSheet.addImage(imageId, "A1:D5");
-  } else {
-    console.log("Logo response not OK:", response.status);
   }
 } catch (error) {
   console.log("Logo fetch error:", error);
@@ -414,12 +417,12 @@ const headerFfontAWBLabel = { name: "Seaford", size: 13, bold: true };
 // ============================================================
 // 🔹 VENDEDOR (A–D)
 // ============================================================
-invoiceSheet.mergeCells("A1:D5");
-invoiceSheet.mergeCells("A6:D7");
-invoiceSheet.mergeCells("A8:D12");
+safeMerge(invoiceSheet, "A6:D7");
+safeMerge(invoiceSheet, "A8:D12");
 
 const darkBlueText = { argb: "FF1F4E79" };
 const accentBlue = { argb: "FF2F75B5" };
+
 const vendorCell = invoiceSheet.getCell("A6");
 vendorCell.value = "SOC. COOP. QUALITY FISH".toUpperCase();
 vendorCell.font = {
@@ -431,7 +434,6 @@ vendorCell.font = {
 vendorCell.alignment = { horizontal: "center", vertical: "middle" };
 
 const vendorInfo = invoiceSheet.getCell("A8");
-
 vendorInfo.value =
   "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494".toUpperCase();
 
