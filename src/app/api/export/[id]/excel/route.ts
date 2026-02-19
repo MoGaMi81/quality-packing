@@ -69,6 +69,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   // ✅ Crear hoja UNA sola vez
   const invoiceSheet = wb.addWorksheet("Invoice");
+  const packingSheet = wb.addWorksheet("Packing");
 
 
   // ============================================================
@@ -139,79 +140,83 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: e2.message }, { status: 500 });
   }
 
+  const headerRow = packingSheet.getRow(13);
 
   // ============================================================
 // 🟦 PACKING SHEET
 // ============================================================
-
-const packingSheet = wb.addWorksheet("Packing");
 
 // Tamaño carta
 packingSheet.pageSetup.paperSize = 9;
 packingSheet.pageSetup.orientation = "portrait";
 
 // ============================================================
-// 🔹 HEADER (igual que invoice pero simplificado)
+// 📏 MISMAS COLUMNAS QUE INVOICE
 // ============================================================
 
-packingSheet.mergeCells("A1:E1");
-packingSheet.getCell("A1").value = `CLIENT: ${clientName}`;
-packingSheet.getCell("A1").font = {
-  name: "Seaford",
-  size: 14,
-  bold: true,
-};
+packingSheet.getColumn("A").width = 4.18;
+packingSheet.getColumn("B").width = 6.41;
+packingSheet.getColumn("C").width = 36.86;
+packingSheet.getColumn("D").width = 4.86;
+packingSheet.getColumn("E").width = 6.18;
+packingSheet.getColumn("F").width = 28.86;
+packingSheet.getColumn("G").width = 6.18;
+packingSheet.getColumn("H").width = 12.18;
 
-packingSheet.mergeCells("A2:E2");
-packingSheet.getCell("A2").value = `INVOICE NO: ${packing.invoice_no}`;
-packingSheet.getCell("A2").font = {
-  name: "Seaford",
-  size: 14,
-  bold: true,
-};
+// ============================================================
+// 🔹 HEADER SUPERIOR
+// ============================================================
 
-packingSheet.mergeCells("A3:E3");
+packingSheet.mergeCells("A1:H1");
+packingSheet.getCell("A1").value = clientName.toUpperCase();
+packingSheet.getCell("A1").font = { name: "Seaford", size: 18, bold: true };
+
+packingSheet.mergeCells("A2:H2");
+packingSheet.getCell("A2").value = `PACKING LIST - INVOICE ${packing.invoice_no}`;
+packingSheet.getCell("A2").font = { name: "Seaford", size: 14, bold: true };
+
+packingSheet.mergeCells("A3:H3");
 packingSheet.getCell("A3").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
-packingSheet.getCell("A3").font = {
-  name: "Seaford",
-  size: 14,
-  bold: true,
-};
-
-packingSheet.addRow([]);
+packingSheet.getCell("A3").font = { name: "Seaford", size: 14, bold: true };
 
 // ============================================================
-// 🔹 COLUMNAS
+// 🔹 COLUMN HEADERS (FILA 13)
 // ============================================================
 
-packingSheet.columns = [
-  { header: "BOX NO.", key: "box", width: 12 },
-  { header: "DESCRIPTION", key: "desc", width: 32 },
-  { header: "FORM", key: "form", width: 12 },
-  { header: "SIZE", key: "size", width: 12 },
-  { header: "BOX WEIGHT (LBS)", key: "lbs", width: 20 },
-];
+packingSheet.getCell("A13").value = "BOX";
+packingSheet.getCell("B13").value = "LBS";
+packingSheet.getCell("C13").value = "DESCRIPTION";
+packingSheet.getCell("D13").value = "SIZE";
+packingSheet.getCell("E13").value = "FORM";
+packingSheet.getCell("F13").value = "SCIENTIFIC NAME";
+packingSheet.getCell("G13").value = "";
+packingSheet.getCell("H13").value = "";
 
-// Estilo header
-const headerRowPacking = packingSheet.getRow(5);
-headerRowPacking.height = 26;
 
-headerRowPacking.eachCell((cell) => {
+headerRow.height = 28;
+
+for (let col = 1; col <= 8; col++) {
+  const cell = packingSheet.getCell(13, col);
+
   cell.font = { name: "Seaford", bold: true };
-  cell.alignment = { vertical: "middle", horizontal: "center" };
+  cell.alignment = { horizontal: "center", vertical: "middle" };
+
   cell.fill = {
     type: "pattern",
     pattern: "solid",
     fgColor: { argb: "FFD9EAF7" },
   };
+
   cell.border = {
     bottom: { style: "medium" },
   };
-});
+}
 
 // ============================================================
-// 🔹 AGRUPAR CAJAS (MISMA LÓGICA TUYA)
+// 🔹 ITEMS DESDE FILA 14
 // ============================================================
+
+let packingRow = 14;
 
 const boxesMap = new Map<number, any>();
 
@@ -231,32 +236,37 @@ lines?.forEach((l: any) => {
 
 const boxes = Array.from(boxesMap.values());
 
-// ============================================================
-// 🔹 ITEMS
-// ============================================================
-
 boxes.forEach((b) => {
   b.lines.forEach((l: any) => {
-    const row = packingSheet.addRow({
-      box: b.box_no,
-      desc: l.description_en,
-      form: l.form,
-      size: l.size,
-      lbs: l.pounds,
-    });
+    packingSheet.getCell(`A${row}`).value = b.box_no;
+    packingSheet.getCell(`B${row}`).value = l.pounds;
+    packingSheet.getCell(`C${row}`).value = l.description_en;
+    packingSheet.getCell(`D${row}`).value = l.size;
+    packingSheet.getCell(`E${row}`).value = l.form;
+    packingSheet.getCell(`F${row}`).value = l.scientific_name ?? "";
 
-    row.font = { name: "Seaford" };
+    for (let col = 1; col <= 8; col++) {
+      const cell = packingSheet.getCell(row, col);
 
-    row.eachCell((cell) => {
+      cell.font = { name: "Seaford" };
+
       cell.border = {
         top: { style: "thin", color: { argb: "FFB7D7F0" } },
         left: { style: "thin", color: { argb: "FFB7D7F0" } },
         bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
         right: { style: "thin", color: { argb: "FFB7D7F0" } },
       };
-    });
+    }
+
+    row++;
   });
 });
+
+// ============================================================
+// 🔹 BORDE EXTERNO TABLA
+// ============================================================
+
+setOuterBorder(packingSheet, 13, packingRow - 1, 1, 8);
 
 
   function formatAmountInWords(amount: number): string {
@@ -363,7 +373,6 @@ invoiceSheet.getCell("G13").value = "Price";
 invoiceSheet.getCell("H13").value = "Amount";
 
 // Estilo completo aplicado UNA sola vez
-const headerRow = invoiceSheet.getRow(13);
 headerRow.height = 30; // altura suficiente para que no se corte
 
 for (let col = 1; col <= 8; col++) {
