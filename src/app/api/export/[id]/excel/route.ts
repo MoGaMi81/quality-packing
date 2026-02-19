@@ -203,7 +203,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 // ============================================================
 
 try {
-  const logoUrl = new URL("/logo.png", req.url).toString();
+  const logoUrl = new URL("/Imagen1.png", req.url).toString();
 
   const response = await fetch(logoUrl);
 
