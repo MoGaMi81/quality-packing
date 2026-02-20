@@ -376,6 +376,34 @@ vendorInfo.alignment = {
 setOuterBorder(invoiceSheet, 1, 12, 1, 4);
 
 // ============================================================
+// 🖼️ LOGO VENDEDOR (A1:D5)
+// ============================================================
+
+
+try {
+  const logoUrl = new URL("/logo.jpeg", req.url).toString();
+  const response = await fetch(logoUrl);
+
+  if (response.ok) {
+    const arrayBuffer = await response.arrayBuffer();
+    const base64Image =
+      "data:image/png;base64," + Buffer.from(arrayBuffer).toString("base64");
+
+    const imageId = wb.addImage({
+      base64: base64Image,
+      extension: "png",
+    });
+
+    invoiceSheet.addImage(imageId, {
+      tl: { col: 0, row: 0 }, // A1
+      ext: { width: 128, height: 110 }, // 2.90 x 3.40 cm
+    });
+  }
+} catch (error) {
+  console.log("Logo fetch error:", error);
+}
+
+// ============================================================
 // 🔹 CLIENTE (E–H)
 // ============================================================
 const dateFormatted = packing?.created_at?.slice(0, 10) ?? "";
