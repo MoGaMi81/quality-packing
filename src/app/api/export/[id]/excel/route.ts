@@ -143,170 +143,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const headerRow = packingSheet.getRow(13);
 
 // ============================================================
-// 🟦 PACKING SHEET
-// ============================================================
-
-packingSheet.pageSetup.paperSize = 9;
-packingSheet.pageSetup.orientation = "portrait";
-
-// Mismas columnas que invoice
-packingSheet.getColumn("A").width = 6;
-packingSheet.getColumn("B").width = 8;
-packingSheet.getColumn("C").width = 38;
-packingSheet.getColumn("D").width = 10;
-packingSheet.getColumn("E").width = 10;
-packingSheet.getColumn("F").width = 30;
-
-// ============================================================
-// 🔷 HEADER SUPERIOR
-// ============================================================
-
-packingSheet.mergeCells("A1:F2");
-packingSheet.getCell("A1").value = clientName.toUpperCase();
-packingSheet.getCell("A1").font = {
-  name: "Seaford",
-  size: 22,
-  bold: true,
-};
-packingSheet.getCell("A1").alignment = {
-  horizontal: "left",
-  vertical: "middle",
-};
-
-packingSheet.mergeCells("A3:F3");
-packingSheet.getCell("A3").value =
-  `PACKING LIST - INVOICE ${packing.invoice_no}`;
-packingSheet.getCell("A3").font = {
-  name: "Seaford",
-  size: 18,
-  bold: true,
-};
-packingSheet.getCell("A3").alignment = {
-  horizontal: "left",
-  vertical: "middle",
-};
-
-packingSheet.mergeCells("A4:F4");
-packingSheet.getCell("A4").value =
-  `DATE: ${packing.created_at?.slice(0, 10)}`;
-packingSheet.getCell("A4").font = {
-  name: "Seaford",
-  size: 16,
-  bold: true,
-};
-packingSheet.getCell("A4").alignment = {
-  horizontal: "left",
-  vertical: "middle",
-};
-
-
-// ============================================================
-// 🔷 TABLE HEADER
-// ============================================================
-
-const startRow = 8;
-let packingRow = startRow + 1; // Items comienzan debajo del header
-
-packingSheet.getRow(startRow).height = 28;
-
-const headers = [
-  "BOX",
-  "LBS",
-  "DESCRIPTION",
-  "SIZE",
-  "FORM",
-  "SCIENTIFIC NAME",
-];
-
-headers.forEach((h, i) => {
-  const cell = packingSheet.getCell(startRow, i + 1);
-  cell.value = h;
-  cell.font = { name: "Seaford", bold: true };
-  cell.alignment = { horizontal: "center", vertical: "middle" };
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFD9EAF7" },
-  };
-  cell.border = {
-    top: { style: "medium" },
-    bottom: { style: "medium" },
-  };
-});
-
-// ============================================================
-// 🔹 AGRUPAR BOXES
-// ============================================================
-
-const boxesMap = new Map<number, any>();
-
-lines?.forEach((l: any) => {
-  if (!boxesMap.has(l.box_no)) {
-    boxesMap.set(l.box_no, {
-      box_no: l.box_no,
-      total_lbs: l.pounds,
-      lines: [l],
-    });
-  } else {
-    const b = boxesMap.get(l.box_no);
-    b.total_lbs += l.pounds;
-    b.lines.push(l);
-  }
-});
-
-const boxes = Array.from(boxesMap.values());
-
-// ============================================================
-// 🔹 ITEMS
-// ============================================================
-
-boxes.forEach((b) => {
-  b.lines.forEach((l: any) => {
-
-    packingSheet.getCell(`A${packingRow}`).value = b.box_no;
-    packingSheet.getCell(`B${packingRow}`).value = l.pounds;
-    packingSheet.getCell(`C${packingRow}`).value = l.description_en;
-    packingSheet.getCell(`D${packingRow}`).value = l.size;
-    packingSheet.getCell(`E${packingRow}`).value = l.form;
-    packingSheet.getCell(`F${packingRow}`).value =
-      l.species?.scientific_name ?? "";
-
-    for (let col = 1; col <= 6; col++) {
-      const cell = packingSheet.getCell(packingRow, col);
-
-      cell.font = { name: "Seaford" };
-
-      cell.border = {
-        top: { style: "thin", color: { argb: "FFB7D7F0" } },
-        left: { style: "thin", color: { argb: "FFB7D7F0" } },
-        bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
-        right: { style: "thin", color: { argb: "FFB7D7F0" } },
-      };
-    }
-
-    packingRow++;
-  });
-});
-
-// ============================================================
-// 🔹 BORDE EXTERNO TABLA
-// ============================================================
-
-setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 6);
-
-
-  function formatAmountInWords(amount: number): string {
-  const dollars = Math.floor(amount);
-  const cents = Math.round((amount - dollars) * 100);
-
-  return `${numberToWords(dollars)} DOLLARS AND ${cents
-    .toString()
-    .padStart(2, "0")}/100 USD`;
-}
-
-
-// ============================================================
-// 🖼️ LOGO VENDEDOR (A1:D5)
+// 🔧 UTILIDADES (ARRIBA DEL TODO)
 // ============================================================
 
 function safeMerge(sheet: any, range: string) {
@@ -315,54 +152,13 @@ function safeMerge(sheet: any, range: string) {
   }
 }
 
-try {
-  const logoUrl = new URL("/logo.jpeg", req.url).toString();
-  const response = await fetch(logoUrl);
-
-  if (response.ok) {
-    const arrayBuffer = await response.arrayBuffer();
-    const base64Image =
-      "data:image/png;base64," +
-      Buffer.from(arrayBuffer).toString("base64");
-
-    const imageId = wb.addImage({
-  base64: base64Image,
-  extension: "png",
-});
-
-invoiceSheet.addImage(imageId, {
-  tl: { col: 0, row: 0 }, // A1
-  ext: { width: 128, height: 110 }, // 2.90 x 3.40 cm
-});
-  }
-} catch (error) {
-  console.log("Logo fetch error:", error);
-}
-
-// ============================================================
-// 🧾 INVOICE HEADER – FORMATO SEA LION DEFINITIVO
-// ============================================================
-
-
-// Tamaño carta
-invoiceSheet.pageSetup.paperSize = 9;
-invoiceSheet.pageSetup.orientation = "portrait";
-
-// ============================================================
-// 📏 COLUMNAS EXACTAS FORMATO ORIGINAL
-// ============================================================
-invoiceSheet.getColumn("A").width = 4.18;
-invoiceSheet.getColumn("B").width = 6.41;
-invoiceSheet.getColumn("C").width = 36.86;
-invoiceSheet.getColumn("D").width = 4.86;
-invoiceSheet.getColumn(5).width = 6.18;
-invoiceSheet.getColumn("F").width = 28.86;
-invoiceSheet.getColumn("G").width = 6.18;
-invoiceSheet.getColumn("H").width = 12.18;
-
-let row = 1;
-
-function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: number, endCol: number) {
+function setOuterBorder(
+  sheet: any,
+  startRow: number,
+  endRow: number,
+  startCol: number,
+  endCol: number
+) {
   for (let c = startCol; c <= endCol; c++) {
     sheet.getCell(startRow, c).border = {
       ...sheet.getCell(startRow, c).border,
@@ -386,14 +182,130 @@ function setOuterBorder(sheet: any, startRow: number, endRow: number, startCol: 
   }
 }
 
+// ============================================================
+// ================= PACKING =================
+// ============================================================
+
+packingSheet.pageSetup.paperSize = 9;
+packingSheet.pageSetup.orientation = "portrait";
+
+// Mismas columnas que invoice
+packingSheet.getColumn("A").width = 6;
+packingSheet.getColumn("B").width = 8;
+packingSheet.getColumn("C").width = 38;
+packingSheet.getColumn("D").width = 10;
+packingSheet.getColumn("E").width = 10;
+packingSheet.getColumn("F").width = 30;
+
+// 🔷 HEADER SUPERIOR
+safeMerge(packingSheet, "A1:F2");
+packingSheet.getCell("A1").value = clientName.toUpperCase();
+packingSheet.getCell("A1").font = { name: "Seaford", size: 22, bold: true };
+packingSheet.getCell("A1").alignment = { horizontal: "left", vertical: "middle" };
+
+safeMerge(packingSheet, "A3:F3");
+packingSheet.getCell("A3").value = `PACKING LIST - INVOICE ${packing.invoice_no}`;
+packingSheet.getCell("A3").font = { name: "Seaford", size: 18, bold: true };
+packingSheet.getCell("A3").alignment = { horizontal: "left", vertical: "middle" };
+
+safeMerge(packingSheet, "A4:F4");
+packingSheet.getCell("A4").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
+packingSheet.getCell("A4").font = { name: "Seaford", size: 16, bold: true };
+packingSheet.getCell("A4").alignment = { horizontal: "left", vertical: "middle" };
+
+// 🔷 TABLE HEADER
+const startRow = 8;
+let packingRow = startRow + 1;
+
+packingSheet.getRow(startRow).height = 28;
+
+const headers = ["BOX", "LBS", "DESCRIPTION", "SIZE", "FORM", "SCIENTIFIC NAME"];
+headers.forEach((h, i) => {
+  const cell = packingSheet.getCell(startRow, i + 1);
+  cell.value = h;
+  cell.font = { name: "Seaford", bold: true };
+  cell.alignment = { horizontal: "center", vertical: "middle" };
+  cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9EAF7" } };
+  cell.border = { top: { style: "medium" }, bottom: { style: "medium" } };
+});
+
+// 🔹 AGRUPAR BOXES
+const boxesMap = new Map<number, any>();
+lines?.forEach((l: any) => {
+  if (!boxesMap.has(l.box_no)) {
+    boxesMap.set(l.box_no, { box_no: l.box_no, total_lbs: l.pounds, lines: [l] });
+  } else {
+    const b = boxesMap.get(l.box_no);
+    b.total_lbs += l.pounds;
+    b.lines.push(l);
+  }
+});
+const boxes = Array.from(boxesMap.values());
+
+// 🔹 ITEMS
+boxes.forEach((b) => {
+  b.lines.forEach((l: any) => {
+    packingSheet.getCell(`A${packingRow}`).value = b.box_no;
+    packingSheet.getCell(`B${packingRow}`).value = l.pounds;
+    packingSheet.getCell(`C${packingRow}`).value = l.description_en;
+    packingSheet.getCell(`D${packingRow}`).value = l.size;
+    packingSheet.getCell(`E${packingRow}`).value = l.form;
+    packingSheet.getCell(`F${packingRow}`).value = l.species?.scientific_name ?? "";
+
+    for (let col = 1; col <= 6; col++) {
+      const cell = packingSheet.getCell(packingRow, col);
+      cell.font = { name: "Seaford" };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFB7D7F0" } },
+        left: { style: "thin", color: { argb: "FFB7D7F0" } },
+        bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+        right: { style: "thin", color: { argb: "FFB7D7F0" } },
+      };
+    }
+    packingRow++;
+  });
+});
+
+// 🔹 BORDE EXTERNO TABLA
+setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 6);
+
+// 🖼️ LOGO PACKING
+try {
+  const logoUrl = new URL("/logo.jpeg", req.url).toString();
+  const response = await fetch(logoUrl);
+  if (response.ok) {
+    const arrayBuffer = await response.arrayBuffer();
+    const base64Image =
+      "data:image/png;base64," + Buffer.from(arrayBuffer).toString("base64");
+    const imageId = wb.addImage({ base64: base64Image, extension: "png" });
+    packingSheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 128, height: 110 } });
+  }
+} catch (error) {
+  console.log("Logo fetch error:", error);
+}
 
 // ============================================================
+// ================= INVOICE =================
+// ============================================================
+
+// Tamaño carta
+invoiceSheet.pageSetup.paperSize = 9;
+invoiceSheet.pageSetup.orientation = "portrait";
+
+// 📏 COLUMNAS EXACTAS FORMATO ORIGINAL
+invoiceSheet.getColumn("A").width = 4.18;
+invoiceSheet.getColumn("B").width = 6.41;
+invoiceSheet.getColumn("C").width = 36.86;
+invoiceSheet.getColumn("D").width = 4.86;
+invoiceSheet.getColumn(5).width = 6.18;
+invoiceSheet.getColumn("F").width = 28.86;
+invoiceSheet.getColumn("G").width = 6.18;
+invoiceSheet.getColumn("H").width = 12.18;
+
+let row = 1;
+
 // 🔹 COLUMN HEADERS (A13:H13)
-// ============================================================
-
 row = 13;
-
-// Valores
 invoiceSheet.getCell("A13").value = "Boxes";
 invoiceSheet.getCell("B13").value = "Pounds";
 invoiceSheet.getCell("C13").value = "Description";
@@ -407,26 +319,10 @@ invoiceSheet.getRow(13).height = 30;
 
 for (let col = 1; col <= 8; col++) {
   const cell = invoiceSheet.getCell(13, col);
-
-  cell.font = {
-    bold: true,
-  };
-
-  cell.alignment = {
-    horizontal: "center",
-    vertical: "middle",
-    wrapText: false,
-  };
-
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFD9EAF7" }, // azul header
-  };
-
-  cell.border = {
-    bottom: { style: "medium" },
-  };
+  cell.font = { bold: true };
+  cell.alignment = { horizontal: "center", vertical: "middle", wrapText: false };
+  cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9EAF7" } };
+  cell.border = { bottom: { style: "medium" } };
 }
 
 row = 14;
