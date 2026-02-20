@@ -219,7 +219,7 @@ let packingRow = startRow + 1;
 
 packingSheet.getRow(startRow).height = 28;
 
-const headers = ["BOX", "LBS", "DESCRIPTION", "SIZE", "FORM", "SCIENTIFIC NAME"];
+const headers = ["Box No.", "DESCRIPTION", "PRESENTATION", "SIZE", "TOTAL WEIGHT"];
 headers.forEach((h, i) => {
   const cell = packingSheet.getCell(startRow, i + 1);
   cell.value = h;
