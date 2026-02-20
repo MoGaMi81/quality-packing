@@ -301,10 +301,21 @@ for (let i = 0; i < sortedLines.length; i++) {
   }
 }
 
-// 🔹 ITEMS
- 
+groups.forEach((g) => {
+  const rangeText =
+    g.startBox === g.endBox
+      ? `${g.startBox}`
+      : `${g.startBox} - ${g.endBox}`;
 
+  packingSheet.getCell(`A${packingRow}`).value = rangeText;
+  packingSheet.getCell(`C${packingRow}`).value = g.description;
+  packingSheet.getCell(`D${packingRow}`).value = g.form;
+  packingSheet.getCell(`E${packingRow}`).value = g.poundsPerBox;
+  packingSheet.getCell(`F${packingRow}`).value = g.size;
+  packingSheet.getCell(`G${packingRow}`).value = g.totalWeight;
 
+  packingRow++;
+});
 // 🔹 BORDE EXTERNO TABLA
 setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 6);
 
