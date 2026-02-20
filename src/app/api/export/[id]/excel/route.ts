@@ -228,43 +228,82 @@ headers.forEach((h, i) => {
   cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9EAF7" } };
   cell.border = { top: { style: "medium" }, bottom: { style: "medium" } };
 });
+// ============================================================
+// 🔹 AGRUPAR POR RANGO (PACKING GENERAL)
+// ============================================================
 
-// 🔹 AGRUPAR BOXES
-const boxesMap = new Map<number, any>();
-lines?.forEach((l: any) => {
-  if (!boxesMap.has(l.box_no)) {
-    boxesMap.set(l.box_no, { box_no: l.box_no, total_lbs: l.pounds, lines: [l] });
-  } else {
-    const b = boxesMap.get(l.box_no);
-    b.total_lbs += l.pounds;
-    b.lines.push(l);
+const sortedLines = [...(lines ?? [])].sort(
+  (a, b) => a.box_no - b.box_no
+);
+
+type PackingGroup = {
+  startBox: number;
+  endBox: number;
+  description: string;
+  form: string;
+  size: string;
+  poundsPerBox: number;
+  scientific: string;
+  boxCount: number;
+  totalWeight: number;
+};
+
+const groups: PackingGroup[] = [];
+
+for (let i = 0; i < sortedLines.length; i++) {
+  const current = sortedLines[i];
+
+  const scientificName =
+    current.species?.[0]?.scientific_name ?? "";
+
+  if (groups.length === 0) {
+    groups.push({
+      startBox: current.box_no,
+      endBox: current.box_no,
+      description: current.description_en,
+      form: current.form,
+      size: current.size,
+      poundsPerBox: current.pounds,
+      scientific: scientificName,
+      boxCount: 1,
+      totalWeight: current.pounds,
+    });
+    continue;
   }
-});
-const boxes = Array.from(boxesMap.values());
+
+  const last = groups[groups.length - 1];
+
+  const sameProduct =
+    last.description === current.description_en &&
+    last.form === current.form &&
+    last.size === current.size &&
+    last.poundsPerBox === current.pounds &&
+    last.scientific === scientificName;
+
+  const consecutive = current.box_no === last.endBox + 1;
+
+  if (sameProduct && consecutive) {
+    last.endBox = current.box_no;
+    last.boxCount++;
+    last.totalWeight += current.pounds;
+  } else {
+    groups.push({
+      startBox: current.box_no,
+      endBox: current.box_no,
+      description: current.description_en,
+      form: current.form,
+      size: current.size,
+      poundsPerBox: current.pounds,
+      scientific: scientificName,
+      boxCount: 1,
+      totalWeight: current.pounds,
+    });
+  }
+}
 
 // 🔹 ITEMS
-boxes.forEach((b) => {
-  b.lines.forEach((l: any) => {
-    packingSheet.getCell(`A${packingRow}`).value = b.box_no;
-    packingSheet.getCell(`B${packingRow}`).value = l.pounds;
-    packingSheet.getCell(`C${packingRow}`).value = l.description_en;
-    packingSheet.getCell(`D${packingRow}`).value = l.size;
-    packingSheet.getCell(`E${packingRow}`).value = l.form;
-    packingSheet.getCell(`F${packingRow}`).value = l.species?.scientific_name ?? "";
+ 
 
-    for (let col = 1; col <= 6; col++) {
-      const cell = packingSheet.getCell(packingRow, col);
-      cell.font = { name: "Seaford" };
-      cell.border = {
-        top: { style: "thin", color: { argb: "FFB7D7F0" } },
-        left: { style: "thin", color: { argb: "FFB7D7F0" } },
-        bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
-        right: { style: "thin", color: { argb: "FFB7D7F0" } },
-      };
-    }
-    packingRow++;
-  });
-});
 
 // 🔹 BORDE EXTERNO TABLA
 setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 6);
@@ -378,7 +417,6 @@ setOuterBorder(invoiceSheet, 1, 12, 1, 4);
 // ============================================================
 // 🖼️ LOGO VENDEDOR (A1:D5)
 // ============================================================
-
 
 try {
   const logoUrl = new URL("/logo.jpeg", req.url).toString();
@@ -528,7 +566,6 @@ for (let r = 1; r <= 13; r++) {
     };
   }
 }
-
 
 // Marco AWB E9:H9
 for (let c = 5; c <= 8; c++) {
@@ -858,7 +895,7 @@ for (let c = 2; c <= 3; c++) {
 // FILA 56 – SIN BORDES
 // ============================================================
 
-invoiceSheet.getCell("B56").value = boxes.length;
+
 invoiceSheet.getCell("C56").value = "TOTAL BOXES";
 
 for (let c = 1; c <= 8; c++) {
