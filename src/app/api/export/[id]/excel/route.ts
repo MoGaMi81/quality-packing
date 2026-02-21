@@ -68,6 +68,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const wb = new ExcelJS.Workbook();
 const invoiceSheet = wb.addWorksheet("Invoice");
 const packingSheet = wb.addWorksheet("Packing");
+const darkBlueText = { argb: "FF1F4E79" };
+const accentBlue = { argb: "FF2F75B5" };
 
 // 🔹 FUENTES HEADER (PONER AQUÍ)
 const headerFontBig = { name: "Seaford", size: 20, bold: true };
@@ -207,8 +209,6 @@ packingSheet.getColumn("H").width = 16;
 // 🔷 PACKING HEADER COMPLETO (IGUAL A INVOICE)
 // ============================================================
 
-const darkBlueText = { argb: "FF1F4E79" };
-const accentBlue = { argb: "FF2F75B5" };
 
 // 🔹 LOGO (A1:D5)
 try {
@@ -545,6 +545,7 @@ for (let col = 1; col <= 8; col++) {
 }
 
 row = 14;
+
 
 // ============================================================
 // 🔹 VENDEDOR (A–D)
