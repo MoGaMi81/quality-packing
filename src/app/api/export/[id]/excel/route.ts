@@ -375,7 +375,7 @@ for (let r = 1; r <= 12; r++) {
 const startRow = 13;
 let packingRow = 14;
 
-packingSheet.getRow(startRow).height = 28;
+packingSheet.getRow(13).height = 40;
 
 // A13:C13 combinado
 safeMerge(packingSheet, "A13:C13");
@@ -555,7 +555,7 @@ invoiceSheet.getCell("F13").value = "Scientific Name";
 invoiceSheet.getCell("G13").value = "Price";
 invoiceSheet.getCell("H13").value = "Amount";
 
-invoiceSheet.getRow(13).height = 30;
+invoiceSheet.getRow(13).height = 40;
 
 for (let col = 1; col <= 8; col++) {
   const cell = invoiceSheet.getCell(13, col);
@@ -732,7 +732,7 @@ invoiceSheet.getCell("G11").font = headerFontMedium;
 invoiceSheet.getCell("G11").alignment = {
   horizontal: "right",
 };
-setOuterBorder(invoiceSheet, 9, 9, 5, 8);
+setOuterBorder(invoiceSheet, 11, 11, 5, 8);
 
 // ============================================================
 // 🔹 COUNTRY
