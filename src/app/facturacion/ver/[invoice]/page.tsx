@@ -59,6 +59,18 @@ export default function VerFacturaPage() {
     0
   );
 
+  const formatInt = (n: number) =>
+  n.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+const formatMoney = (n: number) =>
+  n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
     <main className="p-6 space-y-6">
       {/* HEADER */}
@@ -90,10 +102,10 @@ export default function VerFacturaPage() {
           <b>Total cajas:</b> {data.total_boxes}
         </div>
         <div>
-          <b>NET WEIGHT:</b> {totalNet.toFixed(2)} lbs
+          <b>NET WEIGHT:</b> {formatInt(totalNet)} lbs
         </div>
         <div>
-          <b>GROSS WEIGHT (+31%):</b> {totalGross.toFixed(2)} lbs
+          <b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs
         </div>
       </div>
 
@@ -117,7 +129,7 @@ export default function VerFacturaPage() {
               <tr key={i}>
                 <td className="border px-2 py-1 text-right">{l.boxes}</td>
                 <td className="border px-2 py-1 text-right">
-                  {l.pounds.toFixed(2)}
+                  {formatInt(l.pounds)}
                 </td>
                 <td className="border px-2 py-1">{l.description}</td>
                 <td className="border px-2 py-1">{l.size}</td>
@@ -129,7 +141,7 @@ export default function VerFacturaPage() {
                   {l.price != null ? l.price.toFixed(2) : "-"}
                 </td>
                 <td className="border px-2 py-1 text-right">
-                  {l.amount != null ? l.amount.toFixed(2) : "0.00"}
+                  {l.amount != null ? formatMoney(l.amount) : "0.00"}
                 </td>
               </tr>
             ))}
@@ -138,11 +150,11 @@ export default function VerFacturaPage() {
             <tr>
               <td className="border px-2 py-1 text-right">TOTAL</td>
               <td className="border px-2 py-1 text-right">
-                {totalNet.toFixed(2)}
+                {formatInt(totalNet)} lbs
               </td>
               <td colSpan={5} className="border" />
               <td className="border px-2 py-1 text-right">
-                {totalAmount.toFixed(2)}
+                {formatMoney(totalAmount)}
               </td>
             </tr>
           </tfoot>
