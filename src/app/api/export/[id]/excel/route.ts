@@ -151,9 +151,10 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
 // ============================================================
 // 🔧 UTILIDADES (ARRIBA DEL TODO)
 // ============================================================
-
 function safeMerge(sheet: any, range: string) {
-  if (!sheet._merges || !sheet._merges[range]) {
+  const merges = sheet._merges || {};
+
+  if (!Object.values(merges).some((m: any) => m.model?.ref === range)) {
     sheet.mergeCells(range);
   }
 }
@@ -1017,7 +1018,7 @@ const totalBoxes = invoiceBoxesMap.size;
 
   invoiceSheet.mergeCells("G50:H50");
   invoiceSheet.getCell("G50").value = totalAmount;
-  invoiceSheet.getCell("G50").numFmt = '"$"#,##0';
+  invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
   const row50 = invoiceSheet.getRow(50);
 
 row50.font = {
