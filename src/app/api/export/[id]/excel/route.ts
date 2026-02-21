@@ -733,10 +733,9 @@ invoiceTaxCell.alignment = {
 setOuterBorder(invoiceSheet, 1, 8, 5, 8);
 
 // ============================================================
-// 🔹 AWB
+// 🔹 AWB (MARCO EXTERNO LIMPIO)
 // ============================================================
 
-safeMerge(invoiceSheet, "E9");
 safeMerge(invoiceSheet, "F9:H9");
 
 invoiceSheet.getCell("E9").value = "AWB";
@@ -744,9 +743,9 @@ invoiceSheet.getCell("E9").font = headerFontAWBLabel;
 
 invoiceSheet.getCell("F9").value = packing.guide ?? "";
 invoiceSheet.getCell("F9").font = headerFontAWBNumber;
-invoiceSheet.getCell("F9").alignment = {
-  horizontal: "right",
-};
+invoiceSheet.getCell("F9").alignment = { horizontal: "right" };
+
+// BORDE EXTERNO REAL
 setOuterBorder(invoiceSheet, 9, 9, 5, 8);
 
 // ============================================================
