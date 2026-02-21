@@ -494,7 +494,53 @@ groups.forEach((g) => {
   for (let col = 1; col <= 8; col++) {
     const cell = packingSheet.getCell(packingRow, col);
 
-    cell.font = { name: "Seaford" };
+    // ============================================================
+// 🔹 TOTALES PACKING (3 FILAS ABAJO)
+// ============================================================
+
+const totalsRow = packingRow + 2; // 3 filas abajo
+
+let totalBoxesPacking = 0;
+let totalWeightPacking = 0;
+
+groups.forEach(g => {
+  totalBoxesPacking += g.boxCount;
+  totalWeightPacking += g.totalWeight;
+});
+
+// Texto TOTAL BOXES
+packingSheet.getCell(`D${totalsRow}`).value = "TOTAL BOXES";
+packingSheet.getCell(`D${totalsRow}`).font = {
+  name: "Calibri",
+  bold: true,
+};
+packingSheet.getCell(`D${totalsRow}`).alignment = {
+  horizontal: "right",
+};
+
+// Valor total cajas
+packingSheet.getCell(`E${totalsRow}`).value = totalBoxesPacking;
+packingSheet.getCell(`E${totalsRow}`).font = {
+  name: "Calibri",
+  bold: true,
+};
+packingSheet.getCell(`E${totalsRow}`).alignment = {
+  horizontal: "center",
+};
+
+// Total Weight
+packingSheet.getCell(`H${totalsRow}`).value = totalWeightPacking;
+packingSheet.getCell(`H${totalsRow}`).font = {
+  name: "Calibri",
+  bold: true,
+};
+packingSheet.getCell(`H${totalsRow}`).alignment = {
+  horizontal: "right",
+};
+packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
+
+// Marco externo del total
+setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
 
     cell.border = {
       top: { style: "thin", color: { argb: "FFB7D7F0" } },
@@ -506,6 +552,55 @@ groups.forEach((g) => {
 
   packingRow++;
 });
+
+// ============================================================
+// 🔹 TOTALES PACKING (3 FILAS ABAJO)
+// ============================================================
+
+const totalsRow = packingRow + 2; // 3 filas abajo
+
+let totalBoxesPacking = 0;
+let totalWeightPacking = 0;
+
+groups.forEach(g => {
+  totalBoxesPacking += g.boxCount;
+  totalWeightPacking += g.totalWeight;
+});
+
+// Texto TOTAL BOXES
+packingSheet.getCell(`D${totalsRow}`).value = "TOTAL BOXES";
+packingSheet.getCell(`D${totalsRow}`).font = {
+  name: "Calibri",
+  bold: true,
+};
+packingSheet.getCell(`D${totalsRow}`).alignment = {
+  horizontal: "right",
+};
+
+// Valor total cajas
+packingSheet.getCell(`E${totalsRow}`).value = totalBoxesPacking;
+packingSheet.getCell(`E${totalsRow}`).font = {
+  name: "Calibri",
+  bold: true,
+};
+packingSheet.getCell(`E${totalsRow}`).alignment = {
+  horizontal: "center",
+};
+
+// Total Weight
+packingSheet.getCell(`H${totalsRow}`).value = totalWeightPacking;
+packingSheet.getCell(`H${totalsRow}`).font = {
+  name: "Calibri",
+  bold: true,
+};
+packingSheet.getCell(`H${totalsRow}`).alignment = {
+  horizontal: "right",
+};
+packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
+
+// Marco externo del total
+setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
+
 // 🔹 BORDE EXTERNO TABLA
 setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 8);
 
@@ -566,7 +661,6 @@ for (let col = 1; col <= 8; col++) {
 }
 
 row = 14;
-
 
 // ============================================================
 // 🔹 VENDEDOR (A–D) INVOICE
@@ -674,7 +768,12 @@ safeMerge(invoiceSheet, "E8:H8");
 
 const invoiceTaxCell = invoiceSheet.getCell("E8");
 invoiceTaxCell.value = `TAX ID # ${clientTaxId}`.toUpperCase();
-invoiceTaxCell.font = headerFontMedium;
+invoiceTaxCell.font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+  color: accentBlue,   // 🔵 azul
+};
 invoiceTaxCell.alignment = {
   horizontal: "left",
   vertical: "middle",
@@ -686,6 +785,7 @@ setOuterBorder(invoiceSheet, 1, 8, 5, 8);
 // 🔹 AWB
 // ============================================================
 
+safeMerge(invoiceSheet, "E9");
 safeMerge(invoiceSheet, "F9:H9");
 
 invoiceSheet.getCell("E9").value = "AWB";
@@ -961,13 +1061,13 @@ const totalBoxes = invoiceBoxesMap.size;
 
   invoiceSheet.getCell("A50").value = totalBoxes;
   invoiceSheet.getCell("B50").value = totalLbs;
-  invoiceSheet.getCell("B50").numFmt = "#,##0.00";
+  invoiceSheet.getCell("B50").numFmt = "#,##0";
   invoiceSheet.getCell("C50").value = "LBS";
   
 
   invoiceSheet.mergeCells("G50:H50");
   invoiceSheet.getCell("G50").value = totalAmount;
-  invoiceSheet.getCell("G50").numFmt = '"$"#,##0.00';
+  invoiceSheet.getCell("G50").numFmt = '"$"#,##0';
   const row50 = invoiceSheet.getRow(50);
 
 row50.font = {
