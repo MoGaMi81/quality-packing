@@ -314,6 +314,7 @@ packingSheet.getCell("E9").alignment = { horizontal: "left", vertical: "middle" 
 packingSheet.getCell("F9").value = packing.guide ?? "";
 packingSheet.getCell("F9").font = headerFontAWBNumber;
 packingSheet.getCell("F9").alignment = { horizontal: "right", vertical: "middle" };
+setOuterBorder(packingSheet, 9, 9, 5, 8);
 
 // 🔹 INVOICE
 safeMerge(packingSheet, "E10:F10");
@@ -326,6 +327,7 @@ packingSheet.getCell("E10").alignment = { horizontal: "left", vertical: "middle"
 packingSheet.getCell("G10").value = packing.invoice_no;
 packingSheet.getCell("G10").font = headerFontMedium;
 packingSheet.getCell("G10").alignment = { horizontal: "right", vertical: "middle" };
+setOuterBorder(packingSheet, 10, 10, 5, 8);
 
 // 🔹 DATE
 safeMerge(packingSheet, "E11:F11");
@@ -338,6 +340,7 @@ packingSheet.getCell("E11").alignment = { horizontal: "left", vertical: "middle"
 packingSheet.getCell("G11").value = packing.created_at?.slice(0, 10);
 packingSheet.getCell("G11").font = headerFontMedium;
 packingSheet.getCell("G11").alignment = { horizontal: "right", vertical: "middle" };
+setOuterBorder(packingSheet, 11, 11, 5, 8);
 
 // 🔹 COUNTRY OF ORIGIN
 safeMerge(packingSheet, "E12:H12");
@@ -351,33 +354,51 @@ countryCell.fill = {
   pattern: "solid",
   fgColor: { argb: "FFFFFF00" },
 };
+setOuterBorder(packingSheet, 12, 12, 5, 8);
 
 // 🔹 BORDES
 setOuterBorder(packingSheet, 1, 12, 1, 4);
 setOuterBorder(packingSheet, 1, 8, 5, 8);
 
+// 🔹 Fondo blanco header completo (Packing)
+for (let r = 1; r <= 12; r++) {
+  for (let c = 1; c <= 8; c++) {
+    packingSheet.getCell(r, c).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFFFFFF" },
+    };
+  }
+}
+
 // 🔷 TABLE HEADER
 const startRow = 13;
-let packingRow = startRow + 1;
+let packingRow = 14;
 
 packingSheet.getRow(startRow).height = 28;
 
-const headers = [
-  "BOX NO.",
-  "",
-  "",
-  "DESCRIPTION",
-  "FORM",
-  "LB/BOX",
-  "SIZE",
-  "TOTAL WEIGTH",
-];
-headers.forEach((h, i) => {
-  const cell = packingSheet.getCell(startRow, i + 1);
-  cell.value = h;
+// A13:C13 combinado
+safeMerge(packingSheet, "A13:C13");
+
+packingSheet.getCell("A13").value = "BOX NO.";
+packingSheet.getCell("A13").font = { name: "Seaford", bold: true };
+packingSheet.getCell("A13").alignment = {
+  horizontal: "center",
+  vertical: "middle",
+};
+
+// Resto headers
+packingSheet.getCell("D13").value = "DESCRIPTION";
+packingSheet.getCell("E13").value = "FORM";
+packingSheet.getCell("F13").value = "LB/BOX";
+packingSheet.getCell("G13").value = "SIZE";
+packingSheet.getCell("H13").value = "TOTAL WEIGTH";
+
+for (let c = 1; c <= 8; c++) {
+  const cell = packingSheet.getCell(13, c);
   cell.font = { name: "Seaford", bold: true };
   cell.alignment = { horizontal: "center", vertical: "middle" };
-});
+}
 
 // ============================================================
 // 🔹 AGRUPAR POR RANGO (PACKING GENERAL)
