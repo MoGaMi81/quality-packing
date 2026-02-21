@@ -209,7 +209,6 @@ packingSheet.getColumn("H").width = 16;
 // 🔷 PACKING HEADER COMPLETO (IGUAL A INVOICE)
 // ============================================================
 
-
 // 🔹 LOGO (A1:D5)
 try {
   const logoUrl = new URL("/logo.jpeg", req.url).toString();
@@ -494,52 +493,54 @@ groups.forEach((g) => {
   for (let col = 1; col <= 8; col++) {
     const cell = packingSheet.getCell(packingRow, col);
 
-    // ============================================================
-// 🔹 TOTALES PACKING (3 FILAS ABAJO)
+// ============================================================
+// 🔹 TOTALES PACKING (SOLO UNA VEZ)
 // ============================================================
 
-const totalsRow = packingRow + 2; // 3 filas abajo
+// Última fila usada es packingRow - 1
+const lastDataRow = packingRow - 1;
 
-let totalBoxesPacking = 0;
-let totalWeightPacking = 0;
+// Exactamente 3 filas abajo
+const totalsRow = lastDataRow + 3;
 
-groups.forEach(g => {
-  totalBoxesPacking += g.boxCount;
-  totalWeightPacking += g.totalWeight;
-});
+// Calcular totales reales desde groups
+const totalBoxesPacking = groups.reduce(
+  (sum, g) => sum + g.boxCount,
+  0
+);
+
+const totalWeightPacking = groups.reduce(
+  (sum, g) => sum + g.totalWeight,
+  0
+);
 
 // Texto TOTAL BOXES
-packingSheet.getCell(`D${totalsRow}`).value = "TOTAL BOXES";
-packingSheet.getCell(`D${totalsRow}`).font = {
+packingSheet.mergeCells(`A${totalsRow}:G${totalsRow}`);
+
+const totalLabelCell = packingSheet.getCell(`A${totalsRow}`);
+totalLabelCell.value = "TOTAL BOXES";
+totalLabelCell.font = {
   name: "Calibri",
   bold: true,
 };
-packingSheet.getCell(`D${totalsRow}`).alignment = {
+totalLabelCell.alignment = {
+  horizontal: "right",
+  vertical: "middle",
+};
+
+// Total peso en H
+const totalValueCell = packingSheet.getCell(`H${totalsRow}`);
+totalValueCell.value = totalWeightPacking;
+totalValueCell.font = {
+  name: "Calibri",
+  bold: true,
+};
+totalValueCell.alignment = {
   horizontal: "right",
 };
+totalValueCell.numFmt = "#,##0";
 
-// Valor total cajas
-packingSheet.getCell(`E${totalsRow}`).value = totalBoxesPacking;
-packingSheet.getCell(`E${totalsRow}`).font = {
-  name: "Calibri",
-  bold: true,
-};
-packingSheet.getCell(`E${totalsRow}`).alignment = {
-  horizontal: "center",
-};
-
-// Total Weight
-packingSheet.getCell(`H${totalsRow}`).value = totalWeightPacking;
-packingSheet.getCell(`H${totalsRow}`).font = {
-  name: "Calibri",
-  bold: true,
-};
-packingSheet.getCell(`H${totalsRow}`).alignment = {
-  horizontal: "right",
-};
-packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
-
-// Marco externo del total
+// Marco externo limpio
 setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
 
     cell.border = {
@@ -553,56 +554,6 @@ setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
   packingRow++;
 });
 
-// ============================================================
-// 🔹 TOTALES PACKING (3 FILAS ABAJO)
-// ============================================================
-
-const totalsRow = packingRow + 2; // 3 filas abajo
-
-let totalBoxesPacking = 0;
-let totalWeightPacking = 0;
-
-groups.forEach(g => {
-  totalBoxesPacking += g.boxCount;
-  totalWeightPacking += g.totalWeight;
-});
-
-// Texto TOTAL BOXES
-packingSheet.getCell(`D${totalsRow}`).value = "TOTAL BOXES";
-packingSheet.getCell(`D${totalsRow}`).font = {
-  name: "Calibri",
-  bold: true,
-};
-packingSheet.getCell(`D${totalsRow}`).alignment = {
-  horizontal: "right",
-};
-
-// Valor total cajas
-packingSheet.getCell(`E${totalsRow}`).value = totalBoxesPacking;
-packingSheet.getCell(`E${totalsRow}`).font = {
-  name: "Calibri",
-  bold: true,
-};
-packingSheet.getCell(`E${totalsRow}`).alignment = {
-  horizontal: "center",
-};
-
-// Total Weight
-packingSheet.getCell(`H${totalsRow}`).value = totalWeightPacking;
-packingSheet.getCell(`H${totalsRow}`).font = {
-  name: "Calibri",
-  bold: true,
-};
-packingSheet.getCell(`H${totalsRow}`).alignment = {
-  horizontal: "right",
-};
-packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
-
-// Marco externo del total
-setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
-
-// 🔹 BORDE EXTERNO TABLA
-setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 8);
 
 // 🖼️ LOGO PACKING
 try {
