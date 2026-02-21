@@ -199,21 +199,102 @@ packingSheet.getColumn("F").width = 10;
 packingSheet.getColumn("G").width = 12;
 packingSheet.getColumn("H").width = 16;
 
-// 🔷 HEADER SUPERIOR
-safeMerge(packingSheet, "A1:F2");
-packingSheet.getCell("A1").value = clientName.toUpperCase();
-packingSheet.getCell("A1").font = { name: "Seaford", size: 22, bold: true };
-packingSheet.getCell("A1").alignment = { horizontal: "left", vertical: "middle" };
+// ============================================================
+// 🔷 PACKING HEADER IGUAL A INVOICE
+// ============================================================
 
-safeMerge(packingSheet, "A3:F3");
-packingSheet.getCell("A3").value = `PACKING LIST - INVOICE ${packing.invoice_no}`;
-packingSheet.getCell("A3").font = { name: "Seaford", size: 18, bold: true };
-packingSheet.getCell("A3").alignment = { horizontal: "left", vertical: "middle" };
+const darkBlueText = { argb: "FF1F4E79" };
+const accentBlue = { argb: "FF2F75B5" };
 
-safeMerge(packingSheet, "A4:F4");
-packingSheet.getCell("A4").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
-packingSheet.getCell("A4").font = { name: "Seaford", size: 16, bold: true };
-packingSheet.getCell("A4").alignment = { horizontal: "left", vertical: "middle" };
+// 🔹 VENDEDOR (A–D)
+safeMerge(packingSheet, "A6:D7");
+safeMerge(packingSheet, "A8:D12");
+
+const vendorCell = packingSheet.getCell("A6");
+vendorCell.value = "SOC. COOP. QUALITY FISH";
+vendorCell.font = {
+  name: "Seaford",
+  size: 20,
+  bold: true,
+  color: darkBlueText,
+};
+vendorCell.alignment = { horizontal: "center", vertical: "middle" };
+
+const vendorInfo = packingSheet.getCell("A8");
+vendorInfo.value =
+  "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494";
+vendorInfo.font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+  color: accentBlue,
+};
+vendorInfo.alignment = {
+  wrapText: true,
+  vertical: "top",
+  horizontal: "left",
+};
+
+// 🔹 CLIENTE (E–H)
+safeMerge(packingSheet, "E1:H3");
+safeMerge(packingSheet, "E4:H7");
+
+const clientCell = packingSheet.getCell("E1");
+clientCell.value = clientName.toUpperCase();
+clientCell.font = {
+  name: "Seaford",
+  size: 20,
+  bold: true,
+  color: darkBlueText,
+};
+clientCell.alignment = { horizontal: "center", vertical: "middle" };
+
+const clientAddress = packingSheet.getCell("E4");
+clientAddress.value =
+  `${clientData?.address ?? ""}\n${clientData?.city ?? ""}, ${clientData?.state ?? ""} ${clientData?.zip ?? ""}`;
+clientAddress.font = {
+  name: "Seaford",
+  size: 14,
+  bold: true,
+  color: accentBlue,
+};
+clientAddress.alignment = {
+  wrapText: true,
+  vertical: "top",
+  horizontal: "left",
+};
+
+// 🔹 PACKING TITLE CENTRADO
+safeMerge(packingSheet, "A1:H2");
+packingSheet.getCell("A1").value =
+  `PACKING LIST - INVOICE ${packing.invoice_no}`;
+packingSheet.getCell("A1").font = {
+  name: "Seaford",
+  size: 22,
+  bold: true,
+};
+packingSheet.getCell("A1").alignment = {
+  horizontal: "center",
+  vertical: "middle",
+};
+
+// 🔹 DATE
+safeMerge(packingSheet, "A3:H3");
+packingSheet.getCell("A3").value =
+  `DATE: ${packing.created_at?.slice(0, 10)}`;
+packingSheet.getCell("A3").font = {
+  name: "Seaford",
+  size: 16,
+  bold: true,
+};
+packingSheet.getCell("A3").alignment = {
+  horizontal: "center",
+  vertical: "middle",
+};
+
+// 🔹 BORDES
+setOuterBorder(packingSheet, 1, 12, 1, 4);
+setOuterBorder(packingSheet, 1, 8, 5, 8);
 
 // 🔷 TABLE HEADER
 const startRow = 14;
@@ -225,11 +306,11 @@ const headers = [
   "Box No.",
   "",
   "",
-  "Item Name/Producto",
-  "Presentation/Presentacion",
+  "DESCRIPTION",
+  "FORM",
   "",
-  "Size/Talla",
-  "Box Weight/Peso Caja",
+  "SIZE",
+  "TOTAL WEIGTH",
 ];
 headers.forEach((h, i) => {
   const cell = packingSheet.getCell(startRow, i + 1);
@@ -420,10 +501,7 @@ const headerFfontAWBLabel = { name: "Seaford", size: 13, bold: true };
 safeMerge(invoiceSheet, "A6:D7");
 safeMerge(invoiceSheet, "A8:D12");
 
-const darkBlueText = { argb: "FF1F4E79" };
-const accentBlue = { argb: "FF2F75B5" };
 
-const vendorCell = invoiceSheet.getCell("A6");
 vendorCell.value = "SOC. COOP. QUALITY FISH".toUpperCase();
 vendorCell.font = {
   name: "Seaford",
@@ -433,7 +511,7 @@ vendorCell.font = {
 };
 vendorCell.alignment = { horizontal: "center", vertical: "middle" };
 
-const vendorInfo = invoiceSheet.getCell("A8");
+
 vendorInfo.value =
   "CALLE 21 S/N X 136 Y 138\nCHELEM, YUCATAN, MEX.\nRFC: QFI221111RI5\nFDA: 1506224494".toUpperCase();
 
@@ -492,7 +570,6 @@ if (!clientData) {
 invoiceSheet.mergeCells("E1:H3");
 invoiceSheet.mergeCells("E4:H7");
 
-const clientCell = invoiceSheet.getCell("E1");
 clientCell.value = (clientData.name ?? "").toUpperCase();
 clientCell.font = {
   name: "Seaford",
@@ -502,7 +579,6 @@ clientCell.font = {
 };
 clientCell.alignment = { horizontal: "center", vertical: "middle" };
 
-const clientAddress = invoiceSheet.getCell("E4");
 clientAddress.value =
   `${clientData.address ?? ""}\n${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`.toUpperCase();
 clientAddress.font = {
