@@ -357,7 +357,7 @@ setOuterBorder(packingSheet, 1, 12, 1, 4);
 setOuterBorder(packingSheet, 1, 8, 5, 8);
 
 // 🔷 TABLE HEADER
-const startRow = 14;
+const startRow = 13;
 let packingRow = startRow + 1;
 
 packingSheet.getRow(startRow).height = 28;
