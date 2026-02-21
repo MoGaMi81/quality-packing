@@ -65,7 +65,7 @@ function formatAmountInWords(amount: number): string {
 export const runtime = "nodejs";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
-  const wb = new ExcelJS.Workbook();
+const wb = new ExcelJS.Workbook();
 const invoiceSheet = wb.addWorksheet("Invoice");
 const packingSheet = wb.addWorksheet("Packing");
 const darkBlueText = { argb: "FF1F4E79" };
