@@ -494,17 +494,34 @@ groups.forEach((g) => {
   for (let col = 1; col <= 8; col++) {
     const cell = packingSheet.getCell(packingRow, col);
 
+    cell.font = {
+      name: "Calibri",
+      size: 12,
+    };
+
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFB7D7F0" } },
+      left: { style: "thin", color: { argb: "FFB7D7F0" } },
+      bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+      right: { style: "thin", color: { argb: "FFB7D7F0" } },
+    };
+  }
+
+  packingRow++;
+});
+
+
 // ============================================================
-// 🔹 TOTALES PACKING (SOLO UNA VEZ)
+// 🔹 TOTALES PACKING (UNA SOLA VEZ – FUERA DEL FOR)
 // ============================================================
 
-// Última fila usada es packingRow - 1
+// Última fila usada
 const lastDataRow = packingRow - 1;
 
 // Exactamente 3 filas abajo
 const totalsRow = lastDataRow + 3;
 
-// Calcular totales reales desde groups
+// Totales reales
 const totalBoxesPacking = groups.reduce(
   (sum, g) => sum + g.boxCount,
   0
@@ -515,11 +532,11 @@ const totalWeightPacking = groups.reduce(
   0
 );
 
-// Texto TOTAL BOXES
+// Merge solo aquí (una vez)
 packingSheet.mergeCells(`A${totalsRow}:G${totalsRow}`);
 
 const totalLabelCell = packingSheet.getCell(`A${totalsRow}`);
-totalLabelCell.value = "TOTAL BOXES";
+totalLabelCell.value = `TOTAL BOXES ${totalBoxesPacking}`;
 totalLabelCell.font = {
   name: "Calibri",
   bold: true,
@@ -529,7 +546,6 @@ totalLabelCell.alignment = {
   vertical: "middle",
 };
 
-// Total peso en H
 const totalValueCell = packingSheet.getCell(`H${totalsRow}`);
 totalValueCell.value = totalWeightPacking;
 totalValueCell.font = {
@@ -543,17 +559,6 @@ totalValueCell.numFmt = "#,##0";
 
 // Marco externo limpio
 setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
-
-    cell.border = {
-      top: { style: "thin", color: { argb: "FFB7D7F0" } },
-      left: { style: "thin", color: { argb: "FFB7D7F0" } },
-      bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
-      right: { style: "thin", color: { argb: "FFB7D7F0" } },
-    };
-  }
-
-  packingRow++;
-});
 
 
 // 🖼️ LOGO PACKING
