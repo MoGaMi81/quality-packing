@@ -100,7 +100,9 @@ export default function ViewPacking() {
           </a>
 
           <button
-            onClick={() => router.push(`/packings/${id}/invoice`)}
+            onClick={() =>
+  router.push(`/facturacion/${packing.invoice_no}`)
+}
             className="px-4 py-2 border rounded"
           >
             Ver Factura / Resumen
