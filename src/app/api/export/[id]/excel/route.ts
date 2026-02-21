@@ -696,6 +696,7 @@ invoiceSheet.getCell("F9").font = headerFontAWBNumber;
 invoiceSheet.getCell("F9").alignment = {
   horizontal: "right",
 };
+setOuterBorder(invoiceSheet, 9, 9, 5, 8);
 
 // ============================================================
 // 🔹 INVOICE NUMBER
@@ -712,6 +713,7 @@ invoiceSheet.getCell("G10").font = headerFontMedium;
 invoiceSheet.getCell("G10").alignment = {
   horizontal: "right",
 };
+setOuterBorder(invoiceSheet, 10, 10, 5, 8);
 
 // ============================================================
 // 🔹 DATE
@@ -730,6 +732,7 @@ invoiceSheet.getCell("G11").font = headerFontMedium;
 invoiceSheet.getCell("G11").alignment = {
   horizontal: "right",
 };
+setOuterBorder(invoiceSheet, 9, 9, 5, 8);
 
 // ============================================================
 // 🔹 COUNTRY
@@ -749,7 +752,7 @@ invoiceCountryCell.fill = {
   fgColor: { argb: "FFFFFF00" },
 };
 
-setOuterBorder(invoiceSheet, 9, 12, 5, 8);
+setOuterBorder(invoiceSheet, 12, 12, 5, 8);
 
 
 // ============================================================
