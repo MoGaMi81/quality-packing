@@ -30,9 +30,9 @@ type Row = {
 
 export async function GET(
   _req: Request,
-  { params }: { params: { invoice: string } }
+  { params }: { params: { id: string } }
 ) {
-  const invoice_no = params.invoice.toUpperCase();
+  const invoice_no = params.id.toUpperCase();
 
   /* =====================================================
      1️⃣ PACKING + CLIENTE (JOIN SEGURO)
