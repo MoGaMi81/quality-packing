@@ -191,11 +191,13 @@ packingSheet.pageSetup.orientation = "portrait";
 
 // Mismas columnas que invoice
 packingSheet.getColumn("A").width = 6;
-packingSheet.getColumn("B").width = 8;
-packingSheet.getColumn("C").width = 38;
-packingSheet.getColumn("D").width = 10;
-packingSheet.getColumn("E").width = 10;
-packingSheet.getColumn("F").width = 30;
+packingSheet.getColumn("B").width = 4;
+packingSheet.getColumn("C").width = 6;
+packingSheet.getColumn("D").width = 38;
+packingSheet.getColumn("E").width = 12;
+packingSheet.getColumn("F").width = 10;
+packingSheet.getColumn("G").width = 12;
+packingSheet.getColumn("H").width = 16;
 
 // 🔷 HEADER SUPERIOR
 safeMerge(packingSheet, "A1:F2");
@@ -219,15 +221,23 @@ let packingRow = startRow + 1;
 
 packingSheet.getRow(startRow).height = 28;
 
-const headers = ["Box No.", "DESCRIPTION", "PRESENTATION", "SIZE", "TOTAL WEIGHT"];
+const headers = [
+  "Box No.",
+  "",
+  "",
+  "Item Name/Producto",
+  "Presentation/Presentacion",
+  "",
+  "Size/Talla",
+  "Box Weight/Peso Caja",
+];
 headers.forEach((h, i) => {
   const cell = packingSheet.getCell(startRow, i + 1);
   cell.value = h;
   cell.font = { name: "Seaford", bold: true };
   cell.alignment = { horizontal: "center", vertical: "middle" };
-  cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9EAF7" } };
-  cell.border = { top: { style: "medium" }, bottom: { style: "medium" } };
 });
+
 // ============================================================
 // 🔹 AGRUPAR POR RANGO (PACKING GENERAL)
 // ============================================================
@@ -301,23 +311,41 @@ for (let i = 0; i < sortedLines.length; i++) {
   }
 }
 
-groups.forEach((g) => {
-  const rangeText =
-    g.startBox === g.endBox
-      ? `${g.startBox}`
-      : `${g.startBox} - ${g.endBox}`;
+// ============================================================
+// 🔹 ITEMS (PACKING GENERAL 8 COLUMNAS)
+// ============================================================
 
-  packingSheet.getCell(`A${packingRow}`).value = rangeText;
-  packingSheet.getCell(`C${packingRow}`).value = g.description;
-  packingSheet.getCell(`D${packingRow}`).value = g.form;
-  packingSheet.getCell(`E${packingRow}`).value = g.poundsPerBox;
-  packingSheet.getCell(`F${packingRow}`).value = g.size;
-  packingSheet.getCell(`G${packingRow}`).value = g.totalWeight;
+groups.forEach((g) => {
+
+  const isRange = g.startBox !== g.endBox;
+
+  packingSheet.getCell(`A${packingRow}`).value = g.startBox;
+  packingSheet.getCell(`B${packingRow}`).value = isRange ? "-" : "";
+  packingSheet.getCell(`C${packingRow}`).value = isRange ? g.endBox : "";
+
+  packingSheet.getCell(`D${packingRow}`).value = g.description;
+  packingSheet.getCell(`E${packingRow}`).value = g.form;
+  packingSheet.getCell(`F${packingRow}`).value = g.poundsPerBox;
+  packingSheet.getCell(`G${packingRow}`).value = g.size;
+  packingSheet.getCell(`H${packingRow}`).value = g.totalWeight;
+
+  for (let col = 1; col <= 8; col++) {
+    const cell = packingSheet.getCell(packingRow, col);
+
+    cell.font = { name: "Seaford" };
+
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFB7D7F0" } },
+      left: { style: "thin", color: { argb: "FFB7D7F0" } },
+      bottom: { style: "thin", color: { argb: "FFB7D7F0" } },
+      right: { style: "thin", color: { argb: "FFB7D7F0" } },
+    };
+  }
 
   packingRow++;
 });
 // 🔹 BORDE EXTERNO TABLA
-setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 6);
+setOuterBorder(packingSheet, startRow, packingRow - 1, 1, 8);
 
 // 🖼️ LOGO PACKING
 try {
