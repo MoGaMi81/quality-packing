@@ -200,17 +200,17 @@ packingSheet.getColumn("G").width = 12;
 packingSheet.getColumn("H").width = 16;
 
 // 🔷 HEADER SUPERIOR
-safeMerge(packingSheet, "A1:F2");
+safeMerge(packingSheet, "A1:H2");
 packingSheet.getCell("A1").value = clientName.toUpperCase();
 packingSheet.getCell("A1").font = { name: "Seaford", size: 22, bold: true };
 packingSheet.getCell("A1").alignment = { horizontal: "left", vertical: "middle" };
 
-safeMerge(packingSheet, "A3:F3");
+safeMerge(packingSheet, "A3:H3");
 packingSheet.getCell("A3").value = `PACKING LIST - INVOICE ${packing.invoice_no}`;
 packingSheet.getCell("A3").font = { name: "Seaford", size: 18, bold: true };
 packingSheet.getCell("A3").alignment = { horizontal: "left", vertical: "middle" };
 
-safeMerge(packingSheet, "A4:F4");
+safeMerge(packingSheet, "A4:H4");
 packingSheet.getCell("A4").value = `DATE: ${packing.created_at?.slice(0, 10)}`;
 packingSheet.getCell("A4").font = { name: "Seaford", size: 16, bold: true };
 packingSheet.getCell("A4").alignment = { horizontal: "left", vertical: "middle" };
