@@ -30,7 +30,7 @@ const { data, error } = await supabase
       price
     )
   `)
-  .eq("id", packingId)
+  .eq("id", params.id)
   .single();
 
   if (error || !data) {
