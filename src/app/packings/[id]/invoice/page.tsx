@@ -39,6 +39,13 @@ export default function InvoicePage({
         <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
       </header>
 
+      <div className="text-right space-y-1">
+        <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
+        <p className="text-lg font-bold">
+          Total USD: ${totals.total_usd.toFixed(2)}
+        </p>
+      </div>
+
       <table className="w-full border text-sm">
         <thead className="bg-gray-100">
           <tr>
@@ -60,14 +67,8 @@ export default function InvoicePage({
             </tr>
           ))}
         </tbody>
-      </table>
 
-      <footer className="text-right space-y-1">
-        <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
-        <p className="text-lg font-bold">
-          Total USD: ${totals.total_usd.toFixed(2)}
-        </p>
-      </footer>
+      </table>
 
       {/* ✅ Bloque de exportación a Excel */}
       <div className="mt-6 flex justify-end gap-4">

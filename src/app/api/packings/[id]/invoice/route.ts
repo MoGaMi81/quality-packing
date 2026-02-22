@@ -17,6 +17,7 @@ const { data, error } = await supabase
   .select(`
     id,
     invoice_no,
+    client_code,
     created_at,
     clients (
       name
@@ -51,13 +52,13 @@ const { data, error } = await supabase
     total_usd: lines.reduce((s: number, l: any) => s + l.total, 0),
   };
 
-  return NextResponse.json({
-    header: {
-      invoice: data.invoice_no,
-      client_name: data.clients?.[0]?.name ?? "",
-      date: data.created_at,
-    },
-    lines,
-    totals,
-  });
+ return NextResponse.json({
+  header: {
+    invoice: data.invoice_no,
+    client_name: data.clients?.[0]?.name ?? data.client_code ?? "",
+    date: data.created_at,
+  },
+  lines,
+  totals,
+});
 }

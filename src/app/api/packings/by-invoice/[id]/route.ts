@@ -17,10 +17,15 @@ export async function GET(
   }
 
   const { data: packing, error } = await supabase
-    .from("packings")
-    .select("*")
-    .eq("invoice_no", invoice)
-    .single(); // 👈 CLAVE
+  .from("packings")
+  .select(`
+    *,
+    clients (
+      name
+    )
+  `)
+  .eq("invoice_no", invoice)
+  .single();
 
   if (error || !packing) {
     return NextResponse.json(
