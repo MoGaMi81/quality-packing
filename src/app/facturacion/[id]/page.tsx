@@ -35,7 +35,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(
-      `/api/packings/${invoiceId}/invoice`)
+      `/api/packings/${invoiceId}`)
       .then((r) => {
         if (!r.ok) throw new Error("Factura no encontrada");
         setData(r.invoice);
