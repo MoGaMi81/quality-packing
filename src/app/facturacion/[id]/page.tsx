@@ -35,8 +35,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(
-      `/api/facturacion/by-invoice/${invoiceId}`
-    )
+      `/api/packings/${invoiceId}/invoice`)
       .then((r) => {
         if (!r.ok) throw new Error("Factura no encontrada");
         setData(r.invoice);
@@ -126,13 +125,19 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
       <button
         className="mt-4 bg-black text-white px-4 py-2 rounded"
         onClick={async () => {
-          for (const l of data.lines) {
-            await fetch(`/api/packing-lines/${l.line_id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ price: l.price }),
-            });
-          }
+          const prices: Record<string, number> = {};
+
+// Agrupar por description + form + size
+for (const l of data.lines) {
+  const key = `${l.description}|||${l.form}|||${l.size}`;
+  prices[key] = l.price ?? 0;
+}
+
+await fetch(`/api/packings/${invoiceId}/pricing`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prices }),
+});
           alert("Precios actualizados");
         }}
       >
