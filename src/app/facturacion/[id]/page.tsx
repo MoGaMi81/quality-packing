@@ -34,18 +34,18 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJSON<{ ok: boolean; invoice: Invoice }>(
-      `/api/packing-drafts/${invoiceId}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Factura no encontrada");
-        setData(r.invoice);
-      })
+    fetchJSON<Invoice>(
+  `/api/packing-drafts/${invoiceId}`
+)
+  .then((r) => {
+    setData(r);
+  })
       .catch(() => alert("Error cargando factura"))
       .finally(() => setLoading(false));
   }, [invoiceId]);
 
   if (loading) return <main className="p-6">Cargando…</main>;
-  if (!data) return null;
+  if (!data) return <main className="p-6">No encontrado</main>;
 
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
