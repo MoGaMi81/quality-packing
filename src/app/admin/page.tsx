@@ -43,7 +43,7 @@ export default function AdminDashboard() {
         <Card
           title="Ver"
           desc="Consulta general de packings"
-          onClick={() => router.push("/admin/view")}
+          onClick={() => router.push("/packings/${invoice_no}/view")}
         />
 
         <Card
