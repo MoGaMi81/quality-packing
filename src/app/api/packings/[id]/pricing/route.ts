@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { applyPricing } from "@/domain/packing/pricing";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,50 +48,26 @@ export async function POST(
   }
 
   /* =====================================================
-     2️⃣ Obtener líneas COMPLETAS (PackingLine)
+     2️⃣ Actualizar precios por clave code|form|size
      ===================================================== */
-  const { data: lines, error: linesError } = await supabase
-    .from("packing_lines")
-    .select(`
-      id,
-      code,
-      description_en,
-      form,
-      size,
-      pounds,
-      box_no,
-      is_combined,
-      combined_with
-    `)
-    .eq("packing_id", packing_id);
+  for (const key of Object.keys(prices)) {
+    const price = prices[key];
+    const [code, form, size] = key.split("|");
 
-  if (linesError || !lines || lines.length === 0) {
-    return NextResponse.json(
-      { ok: false, error: "El packing no tiene líneas" },
-      { status: 400 }
-    );
-  }
-
-  /* =====================================================
-     3️⃣ Aplicar precios USANDO EL ENGINE (única verdad)
-     ===================================================== */
-  const priced = applyPricing(lines, prices);
-
-  for (const l of priced) {
-    if (!l.price || l.price <= 0) {
+    if (!code || !form || !size) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: `Falta precio válido para ${l.description_en} ${l.form} ${l.size}`,
-        },
+        { ok: false, error: `Clave inválida: ${key}` },
         { status: 400 }
       );
     }
 
     const { error } = await supabase
       .from("packing_lines")
-      .update({ price: l.price })
-      .eq("id", l.id);
+      .update({ price })
+      .eq("packing_id", packing_id)
+      .eq("code", code)
+      .eq("form", form)
+      .eq("size", size);
 
     if (error) {
       return NextResponse.json(
@@ -103,7 +78,7 @@ export async function POST(
   }
 
   /* =====================================================
-     4️⃣ Marcar pricing como DONE
+     3️⃣ Marcar pricing como DONE
      ===================================================== */
   const { error: updatePackingError } = await supabase
     .from("packings")
