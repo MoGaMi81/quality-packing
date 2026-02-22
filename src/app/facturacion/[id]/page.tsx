@@ -5,6 +5,7 @@ import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
 
 type Line = {
+  line_id: string; // 👈 agregado
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -25,11 +26,7 @@ type Invoice = {
   lines: Line[];
 };
 
-export default function FacturacionDetail({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function FacturacionDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
   const invoiceId = params.id;
 
@@ -52,23 +49,15 @@ export default function FacturacionDetail({
   if (!data) return null;
 
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
-  const totalAmount = data.lines.reduce(
-    (s, l) => s + (l.amount ?? 0),
-    0
-  );
+  const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
   return (
     <main className="p-6 space-y-6">
-      <button
-        onClick={() => router.back()}
-        className="px-3 py-1 border rounded"
-      >
+      <button onClick={() => router.back()} className="px-3 py-1 border rounded">
         ← Volver
       </button>
 
-      <h1 className="text-2xl font-bold">
-        Factura {data.invoice_no}
-      </h1>
+      <h1 className="text-2xl font-bold">Factura {data.invoice_no}</h1>
 
       <div className="border rounded p-4 space-y-1 text-sm">
         <div>
@@ -85,18 +74,79 @@ export default function FacturacionDetail({
         </div>
       </div>
 
+      {/* ================== TABLA DE LÍNEAS ================== */}
+      <table className="border-collapse border w-full text-sm">
+        <thead>
+          <tr>
+            <th className="border px-2 py-1">Descripción</th>
+            <th className="border px-2 py-1">Form</th>
+            <th className="border px-2 py-1">Size</th>
+            <th className="border px-2 py-1 text-right">Lbs</th>
+            <th className="border px-2 py-1 text-right">Precio</th>
+            <th className="border px-2 py-1 text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.lines.map((l, i) => (
+            <tr key={l.line_id}>
+              <td className="border px-2 py-1">{l.description}</td>
+              <td className="border px-2 py-1">{l.form}</td>
+              <td className="border px-2 py-1">{l.size}</td>
+              <td className="border px-2 py-1 text-right">{l.pounds}</td>
+
+              {/* 👇 PRICE editable */}
+              <td className="border px-2 py-1 text-right">
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-24 text-right border rounded px-1"
+                  value={l.price ?? 0}
+                  onChange={(e) => {
+                    const newPrice = parseFloat(e.target.value) || 0;
+                    const updated = [...data.lines];
+                    updated[i].price = newPrice;
+                    updated[i].amount = updated[i].pounds * newPrice;
+                    setData({ ...data, lines: updated });
+                  }}
+                />
+              </td>
+
+              {/* 👇 AMOUNT calculado */}
+              <td className="border px-2 py-1 text-right">
+                {l.amount?.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* ================== BOTÓN GUARDAR ================== */}
+      <button
+        className="mt-4 bg-black text-white px-4 py-2 rounded"
+        onClick={async () => {
+          for (const l of data.lines) {
+            await fetch(`/api/packing-lines/${l.line_id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ price: l.price }),
+            });
+          }
+          alert("Precios actualizados");
+        }}
+      >
+        Guardar precios
+      </button>
+
       <div className="border rounded p-4 text-sm">
         <div>
           <b>Total lbs:</b>{" "}
-          {totalNet.toLocaleString("en-US", {
-            maximumFractionDigits: 0,
-          })}
+          {totalNet.toLocaleString("en-US", { maximumFractionDigits: 0 })}
         </div>
         <div>
           <b>Total USD:</b>{" "}
-          {totalAmount.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-          })}
+          {totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
         </div>
       </div>
     </main>

@@ -7,6 +7,7 @@ const supabase = createClient(
 );
 
 type LineDB = {
+  id: string; // 👈 ahora incluimos id
   box_no: string;
   code: string;
   description_en: string;
@@ -18,6 +19,7 @@ type LineDB = {
 };
 
 type Row = {
+  line_id: string; // 👈 nuevo campo
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -35,7 +37,7 @@ export async function GET(
   const invoice_no = params.id.toUpperCase();
 
   /* =====================================================
-     1️⃣ PACKING + CLIENTE (JOIN SEGURO)
+     1️⃣ PACKING + CLIENTE
      ===================================================== */
   const { data: packing, error: packingError } = await supabase
     .from("packings")
@@ -62,6 +64,7 @@ export async function GET(
   const { data, error: linesError } = await supabase
     .from("packing_lines")
     .select(`
+      id,
       box_no,
       code,
       description_en,
@@ -90,7 +93,7 @@ export async function GET(
   const lines = data as LineDB[];
 
   /* =====================================================
-     3️⃣ CONSTRUIR FILAS (MISMA LÓGICA QUE YA FUNCIONA)
+     3️⃣ CONSTRUIR FILAS
      ===================================================== */
   const rows: Row[] = [];
   const normalMap = new Map<string, Row>();
@@ -105,6 +108,7 @@ export async function GET(
       hasMixed = true;
 
       rows.push({
+        line_id: l.id, // 👈 agregado
         boxes: "MX",
         pounds: l.pounds,
         description: l.description_en,
@@ -125,6 +129,7 @@ export async function GET(
 
     if (!normalMap.has(key)) {
       normalMap.set(key, {
+        line_id: l.id, // 👈 agregado
         boxes: 1,
         pounds: l.pounds,
         description: l.description_en,
@@ -143,7 +148,7 @@ export async function GET(
   }
 
   /* =====================================================
-     4️⃣ TOTAL DE CAJAS (NO TOCAR – YA FUNCIONA)
+     4️⃣ TOTAL DE CAJAS
      ===================================================== */
   const total_boxes = normalBoxes.size + (hasMixed ? 1 : 0);
 
@@ -154,11 +159,8 @@ export async function GET(
     ok: true,
     invoice: {
       invoice_no: packing.invoice_no,
-
-      // 👇 AHORA SÍ CORRECTO
       client_code: packing.client_code,
-      client_name: packing.client_code, 
-
+      client_name: packing.client_code,
       guide: packing.guide,
       date: packing.created_at,
       total_boxes,
