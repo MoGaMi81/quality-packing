@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams  } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
 type Line = {
@@ -50,6 +50,8 @@ export default function VerFacturaPage() {
   /* =============================
      TOTALES
      ============================= */
+     const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalGross = totalNet * 1.31;
 
@@ -76,11 +78,17 @@ const formatMoney = (n: number) =>
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <button
-          onClick={() => router.replace("/facturacion")}
-          className="px-3 py-1 border rounded"
-        >
-          ← Volver
-        </button>
+  onClick={() => {
+    if (from === "admin") {
+      router.replace("/admin/ver");
+    } else {
+      router.replace("/facturacion");
+    }
+  }}
+  className="px-3 py-1 border rounded"
+>
+  ← Volver
+</button>
 
         <h1 className="text-2xl font-bold">Factura {data.invoice_no}</h1>
 
