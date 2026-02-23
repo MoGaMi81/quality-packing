@@ -23,10 +23,10 @@ const { data, error } = await supabase
       name
     ),
     packing_lines (
-      pricing_key,
-      species_name,
+      description_en,
       form,
-      lbs,
+      size,
+      pounds,
       price
     )
   `)
