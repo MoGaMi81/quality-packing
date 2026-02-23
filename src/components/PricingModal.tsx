@@ -23,8 +23,8 @@ function priceKey(l: PackingLine) {
     return "GROUPER_WG"; // ← CLAVE ÚNICA
   }
 
-  // resto → por especie + forma + talla
-  return `${l.description_en}|||${l.form}|||${l.size}`;
+  // resto → por code + form + size
+  return `${l.code}|${l.form}|${l.size}`;
 }
 
 type PriceReq = {

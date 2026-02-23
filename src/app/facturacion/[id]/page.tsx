@@ -24,6 +24,7 @@ type Draft = {
 export default function FacturacionDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
   const draftId = params.id;
+  
 
   const [data, setData] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +102,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
             }
 
             // 🔥 Redirigir a invoice real
-            router.push(`/packings/${json.packing_id}/invoice`);
+            router.push("/facturacion");
           }}
         >
           Facturar
