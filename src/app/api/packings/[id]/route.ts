@@ -26,6 +26,7 @@ export async function GET(
       name
     ),
     packing_lines (
+      code,
       box_no,
       is_combined,
       combined_with,
