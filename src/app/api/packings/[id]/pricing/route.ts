@@ -51,23 +51,17 @@ export async function POST(
      2️⃣ Actualizar precios por clave code|form|size
      ===================================================== */
   for (const key of Object.keys(prices)) {
-    const price = prices[key];
-    const [code, form, size] = key.split("|");
+  const price = prices[key];
 
-    if (!code || !form || !size) {
-      return NextResponse.json(
-        { ok: false, error: `Clave inválida: ${key}` },
-        { status: 400 }
-      );
-    }
-
+  // 🔑 CASO ESPECIAL GROUPER_WG
+  if (key === "GROUPER_WG") {
     const { error } = await supabase
       .from("packing_lines")
       .update({ price })
       .eq("packing_id", packing_id)
-      .eq("code", code)
-      .eq("form", form)
-      .eq("size", size);
+      .eq("form", "W&G")
+      .ilike("description_en", "%GROUPER%")
+      .not("description_en", "ilike", "%FILLET%");
 
     if (error) {
       return NextResponse.json(
@@ -75,7 +69,35 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    continue;
   }
+
+  // 🔑 NORMAL: code|form|size
+  const [code, form, size] = key.split("|");
+
+  if (!code || !form || !size) {
+    return NextResponse.json(
+      { ok: false, error: `Clave inválida: ${key}` },
+      { status: 400 }
+    );
+  }
+
+  const { error } = await supabase
+    .from("packing_lines")
+    .update({ price })
+    .eq("packing_id", packing_id)
+    .eq("code", code)
+    .eq("form", form)
+    .eq("size", size);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
   /* =====================================================
      3️⃣ Marcar pricing como DONE
