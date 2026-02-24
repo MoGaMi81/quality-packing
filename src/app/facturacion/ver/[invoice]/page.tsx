@@ -30,6 +30,7 @@ export default function VerFacturaPage() {
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
   const router = useRouter();
+  const returnId = searchParams.get("returnId");
 
   const [data, setData] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,8 +81,8 @@ const formatMoney = (n: number) =>
       <div className="flex justify-between items-center">
         <button
   onClick={() => {
-    if (from === "admin") {
-      router.replace("/admin/ver");
+    if (from === "admin" && returnId) {
+      router.replace(`/admin/view/${returnId}`);
     } else {
       router.replace("/facturacion");
     }

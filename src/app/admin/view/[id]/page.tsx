@@ -101,7 +101,9 @@ export default function ViewPacking() {
 
           <button
             onClick={() =>
-            router.push(`/facturacion/ver/${packing.invoice_no}?from=admin`)
+            router.push(
+  `/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`
+)
            }
             className="px-4 py-2 border rounded"
           >
