@@ -100,6 +100,7 @@ export async function PATCH(
     combined_with: l.combined_with ?? null,
     code: l.code || l.species_code || l.key || "UNDEFINED",
     description_en: l.description_en,
+    scientific_name: l.scientific_name ?? null,
     form: l.form,
     size: l.size,
     pounds: l.pounds,
