@@ -26,6 +26,8 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
   const router = useRouter();
 
@@ -50,10 +52,9 @@ export default function VerFacturaPage() {
   /* =============================
      TOTALES
      ============================= */
-     const searchParams = useSearchParams();
-  const from = searchParams.get("from");
-  const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
-  const totalGross = totalNet * 1.31;
+     
+     const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
+     const totalGross = totalNet * 1.31;
 
   // ✅ Adaptación: usar nullish coalescing para evitar errores
   const totalAmount = data.lines.reduce(
