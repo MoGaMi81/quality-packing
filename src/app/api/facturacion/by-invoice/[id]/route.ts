@@ -158,6 +158,7 @@ export async function GET(
   return NextResponse.json({
     ok: true,
     invoice: {
+      packing_id: packing.id,
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
       client_name: packing.client_code,

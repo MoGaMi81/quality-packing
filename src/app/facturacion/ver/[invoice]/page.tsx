@@ -16,12 +16,13 @@ type Line = {
 };
 
 type Invoice = {
+  packing_id: string;
   invoice_no: string;
   client_code: string;
   client_name: string;
   guide: string | null;
   date: string;
-  total_boxes: number; // ✅ ahora viene del backend
+  total_boxes: number;
   lines: Line[];
 };
 
@@ -80,17 +81,17 @@ const formatMoney = (n: number) =>
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <button
-  onClick={() => {
-    if (from === "admin" && returnId) {
-      router.replace(`/admin/view/${returnId}`);
-    } else {
-      router.replace("/facturacion");
-    }
-  }}
-  className="px-3 py-1 border rounded"
->
-  ← Volver
-</button>
+          onClick={() => {
+            if (from === "admin" && returnId) {
+              router.replace(`/admin/view/${returnId}`);
+            } else {
+              router.replace("/facturacion");
+             }
+          }}
+          className="px-3 py-1 border rounded"
+        >
+          ← Volver
+        </button>
 
         <h1 className="text-2xl font-bold">Factura {data.invoice_no}</h1>
 
@@ -118,6 +119,26 @@ const formatMoney = (n: number) =>
           <b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs
         </div>
       </div>
+
+      {/* BOTONES */}
+        <div className="flex justify-end gap-4 mt-4">
+          <a
+            href={`/api/export/${data.packing_id}/excel`}
+            className="px-4 py-2 bg-black text-white rounded"
+          >
+            Exportar Excel
+          </a>
+
+          <button
+            onClick={() => {
+      // luego conectamos esto con PricingModal
+              alert("Editar precios - siguiente fase");
+            }}
+            className="px-4 py-2 border rounded"
+          >
+            Editar precios
+          </button>
+        </div>
 
       {/* TABLE */}
       <div className="overflow-auto">
