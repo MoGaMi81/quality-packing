@@ -16,6 +16,8 @@ type LineDB = {
   size: string;
   pounds: number;
   price: number | null;
+  is_combined: boolean; // 👈 nuevo campo
+  combined_with: string | null; // 👈 nuevo campo
 };
 
 type Row = {
@@ -46,7 +48,10 @@ export async function GET(
       invoice_no,
       client_code,
       guide,
-      created_at
+      created_at,
+      clients (
+        name
+      )
     `)
     .eq("invoice_no", invoice_no)
     .single();
@@ -72,7 +77,9 @@ export async function GET(
       form,
       size,
       pounds,
-      price
+      price,
+      is_combined,
+      combined_with
     `)
     .eq("packing_id", packing.id);
 
@@ -104,12 +111,12 @@ export async function GET(
     const price = l.price ?? 0;
 
     // 👉 CAJA COMBINADA
-    if (l.box_no === "MX") {
+    if (l.is_combined) {
       hasMixed = true;
 
       rows.push({
-        line_id: l.id, // 👈 agregado
-        boxes: "MX",
+        line_id: l.id,
+        boxes: 1, // cada combinada cuenta individual
         pounds: l.pounds,
         description: l.description_en,
         size: l.size,
@@ -125,25 +132,27 @@ export async function GET(
     // 👉 CAJA NORMAL
     normalBoxes.add(l.box_no);
 
-    const key = `${l.description_en}|||${l.form}|||${l.size}`;
+    if (!l.is_combined) {
+      const key = `${l.description_en}|||${l.form}|||${l.size}`;
 
-    if (!normalMap.has(key)) {
-      normalMap.set(key, {
-        line_id: l.id, // 👈 agregado
-        boxes: 1,
-        pounds: l.pounds,
-        description: l.description_en,
-        size: l.size,
-        form: l.form,
-        scientific_name: l.scientific_name,
-        price,
-        amount: l.pounds * price,
-      });
-    } else {
-      const row = normalMap.get(key)!;
-      row.boxes = (row.boxes as number) + 1;
-      row.pounds += l.pounds;
-      row.amount = row.pounds * row.price;
+      if (!normalMap.has(key)) {
+        normalMap.set(key, {
+          line_id: l.id,
+          boxes: 1,
+          pounds: l.pounds,
+          description: l.description_en,
+          size: l.size,
+          form: l.form,
+          scientific_name: l.scientific_name,
+          price,
+          amount: l.pounds * price,
+        });
+      } else {
+        const row = normalMap.get(key)!;
+        row.boxes = (row.boxes as number) + 1;
+        row.pounds += l.pounds;
+        row.amount = row.pounds * row.price;
+      }
     }
   }
 
@@ -161,7 +170,7 @@ export async function GET(
       packing_id: packing.id,
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name: packing.client_code,
+      client_name: packing.clients?.[0]?.name ?? packing.client_code,
       guide: packing.guide,
       date: packing.created_at,
       total_boxes,
