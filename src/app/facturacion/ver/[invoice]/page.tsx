@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams  } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
+import { getRole } from "@/lib/role";
 
 type Line = {
   boxes: number | "MX";
@@ -27,6 +28,7 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
+  const role = getRole();
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
@@ -120,26 +122,26 @@ const formatMoney = (n: number) =>
         </div>
       </div>
 
-      {/* BOTONES */}
-        <div className="flex justify-end gap-4 mt-4">
-          <a
-            href={`/api/export/${data.packing_id}/excel`}
-            className="px-4 py-2 bg-black text-white rounded"
-          >
-            Exportar Excel
-          </a>
+      {/* BOTONES SOLO ADMIN */}
+{role === "admin" && data?.packing_id && (
+  <div className="flex justify-end gap-4 mt-4">
+    <a
+      href={`/api/export/${data.packing_id}/excel`}
+      className="px-4 py-2 bg-black text-white rounded"
+    >
+      Exportar Excel
+    </a>
 
-          <button
-            onClick={() => {
-      // luego conectamos esto con PricingModal
-              alert("Editar precios - siguiente fase");
-            }}
-            className="px-4 py-2 border rounded"
-          >
-            Editar precios
-          </button>
-        </div>
-
+    <button
+      onClick={() => {
+        alert("Editar precios - siguiente fase");
+      }}
+      className="px-4 py-2 border rounded"
+    >
+      Editar precios
+    </button>
+  </div>
+)}
       {/* TABLE */}
       <div className="overflow-auto">
         <table className="w-full border text-sm">

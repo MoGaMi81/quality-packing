@@ -125,7 +125,7 @@ export async function GET(
     // 👉 CAJA NORMAL
     normalBoxes.add(l.box_no);
 
-    const key = `${l.code}|${l.form}|${l.size}`;
+    const key = `${l.description_en}|||${l.form}|||${l.size}`;
 
     if (!normalMap.has(key)) {
       normalMap.set(key, {
