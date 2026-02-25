@@ -12,11 +12,10 @@ type Props = {
   onClose: () => void;
 };
 
-
 export default function BoxesWizardModal({ open, onClose }: Props) {
   const { lines, addLines } = usePackingStore();
   const { getByCode, loading } = useSpeciesCatalog();
-  
+
   const [mode, setMode] = useState<Mode>("SIMPLE");
 
   // inputs
@@ -32,18 +31,14 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   /* =====================
      HELPERS
   ===================== */
-
   function getNextBoxNo(): number {
-    const nums = lines
-      .map(l => Number(l.box_no))
-      .filter(n => Number.isFinite(n));
+    const nums = lines.map(l => Number(l.box_no)).filter(n => Number.isFinite(n));
     return nums.length ? Math.max(...nums) + 1 : 1;
   }
 
   /* =====================
      SIMPLE / RANGO
   ===================== */
-
   function addSimple() {
     const species = getByCode(code);
     if (!species || pounds <= 0 || qty <= 0) return;
@@ -51,16 +46,15 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     const startBoxNo = getNextBoxNo();
 
     const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
-  box_no: startBoxNo + i,
-  is_combined: false,
-
-  code: species.code,
-  description_en: species.description_en,
-  scientific_name: species.scientific_name ?? null,  // ✅ AQUI
-  form: species.form,
-  size: species.size,
-  pounds,
-}));
+      box_no: startBoxNo + i,
+      is_combined: false,
+      code: species.code,
+      description_en: species.description_en,
+      scientific_name: species.scientific_name ?? null,
+      form: species.form,
+      size: species.size,
+      pounds,
+    }));
 
     addLines(newLines);
     resetAll();
@@ -70,25 +64,22 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   /* =====================
      COMBINADA
   ===================== */
-
   function addCombinedLine() {
     const species = getByCode(code);
     if (!species || pounds <= 0) return;
 
-    const boxNo =
-      combinedLines[0]?.box_no ?? getNextBoxNo();
+    const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
 
     const line: PackingLine = {
-  box_no: boxNo,
-  is_combined: true,
-
-  code: species.code,
-  description_en: species.description_en,
-  scientific_name: species.scientific_name ?? null,  // ✅ AQUI
-  form: species.form,
-  size: species.size,
-  pounds,
-};
+      box_no: boxNo,
+      is_combined: true,
+      code: species.code,
+      description_en: species.description_en,
+      scientific_name: species.scientific_name ?? null,
+      form: species.form,
+      size: species.size,
+      pounds,
+    };
 
     setCombinedLines(prev => [...prev, line]);
     setCode("");
@@ -97,7 +88,6 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
 
   function saveCombinedBox() {
     if (!combinedLines.length) return;
-
     addLines(combinedLines);
     resetAll();
     onClose();
@@ -113,6 +103,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   /* =====================
      UI
   ===================== */
+  const species = getByCode(code);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
@@ -148,8 +139,13 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
         />
 
         {code && !loading && !getByCode(code) && (
-          <div className="text-red-600 text-sm mt-1">
-            Clave no encontrada
+          <div className="text-red-600 text-sm mt-1">Clave no encontrada</div>
+        )}
+
+        {/* ✅ INFO DE LA ESPECIE */}
+        {code && species && (
+          <div className="mt-2 text-sm text-gray-600">
+            {species.description_en} · {species.size} · {species.form}
           </div>
         )}
 
