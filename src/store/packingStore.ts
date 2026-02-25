@@ -15,7 +15,6 @@ export type PackingHeader = {
   guide?: string;          // facturación
 };
 
-
 type PackingStatus = "DRAFT" | "FINAL";
 
 /* =======================
@@ -39,6 +38,7 @@ type State = {
   removeLine: (index: number) => void;
   removeBox: (boxNo: number) => void;
   reorder: (arr: PackingLine[]) => void;
+  updateLine: (index: number, updates: Partial<PackingLine>) => void; // 👈 NUEVO
 
   /* ---------- helpers ---------- */
   getNextBoxNo: () => number;
@@ -95,12 +95,17 @@ export const usePackingStore = create<State>((set, get) => ({
 
   removeBox: (boxNo) =>
     set((state) => ({
-      lines: state.lines.filter(
-        (l) => Number(l.box_no) !== boxNo
-      ),
+      lines: state.lines.filter((l) => Number(l.box_no) !== boxNo),
     })),
 
   reorder: (arr) => set({ lines: arr }),
+
+  updateLine: (index, updates) =>
+    set((state) => {
+      const copy = [...state.lines];
+      copy[index] = { ...copy[index], ...updates };
+      return { lines: copy };
+    }),
 
   /* ---------- helpers ---------- */
   getNextBoxNo: () => {
@@ -108,9 +113,7 @@ export const usePackingStore = create<State>((set, get) => ({
     if (lines.length === 0) return 1;
     return (
       Math.max(
-        ...lines
-          .map((l) => Number(l.box_no))
-          .filter((n) => !isNaN(n))
+        ...lines.map((l) => Number(l.box_no)).filter((n) => !isNaN(n))
       ) + 1
     );
   },
