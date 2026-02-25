@@ -22,18 +22,21 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     setHeader,
     setLines,
     reset,
+    removeBox,
+    removeLine,
   } = usePackingStore();
 
+  const [clientName, setClientName] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [error, setError] = useState<string | null>(null);
-
-  // Draft
   const [draft_id, setDraftId] = useState<string | null>(null);
-
-  // Boxes
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
 
+  const safeHeader = header ?? {
+  client_code: "",
+  internal_ref: "",
+};
   /* ================= RESET ================= */
   useEffect(() => {
     if (!open) return;
@@ -60,14 +63,40 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     setStep(2);
   }
 
+  /* ================= CARGAR NOMBRE CLIENTE ================= */
+  useEffect(() => {
+  if (!safeHeader.client_code) {
+    setClientName(null);
+    return;
+  }
+
+  async function loadClient() {
+    try {
+      const res = await fetch(
+        `/api/clients/by-code/${safeHeader.client_code}`
+      );
+      const data = await res.json();
+
+      if (data?.ok && typeof data.name === "string") {
+        setClientName(data.name);
+      } else {
+        setClientName(safeHeader.client_code ?? null);
+      }
+    } catch {
+      setClientName(safeHeader.client_code ?? null);
+    }
+  }
+
+  loadClient();
+}, [header]);
+
   /* ================= GUARDAR BORRADOR ================= */
   async function saveDraftAndExit() {
-    if (!header?.client_code || !header?.internal_ref) {
+    if (!safeHeader.client_code || !safeHeader.internal_ref) {
       alert("Cliente e identificador incompletos");
       return;
     }
 
-    // 🔑 CAMBIO CLAVE: leer estado REAL del store
     const { lines: storeLines } = usePackingStore.getState();
 
     if (!storeLines || storeLines.length === 0) {
@@ -82,8 +111,8 @@ export default function NewPackingWizard({ open, onClose }: Props) {
         body: JSON.stringify({
           draft_id: draft_id ?? null,
           header: {
-            client_code: header.client_code,
-            internal_ref: header.internal_ref,
+            client_code: safeHeader.client_code,
+internal_ref: safeHeader.internal_ref,
           },
           lines: storeLines,
           status: "PROCESS",
@@ -135,7 +164,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     loadDraft();
   }, [open, id, setHeader, setLines]);
 
-  /* ================= FINALIZAR PROCESO ================= */
+  /* ================= FINALIZAR ================= */
   async function finishProcess() {
     if (!draft_id) return;
 
@@ -157,7 +186,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     router.replace("/drafts");
   }
 
-  /* ================= DATOS DERIVADOS ================= */
+  /* ================= DERIVADOS ================= */
   const grouped = groupBoxes(lines);
   const totalCajas = grouped.length;
   const totalLbs = grouped.reduce((s, b) => s + b.total_lbs, 0);
@@ -182,7 +211,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 value={header?.client_code ?? ""}
                 onChange={(e) =>
                   setHeader({
-                    ...header!,
+                    ...(header ?? {}),
                     client_code: e.target.value.toUpperCase(),
                   })
                 }
@@ -196,13 +225,15 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 value={header?.internal_ref ?? ""}
                 onChange={(e) =>
                   setHeader({
-                    ...header!,
+                    ...(header ?? {}),
                     internal_ref: e.target.value.toUpperCase(),
                   })
                 }
               />
 
-              {error && <div className="text-red-600 mt-2">{error}</div>}
+              {error && (
+                <div className="text-red-600 mt-2">{error}</div>
+              )}
 
               <button
                 onClick={goStep1}
@@ -217,8 +248,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           {step === 2 && (
             <>
               <p className="mb-3 text-sm">
-                <b>Cliente:</b> {header?.client_code} <br />
-                <b>Referencia:</b> {header?.internal_ref}
+                <b>Cliente:</b>{" "}
+                {clientName ?? header?.client_code ?? ""} <br />
+                <b>Referencia:</b>{" "}
+                {header?.internal_ref ?? ""}
               </p>
 
               <button
@@ -235,27 +268,53 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                 {grouped.map((box) => (
                   <div
                     key={box.box_no}
-                    className="mb-2 border rounded p-2 cursor-pointer hover:bg-gray-50"
-                    onClick={() => {
-                      if (typeof box.box_no === "number") {
-                        setEditingBox(box.box_no);
-                        setOpenBoxes(true);
-                      }
-                    }}
+                    className="mb-2 border rounded p-2 hover:bg-gray-50"
                   >
-                    <div className="font-semibold">
-                      Caja #{box.box_no}
-                      {box.isCombined && " (Combinada)"}
+                    <div className="font-semibold flex items-center justify-between">
+                      <div>
+                        Caja #{box.box_no}
+                        {box.isCombined && " (Combinada)"}
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          removeBox(box.box_no as number)
+                        }
+                        className="text-red-600 text-xs"
+                      >
+                        Eliminar caja
+                      </button>
                     </div>
 
-                    {box.lines.map((l, i) => (
-                      <div key={i} className="text-sm ml-4">
-                        🐟 {l.description_en} {l.form} {l.size} – {l.pounds} lbs
-                      </div>
-                    ))}
+                    {box.lines.map((l, i) => {
+                      const globalIndex =
+                        lines.indexOf(l);
+
+                      return (
+                        <div
+                          key={i}
+                          className="text-sm ml-4 flex items-center justify-between"
+                        >
+                          <span>
+                            🐟 {l.description_en} {l.form}{" "}
+                            {l.size} – {l.pounds} lbs
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              removeLine(globalIndex)
+                            }
+                            className="text-red-600 text-xs"
+                          >
+                            ❌
+                          </button>
+                        </div>
+                      );
+                    })}
 
                     <div className="ml-4 text-xs text-gray-600 mt-1">
-                      <b>Total caja:</b> {box.total_lbs} lbs
+                      <b>Total caja:</b>{" "}
+                      {box.total_lbs} lbs
                     </div>
                   </div>
                 ))}
@@ -282,7 +341,9 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           {/* ===== PASO 3 ===== */}
           {step === 3 && (
             <>
-              <p className="text-xl font-bold mb-3">Resumen</p>
+              <p className="text-xl font-bold mb-3">
+                Resumen
+              </p>
 
               <div className="text-sm mb-3">
                 <b>Total cajas:</b> {totalCajas} &nbsp;&nbsp;

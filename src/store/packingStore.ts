@@ -36,9 +36,10 @@ type State = {
   addLine: (ln: PackingLine) => void;
   addLines: (arr: PackingLine[]) => void;
   removeLine: (index: number) => void;
+  removeLineByRef: (line: PackingLine) => void;
   removeBox: (boxNo: number) => void;
   reorder: (arr: PackingLine[]) => void;
-  updateLine: (index: number, updates: Partial<PackingLine>) => void; // 👈 NUEVO
+  updateLine: (index: number, updates: Partial<PackingLine>) => void;
 
   /* ---------- helpers ---------- */
   getNextBoxNo: () => number;
@@ -60,88 +61,103 @@ type State = {
    STORE
 ======================= */
 
-export const usePackingStore = create<State>((set, get) => ({
-  packing_id: null,
-  status: "DRAFT",
+export const usePackingStore = create<State>((set, get) => {
+  const { header } = get();
 
-  header: null,
-  lines: [],
+  // ✅ safeHeader para evitar null
+  const safeHeader = header ?? {
+    client_code: "",
+    internal_ref: "",
+  };
 
-  /* ---------- header ---------- */
-  setHeader: (h) =>
-    set(() => ({
-      header: h,
-    })),
+  return {
+    packing_id: null,
+    status: "DRAFT",
 
-  /* ---------- lines ---------- */
-  setLines: (lines) => set({ lines }),
+    header: null,
+    lines: [],
 
-  addLine: (ln) =>
-    set((state) => ({
-      lines: [...state.lines, ln],
-    })),
+    /* ---------- header ---------- */
+    setHeader: (h) =>
+      set(() => ({
+        header: h,
+      })),
 
-  addLines: (arr) =>
-    set((state) => ({
-      lines: [...state.lines, ...arr],
-    })),
+    /* ---------- lines ---------- */
+    setLines: (lines) => set({ lines }),
 
-  removeLine: (index) =>
-    set((state) => {
-      const copy = [...state.lines];
-      copy.splice(index, 1);
-      return { lines: copy };
-    }),
+    addLine: (ln) =>
+      set((state) => ({
+        lines: [...state.lines, ln],
+      })),
 
-  removeBox: (boxNo) =>
-    set((state) => ({
-      lines: state.lines.filter((l) => Number(l.box_no) !== boxNo),
-    })),
+    addLines: (arr) =>
+      set((state) => ({
+        lines: [...state.lines, ...arr],
+      })),
 
-  reorder: (arr) => set({ lines: arr }),
+    removeLine: (index) =>
+      set((state) => {
+        const copy = [...state.lines];
+        copy.splice(index, 1);
+        return { lines: copy };
+      }),
 
-  updateLine: (index, updates) =>
-    set((state) => {
-      const copy = [...state.lines];
-      copy[index] = { ...copy[index], ...updates };
-      return { lines: copy };
-    }),
+    removeLineByRef: (line) =>
+      set((state) => ({
+        lines: state.lines.filter((l) => l !== line),
+      })),
 
-  /* ---------- helpers ---------- */
-  getNextBoxNo: () => {
-    const lines = get().lines;
-    if (lines.length === 0) return 1;
-    return (
-      Math.max(
-        ...lines.map((l) => Number(l.box_no)).filter((n) => !isNaN(n))
-      ) + 1
-    );
-  },
+    removeBox: (boxNo) =>
+      set((state) => ({
+        lines: state.lines.filter((l) => Number(l.box_no) !== boxNo),
+      })),
 
-  /* ---------- lifecycle ---------- */
-  loadFromDB: (data) =>
-    set(() => ({
-      packing_id: data.packing_id,
-      status: data.status,
-      header: data.header,
-      lines: data.lines,
-    })),
+    reorder: (arr) => set({ lines: arr }),
 
-  markDraft: () =>
-    set(() => ({
-      status: "DRAFT",
-    })),
+    updateLine: (index, updates) =>
+      set((state) => {
+        const copy = [...state.lines];
+        copy[index] = { ...copy[index], ...updates };
+        return { lines: copy };
+      }),
 
-  clear: () =>
-    set(() => ({
-      lines: [],
-    })),
+    /* ---------- helpers ---------- */
+    getNextBoxNo: () => {
+      const lines = get().lines;
+      if (lines.length === 0) return 1;
+      return (
+        Math.max(
+          ...lines.map((l) => Number(l.box_no)).filter((n) => !isNaN(n))
+        ) + 1
+      );
+    },
 
-  reset: () =>
-    set(() => ({
-      packing_id: null,
-      status: "DRAFT",
-      header: null,
-      lines: [],
-    })),
-}));
+    /* ---------- lifecycle ---------- */
+    loadFromDB: (data) =>
+      set(() => ({
+        packing_id: data.packing_id,
+        status: data.status,
+        header: data.header,
+        lines: data.lines,
+      })),
+
+    markDraft: () =>
+      set(() => ({
+        status: "DRAFT",
+      })),
+
+    clear: () =>
+      set(() => ({
+        lines: [],
+      })),
+
+    reset: () =>
+      set(() => ({
+        packing_id: null,
+        status: "DRAFT",
+        header: null,
+        lines: [],
+      })),
+  };
+});
