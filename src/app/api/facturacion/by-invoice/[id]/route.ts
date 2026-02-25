@@ -100,6 +100,25 @@ export async function GET(
   const lines = data as LineDB[];
 
   /* =====================================================
+   2️⃣ BIS - TRAER SCIENTIFIC NAME DESDE SPECIES
+   ===================================================== */
+
+const codes = [...new Set(lines.map(l => l.code))];
+
+const { data: speciesData } = await supabase
+  .from("species")
+  .select("code, scientific_name")
+  .in("code", codes);
+
+const speciesMap = new Map<string, string | null>();
+
+if (speciesData) {
+  for (const s of speciesData) {
+    speciesMap.set(s.code, s.scientific_name);
+  }
+}
+
+  /* =====================================================
      3️⃣ CONSTRUIR FILAS
      ===================================================== */
   const rows: Row[] = [];
@@ -121,7 +140,7 @@ export async function GET(
         description: l.description_en,
         size: l.size,
         form: l.form,
-        scientific_name: l.scientific_name,
+        scientific_name: speciesMap.get(l.code) ?? null,
         price,
         amount: l.pounds * price,
       });
@@ -143,7 +162,7 @@ export async function GET(
           description: l.description_en,
           size: l.size,
           form: l.form,
-          scientific_name: l.scientific_name,
+          scientific_name: speciesMap.get(l.code) ?? null,
           price,
           amount: l.pounds * price,
         });
