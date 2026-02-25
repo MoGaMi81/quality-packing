@@ -64,6 +64,18 @@ export async function GET(
   }
 
   /* =====================================================
+   1️⃣ BIS - TRAER CLIENTE DESDE clients
+   ===================================================== */
+
+const { data: clientData } = await supabase
+  .from("clients")
+  .select("name")
+  .eq("code", packing.client_code)
+  .single();
+
+const clientName = clientData?.name ?? packing.client_code;
+
+  /* =====================================================
      2️⃣ LÍNEAS
      ===================================================== */
   const { data, error: linesError } = await supabase
@@ -189,10 +201,7 @@ if (speciesData) {
       packing_id: packing.id,
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name:
-      Array.isArray(packing.clients) && packing.clients.length > 0
-    ? packing.clients[0].name
-    : packing.client_code,
+      client_name: clientName,
       guide: packing.guide,
       date: packing.created_at,
       total_boxes,
