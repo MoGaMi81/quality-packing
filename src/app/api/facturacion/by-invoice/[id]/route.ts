@@ -170,7 +170,7 @@ export async function GET(
       packing_id: packing.id,
       invoice_no: packing.invoice_no,
       client_code: packing.client_code,
-      client_name: packing.clients?.[0]?.name ?? packing.client_code, // 👈 ahora sí toma el nombre
+      client_name: packing.clients?.[0]?.name ?? packing.client_code,
       guide: packing.guide,
       date: packing.created_at,
       total_boxes,

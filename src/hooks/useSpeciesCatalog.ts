@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 export type SpeciesItem = {
   code: string;
   description_en: string;
+  scientific_name?: string | null;
   form: string;
   size: string;
 };

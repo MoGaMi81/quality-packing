@@ -8,7 +8,7 @@ export type PackingLine = {
   [x: string]: any;
   box_no: number | "MX";
   code?: string | null;
-
+ scientific_name?: string | null;
   description_en: string;
   form: string;
   size: string;
@@ -53,6 +53,7 @@ export type InvoiceLine = {
 export type SpeciesGroup = {
   key: string;               // description||form||size
   description_en: string;
+  scientific_name?: string | null;
   form: string;
   size: string;
   boxes: number;             // total de cajas con esa especie
@@ -66,6 +67,7 @@ export type SpeciesGroup = {
 export type PricingLine = {
   box_no: number | "MX";
   description_en: string;
+  scientific_name?: string | null;
   form: string;
   size: string;
   pounds: number;

@@ -51,15 +51,16 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     const startBoxNo = getNextBoxNo();
 
     const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
-      box_no: startBoxNo + i,
-      is_combined: false,
+  box_no: startBoxNo + i,
+  is_combined: false,
 
-      code: species.code,
-      description_en: species.description_en,
-      form: species.form,
-      size: species.size,
-      pounds,
-    }));
+  code: species.code,
+  description_en: species.description_en,
+  scientific_name: species.scientific_name ?? null,  // ✅ AQUI
+  form: species.form,
+  size: species.size,
+  pounds,
+}));
 
     addLines(newLines);
     resetAll();
@@ -78,15 +79,16 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
       combinedLines[0]?.box_no ?? getNextBoxNo();
 
     const line: PackingLine = {
-      box_no: boxNo,
-      is_combined: true,
+  box_no: boxNo,
+  is_combined: true,
 
-      code: species.code,
-      description_en: species.description_en,
-      form: species.form,
-      size: species.size,
-      pounds,
-    };
+  code: species.code,
+  description_en: species.description_en,
+  scientific_name: species.scientific_name ?? null,  // ✅ AQUI
+  form: species.form,
+  size: species.size,
+  pounds,
+};
 
     setCombinedLines(prev => [...prev, line]);
     setCode("");
