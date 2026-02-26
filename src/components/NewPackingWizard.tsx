@@ -24,6 +24,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
     reset,
     removeBox,
     removeLine,
+    updateLine,
   } = usePackingStore();
 
   const [clientName, setClientName] = useState<string | null>(null);
@@ -245,98 +246,137 @@ internal_ref: safeHeader.internal_ref,
           )}
 
           {/* ===== PASO 2 ===== */}
-          {step === 2 && (
-            <>
-              <p className="mb-3 text-sm">
-                <b>Cliente:</b>{" "}
-                {clientName ?? header?.client_code ?? ""} <br />
-                <b>Referencia:</b>{" "}
-                {header?.internal_ref ?? ""}
-              </p>
+{step === 2 && (
+  <>
+    <p className="mb-3 text-sm">
+      <b>Cliente:</b>{" "}
+      {clientName ?? header?.client_code ?? ""} <br />
+      <b>Referencia:</b>{" "}
+      {header?.internal_ref ?? ""}
+    </p>
 
-              <button
-                onClick={() => {
-                  setEditingBox(null);
-                  setOpenBoxes(true);
-                }}
-                className="bg-black text-white px-4 py-2 rounded w-full"
+    <button
+      onClick={() => {
+        setEditingBox(null);
+        setOpenBoxes(true);
+      }}
+      className="bg-black text-white px-4 py-2 rounded w-full"
+    >
+      + Agregar cajas
+    </button>
+
+    <div className="mt-4 border rounded p-2 max-h-56 overflow-auto">
+      {grouped.map((box) => (
+        <div
+          key={box.box_no}
+          className="mb-2 border rounded p-2 hover:bg-gray-50"
+        >
+          <div className="font-semibold flex items-center justify-between">
+            <div>
+              Caja #{box.box_no}
+              {box.isCombined && " (Combinada)"}
+            </div>
+
+            <button
+              onClick={() => removeBox(box.box_no as number)}
+              className="text-red-600 text-xs"
+            >
+              Eliminar caja
+            </button>
+          </div>
+
+          {box.lines.map((l, i) => {
+  const globalIndex = lines.findIndex(
+    (orig) =>
+      orig.box_no === l.box_no &&
+      orig.description_en === l.description_en &&
+      orig.form === l.form &&
+      orig.size === l.size &&
+      orig.pounds === l.pounds
+  );
+
+            return (
+              <div
+                key={i}
+                className="text-sm ml-4 flex items-center justify-between gap-4"
               >
-                + Agregar cajas
-              </button>
-
-              <div className="mt-4 border rounded p-2 max-h-56 overflow-auto">
-                {grouped.map((box) => (
-                  <div
-                    key={box.box_no}
-                    className="mb-2 border rounded p-2 hover:bg-gray-50"
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* ✅ ESPECIE editable */}
+                  <select
+                    value={l.species_code}
+                    onChange={(e) =>
+                      updateLine(globalIndex, {
+                        species_code: e.target.value,
+                      })
+                    }
+                    className="border rounded px-2 py-1 text-sm"
                   >
-                    <div className="font-semibold flex items-center justify-between">
-                      <div>
-                        Caja #{box.box_no}
-                        {box.isCombined && " (Combinada)"}
-                      </div>
+                    {/* aquí necesitas tu catálogo */}
+                  </select>
 
-                      <button
-                        onClick={() =>
-                          removeBox(box.box_no as number)
-                        }
-                        className="text-red-600 text-xs"
-                      >
-                        Eliminar caja
-                      </button>
-                    </div>
+                  {/* SIZE */}
+                  <span className="text-gray-600">
+                    {l.form} {l.size}
+                  </span>
 
-                    {box.lines.map((l, i) => {
-                      const globalIndex =
-                        lines.indexOf(l);
+                  {/* LBS editable */}
+                  <input
+  type="number"
+  value={l.pounds}
+  onChange={(e) =>
+    updateLine(globalIndex, {
+      pounds: Number(e.target.value),
+    })
+  }
+  className="w-20 border rounded px-2 py-1 text-sm"
+/>
+                  <span className="text-xs text-gray-500">lbs</span>
+                </div>
 
-                      return (
-                        <div
-                          key={i}
-                          className="text-sm ml-4 flex items-center justify-between"
-                        >
-                          <span>
-                            🐟 {l.description_en} {l.form}{" "}
-                            {l.size} – {l.pounds} lbs
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              removeLine(globalIndex)
-                            }
-                            className="text-red-600 text-xs"
-                          >
-                            ❌
-                          </button>
-                        </div>
-                      );
-                    })}
-
-                    <div className="ml-4 text-xs text-gray-600 mt-1">
-                      <b>Total caja:</b>{" "}
-                      {box.total_lbs} lbs
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3 mt-4">
+                {/* Botón eliminar línea */}
                 <button
-                  onClick={saveDraftAndExit}
-                  className="flex-1 border px-4 py-2 rounded"
+                  onClick={() => {
+                    if (box.lines.length === 1) {
+                      if (confirm("¿Eliminar caja completa?"))
+                        removeBox(box.box_no as number);
+                    } else {
+                      if (confirm("¿Eliminar solo esta línea?"))
+                        removeLine(globalIndex);
+                    }
+                  }}
+                  className="text-red-600 text-xs hover:underline"
                 >
-                  Guardar y salir
-                </button>
-
-                <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 bg-blue-700 text-white px-4 py-2 rounded"
-                >
-                  Continuar
+                  ❌
                 </button>
               </div>
-            </>
-          )}
+            );
+          })}
+
+          <div className="ml-4 text-xs text-gray-600 mt-1">
+            <b>Total caja:</b>{" "}
+            {box.total_lbs} lbs
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div className="flex gap-3 mt-4">
+      <button
+        onClick={saveDraftAndExit}
+        className="flex-1 border px-4 py-2 rounded"
+      >
+        Guardar y salir
+      </button>
+
+      <button
+        onClick={() => setStep(3)}
+        className="flex-1 bg-blue-700 text-white px-4 py-2 rounded"
+      >
+        Continuar
+      </button>
+    </div>
+  </>
+)}
 
           {/* ===== PASO 3 ===== */}
           {step === 3 && (
