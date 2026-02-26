@@ -279,12 +279,6 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               {box.isCombined && " (Combinada)"}
             </div>
 
-            <button
-              onClick={() => removeBox(box.box_no as number)}
-              className="text-red-600 text-xs hover:underline"
-            >
-              Eliminar caja
-            </button>
           </div>
 
           {box.lines.map((l, i) => {
@@ -362,7 +356,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
                   }}
                   className="text-red-600 text-xs hover:underline"
                 >
-                  ❌
+                  ❌ Eliminar
                 </button>
               </div>
             );
