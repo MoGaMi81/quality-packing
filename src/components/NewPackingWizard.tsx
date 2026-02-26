@@ -1,5 +1,7 @@
 "use client";
 
+import { TrashIcon } from "@heroicons/react/24/outline";
+
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
@@ -345,19 +347,21 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
                 {/* ❌ Botón eliminar línea */}
                 <button
-                  onClick={() => {
-                    if (box.lines.length === 1) {
-                      if (confirm("¿Eliminar caja completa?"))
-                        removeBox(box.box_no as number);
-                    } else {
-                      if (confirm("¿Eliminar solo esta línea?"))
-                        removeLine(globalIndex);
-                    }
-                  }}
-                  className="text-red-600 text-xs hover:underline"
-                >
-                  ❌ Eliminar
-                </button>
+  onClick={() => {
+    if (box.lines.length === 1) {
+      if (confirm("¿Eliminar caja completa?"))
+        removeBox(box.box_no as number);
+    } else {
+      if (confirm("¿Eliminar solo esta línea?"))
+        removeLine(globalIndex);
+    }
+  }}
+  className="text-red-600 text-xs hover:underline flex items-center gap-1"
+>
+  <TrashIcon className="w-4 h-4" />
+  Eliminar
+</button>
+
               </div>
             );
           })}
