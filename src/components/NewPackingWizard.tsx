@@ -5,6 +5,7 @@ import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { useRouter, useSearchParams } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
+import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 
 type Props = {
   open: boolean;
@@ -15,6 +16,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("draft");
+  const { items } = useSpeciesCatalog();
 
   const {
     header,
@@ -113,7 +115,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           draft_id: draft_id ?? null,
           header: {
             client_code: safeHeader.client_code,
-internal_ref: safeHeader.internal_ref,
+            internal_ref: safeHeader.internal_ref,
           },
           lines: storeLines,
           status: "PROCESS",
@@ -269,9 +271,9 @@ internal_ref: safeHeader.internal_ref,
       {grouped.map((box) => (
         <div
           key={box.box_no}
-          className="mb-2 border rounded p-2 hover:bg-gray-50"
+          className="mb-2 border rounded p-3 hover:bg-gray-50"
         >
-          <div className="font-semibold flex items-center justify-between">
+          <div className="font-semibold flex items-center justify-between mb-2">
             <div>
               Caja #{box.box_no}
               {box.isCombined && " (Combinada)"}
@@ -279,39 +281,52 @@ internal_ref: safeHeader.internal_ref,
 
             <button
               onClick={() => removeBox(box.box_no as number)}
-              className="text-red-600 text-xs"
+              className="text-red-600 text-xs hover:underline"
             >
-              
+              Eliminar caja
             </button>
           </div>
 
           {box.lines.map((l, i) => {
-  const globalIndex = lines.findIndex(
-    (orig) =>
-      orig.box_no === l.box_no &&
-      orig.description_en === l.description_en &&
-      orig.form === l.form &&
-      orig.size === l.size &&
-      orig.pounds === l.pounds
-  );
+            const globalIndex = lines.findIndex(
+              (orig) =>
+                orig.box_no === l.box_no &&
+                orig.description_en === l.description_en &&
+                orig.form === l.form &&
+                orig.size === l.size &&
+                orig.pounds === l.pounds
+            );
 
             return (
               <div
                 key={i}
-                className="text-sm ml-4 flex items-center justify-between gap-4"
+                className="text-sm ml-4 flex items-center justify-between gap-4 mb-2"
               >
                 <div className="flex items-center gap-3 flex-wrap">
-                  {/* ✅ ESPECIE editable */}
+
+                  {/* 🔵 ESPECIE editable */}
                   <select
-                    value={l.species_code}
-                    onChange={(e) =>
+                    value={l.code ?? ""}
+                    onChange={(e) => {
+                      const selected = allSpecies.find(
+                        (s) => s.code === e.target.value
+                      );
+                      if (!selected) return;
+
                       updateLine(globalIndex, {
-                        species_code: e.target.value,
-                      })
-                    }
+                        code: selected.code,
+                        description_en: selected.name_en,
+                        scientific_name:
+                          selected.scientific_name ?? null,
+                      });
+                    }}
                     className="border rounded px-2 py-1 text-sm"
                   >
-                    {/* aquí necesitas tu catálogo */}
+                    {allSpecies.map((sp) => (
+                      <option key={sp.code} value={sp.code}>
+                        {sp.code} - {sp.name_en}
+                      </option>
+                    ))}
                   </select>
 
                   {/* SIZE */}
@@ -319,21 +334,21 @@ internal_ref: safeHeader.internal_ref,
                     {l.form} {l.size}
                   </span>
 
-                  {/* LBS editable */}
+                  {/* 🔵 LBS editable */}
                   <input
-  type="number"
-  value={l.pounds}
-  onChange={(e) =>
-    updateLine(globalIndex, {
-      pounds: Number(e.target.value),
-    })
-  }
-  className="w-20 border rounded px-2 py-1 text-sm"
-/>
+                    type="number"
+                    value={l.pounds}
+                    onChange={(e) =>
+                      updateLine(globalIndex, {
+                        pounds: Number(e.target.value),
+                      })
+                    }
+                    className="w-20 border rounded px-2 py-1 text-sm"
+                  />
                   <span className="text-xs text-gray-500">lbs</span>
                 </div>
 
-                {/* Botón eliminar línea */}
+                {/* ❌ Botón eliminar línea */}
                 <button
                   onClick={() => {
                     if (box.lines.length === 1) {
@@ -352,9 +367,8 @@ internal_ref: safeHeader.internal_ref,
             );
           })}
 
-          <div className="ml-4 text-xs text-gray-600 mt-1">
-            <b>Total caja:</b>{" "}
-            {box.total_lbs} lbs
+          <div className="ml-4 text-xs text-gray-600 mt-2">
+            <b>Total caja:</b> {box.total_lbs} lbs
           </div>
         </div>
       ))}
