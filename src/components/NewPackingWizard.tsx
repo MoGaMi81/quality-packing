@@ -281,7 +281,7 @@ internal_ref: safeHeader.internal_ref,
               onClick={() => removeBox(box.box_no as number)}
               className="text-red-600 text-xs"
             >
-              Eliminar caja
+              
             </button>
           </div>
 
