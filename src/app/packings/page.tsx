@@ -1,6 +1,7 @@
+"use client";
+
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
-"use client";
 
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";

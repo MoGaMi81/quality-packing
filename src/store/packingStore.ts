@@ -62,14 +62,7 @@ type State = {
 ======================= */
 
 export const usePackingStore = create<State>((set, get) => {
-  const { header } = get();
-
-  // ✅ safeHeader para evitar null
-  const safeHeader = header ?? {
-    client_code: "",
-    internal_ref: "",
-  };
-
+  
   return {
     packing_id: null,
     status: "DRAFT",
