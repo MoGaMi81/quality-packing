@@ -306,28 +306,29 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
                   {/* 🔵 ESPECIE editable */}
                   <select
-                    value={l.code ?? ""}
-                    onChange={(e) => {
-                      const selected = allSpecies.find(
-                        (s) => s.code === e.target.value
-                      );
-                      if (!selected) return;
+  value={l.code ?? ""}
+  onChange={(e) => {
+    const selected = items.find(
+      (s) => s.code === e.target.value
+    );
+    if (!selected) return;
 
-                      updateLine(globalIndex, {
-                        code: selected.code,
-                        description_en: selected.name_en,
-                        scientific_name:
-                          selected.scientific_name ?? null,
-                      });
-                    }}
-                    className="border rounded px-2 py-1 text-sm"
-                  >
-                    {allSpecies.map((sp) => (
-                      <option key={sp.code} value={sp.code}>
-                        {sp.code} - {sp.name_en}
-                      </option>
-                    ))}
-                  </select>
+    updateLine(globalIndex, {
+      code: selected.code,
+      description_en: selected.description_en,
+      scientific_name: selected.scientific_name ?? null,
+      form: selected.form,
+      size: selected.size,
+    });
+  }}
+  className="border rounded px-2 py-1 text-sm"
+>
+  {items.map((sp) => (
+    <option key={sp.code} value={sp.code}>
+      {sp.code} - {sp.description_en}
+    </option>
+  ))}
+</select>
 
                   {/* SIZE */}
                   <span className="text-gray-600">
