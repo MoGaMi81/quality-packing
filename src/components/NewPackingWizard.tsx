@@ -254,7 +254,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   <>
     <p className="mb-3 text-sm">
       <b>Cliente:</b>{" "}
-      {clientName ?? header?.client_code ?? ""} <br />
+        {clientName ?? "—"} <br />
       <b>Referencia:</b>{" "}
       {header?.internal_ref ?? ""}
     </p>
