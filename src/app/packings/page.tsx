@@ -37,7 +37,7 @@ export default function PackingPage() {
 
   useEffect(() => {
     if (!header) return;
-    setClientCode(header.client_code ?? "");
+    setClientCode(header.client_name ?? "");
     setGuide(header.guide ?? "");
     setInvoiceNo(header.invoice_no ?? "");
     setDate(header.date ?? "");
@@ -73,7 +73,7 @@ export default function PackingPage() {
                     setClientCode(e.target.value);
                     setHeader({
                       ...header,
-                      client_code: e.target.value,
+                      client_name: e.target.value,
                     });
                   }}
                 />

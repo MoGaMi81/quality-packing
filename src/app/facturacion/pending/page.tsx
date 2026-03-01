@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
-// 🔑 Tipo Row ahora con client_name
+
 type Row = {
   id: string;
   client_name: string;
