@@ -74,7 +74,7 @@ export async function PATCH(
     .insert({
       invoice_no: invoice_no.toUpperCase(),
       guide,
-      client_code: draft.client_code,
+      client_name: draft.client_name,
       date: today,
       status: "READY",
       pricing_status: "PENDING",
