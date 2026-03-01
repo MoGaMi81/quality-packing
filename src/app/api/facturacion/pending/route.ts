@@ -14,7 +14,7 @@ export async function GET() {
     .from("packing_drafts")
     .select(`
       id,
-      client_name,
+      client_code,
       internal_ref,
       created_at
     `)
