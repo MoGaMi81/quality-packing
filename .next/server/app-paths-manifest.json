@@ -1,9 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/api/packing-drafts/list/route": "app/api/packing-drafts/list/route.js",
-  "/api/packing-drafts/[id]/route": "app/api/packing-drafts/[id]/route.js",
-  "/drafts/page": "app/drafts/page.js",
-  "/drafts/[id]/page": "app/drafts/[id]/page.js",
-  "/packings/new/page": "app/packings/new/page.js"
+  "/login/page": "app/login/page.js"
 }
