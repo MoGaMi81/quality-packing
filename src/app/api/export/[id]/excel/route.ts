@@ -945,7 +945,7 @@ function writeInvoiceRow(data: {
   invoiceSheet.getCell(`G${row}`).alignment = { horizontal: "right" };
   invoiceSheet.getCell(`H${row}`).alignment = { horizontal: "right" };
 
-  invoiceSheet.getCell(`B${row}`).numFmt = "#,##0";
+  invoiceSheet.getCell(`B${row}`).numFmt = "#,##0.00";
   invoiceSheet.getCell(`G${row}`).numFmt = '"$"#,##0.00';
   invoiceSheet.getCell(`H${row}`).numFmt = '"$"#,##0.00';
 

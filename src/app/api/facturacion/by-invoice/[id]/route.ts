@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 type LineDB = {
-  id: string; 
+  id: string; // 👈 ahora incluimos id
   box_no: string;
   code: string;
   description_en: string;
@@ -16,12 +16,12 @@ type LineDB = {
   size: string;
   pounds: number;
   price: number | null;
-  is_combined: boolean; 
-  combined_with: string | null; 
+  is_combined: boolean; // 👈 nuevo campo
+  combined_with: string | null; // 👈 nuevo campo
 };
 
 type Row = {
-  line_id: string; 
+  line_id: string; // 👈 nuevo campo
   boxes: number | "MX";
   pounds: number;
   description: string;

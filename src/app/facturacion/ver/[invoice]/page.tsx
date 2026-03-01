@@ -44,7 +44,7 @@ export default function VerFacturaPage() {
   )
     .then((r) => {
       if (!r.ok) throw new Error("Factura no encontrada");
-      setData(r.invoice); 
+      setData(r.invoice); // 👈 ESTA ES LA CLAVE
     })
     .catch(() => alert("Error cargando factura"))
     .finally(() => setLoading(false));
@@ -60,6 +60,7 @@ export default function VerFacturaPage() {
      const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
      const totalGross = totalNet * 1.31;
 
+  // ✅ Adaptación: usar nullish coalescing para evitar errores
   const totalAmount = data.lines.reduce(
     (s, l) => s + (l.amount ?? 0),
     0

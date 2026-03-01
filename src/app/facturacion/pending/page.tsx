@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
-
+// 🔑 Tipo Row sin total_boxes ni total_lbs
 type Row = {
   id: string;
-  client_name: string;
+  client_code: string;
   internal_ref: string;
   created_at: string;
 };
@@ -69,7 +69,7 @@ export default function FacturacionPendingPage() {
         >
           <div>
             <div>
-              <b>Cliente:</b> {r.client_name}
+              <b>Cliente:</b> {r.client_code}
             </div>
             <div>
               <b>Referencia:</b> {r.internal_ref}
