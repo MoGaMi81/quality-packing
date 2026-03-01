@@ -39,7 +39,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [editingBox, setEditingBox] = useState<number | null>(null);
 
   const safeHeader = header ?? {
-  client_name: "",
+  client_code: "",
   internal_ref: "",
 };
   /* ================= RESET ================= */
@@ -59,7 +59,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= PASO 1 ================= */
   function goStep1() {
-    if (!header?.client_name || !header?.internal_ref) {
+    if (!header?.client_code || !header?.internal_ref) {
       setError("Cliente e identificador son obligatorios");
       return;
     }
@@ -70,7 +70,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= CARGAR NOMBRE CLIENTE ================= */
   useEffect(() => {
-  if (!safeHeader.client_name) {
+  if (!safeHeader.client_code) {
     setClientName(null);
     return;
   }
@@ -78,17 +78,17 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   async function loadClient() {
     try {
       const res = await fetch(
-        `/api/clients/by-code/${safeHeader.client_name}`
+        `/api/clients/by-code/${safeHeader.client_code}`
       );
       const data = await res.json();
 
       if (data?.ok && typeof data.name === "string") {
         setClientName(data.name);
       } else {
-        setClientName(safeHeader.client_name ?? null);
+        setClientName(safeHeader.client_code ?? null);
       }
     } catch {
-      setClientName(safeHeader.client_name ?? null);
+      setClientName(safeHeader.client_code ?? null);
     }
   }
 
@@ -97,7 +97,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= GUARDAR BORRADOR ================= */
   async function saveDraftAndExit() {
-    if (!safeHeader.client_name || !safeHeader.internal_ref) {
+    if (!safeHeader.client_code || !safeHeader.internal_ref) {
       alert("Cliente e identificador incompletos");
       return;
     }
@@ -116,7 +116,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
         body: JSON.stringify({
           draft_id: draft_id ?? null,
           header: {
-            client_code: safeHeader.client_name,
+            client_code: safeHeader.client_code,
             internal_ref: safeHeader.internal_ref,
           },
           lines: storeLines,
@@ -156,7 +156,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       if (!data.ok) return;
 
       setHeader({
-        client_name: data.draft.client_name,
+        client_code: data.draft.client_code,
         internal_ref: data.draft.internal_ref,
         date: new Date().toISOString().slice(0, 10),
       });
@@ -213,11 +213,11 @@ export default function NewPackingWizard({ open, onClose }: Props) {
               </label>
               <input
                 className="border rounded px-3 py-2 w-full mb-3"
-                value={header?.client_name ?? ""}
+                value={header?.client_code ?? ""}
                 onChange={(e) =>
                   setHeader({
                     ...(header ?? {}),
-                    client_name: e.target.value.toUpperCase(),
+                    client_code: e.target.value.toUpperCase(),
                   })
                 }
               />

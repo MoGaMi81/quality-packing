@@ -12,7 +12,7 @@ const supabase = createClient(
 export async function GET() {
   const { data, error } = await supabase
     .from("packing_drafts")
-    .select("id, client_name, internal_ref, status, created_at")
+    .select("id, client_code, internal_ref, status, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
