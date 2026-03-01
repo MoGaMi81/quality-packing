@@ -1,10 +1,13 @@
 "use client";
 
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { useRouter, useSearchParams } from "next/navigation";
 import { groupBoxes } from "@/lib/groupBoxes";
+import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 
 type Props = {
   open: boolean;
@@ -15,6 +18,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("draft");
+  const { items } = useSpeciesCatalog();
 
   const {
     header,
@@ -33,6 +37,21 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [draft_id, setDraftId] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
+
+  const [clients, setClients] = useState<
+  { code: string; name: string }[]
+>([]);
+
+useEffect(() => {
+  (async () => {
+    const { data } = await supabase
+      .from("clients")
+      .select("code, name")
+      .order("name");
+
+    setClients(data ?? []);
+  })();
+}, []);
 
   const safeHeader = header ?? {
   client_code: "",
@@ -113,7 +132,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           draft_id: draft_id ?? null,
           header: {
             client_code: safeHeader.client_code,
-internal_ref: safeHeader.internal_ref,
+            internal_ref: safeHeader.internal_ref,
           },
           lines: storeLines,
           status: "PROCESS",
@@ -192,6 +211,10 @@ internal_ref: safeHeader.internal_ref,
   const totalCajas = grouped.length;
   const totalLbs = grouped.reduce((s, b) => s + b.total_lbs, 0);
 
+  function setOpenClientModal(arg0: boolean): void {
+    throw new Error("Function not implemented.");
+  }
+
   /* ================= UI ================= */
   return (
     <>
@@ -205,18 +228,34 @@ internal_ref: safeHeader.internal_ref,
           {step === 1 && (
             <>
               <label className="block font-semibold mb-1">
-                Cliente (código)
-              </label>
-              <input
-                className="border rounded px-3 py-2 w-full mb-3"
-                value={header?.client_code ?? ""}
-                onChange={(e) =>
-                  setHeader({
-                    ...(header ?? {}),
-                    client_code: e.target.value.toUpperCase(),
-                  })
-                }
-              />
+              Cliente
+            </label>
+
+            <select
+              className="border rounded px-3 py-2 w-full mb-3"
+            value={header?.client_code ?? ""}
+              onChange={(e) =>
+                setHeader({
+                  ...(header ?? {}),
+                  client_code: e.target.value,
+                })
+              }
+            >
+              <option value="">Seleccionar cliente</option>
+              {clients.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+  type="button"
+  onClick={() => setOpenClientModal(true)}
+  className="text-blue-600 text-sm mb-3"
+>
+  + Nuevo cliente
+</button>
 
               <label className="block font-semibold mb-1">
                 Identificador interno
@@ -250,7 +289,7 @@ internal_ref: safeHeader.internal_ref,
   <>
     <p className="mb-3 text-sm">
       <b>Cliente:</b>{" "}
-      {clientName ?? header?.client_code ?? ""} <br />
+        {clientName ?? "—"} <br />
       <b>Referencia:</b>{" "}
       {header?.internal_ref ?? ""}
     </p>
@@ -269,92 +308,101 @@ internal_ref: safeHeader.internal_ref,
       {grouped.map((box) => (
         <div
           key={box.box_no}
-          className="mb-2 border rounded p-2 hover:bg-gray-50"
+          className="mb-2 border rounded p-3 hover:bg-gray-50"
         >
-          <div className="font-semibold flex items-center justify-between">
+          <div className="font-semibold flex items-center justify-between mb-2">
             <div>
               Caja #{box.box_no}
               {box.isCombined && " (Combinada)"}
             </div>
 
-            <button
-              onClick={() => removeBox(box.box_no as number)}
-              className="text-red-600 text-xs"
-            >
-              
-            </button>
           </div>
 
           {box.lines.map((l, i) => {
-  const globalIndex = lines.findIndex(
-    (orig) =>
-      orig.box_no === l.box_no &&
-      orig.description_en === l.description_en &&
-      orig.form === l.form &&
-      orig.size === l.size &&
-      orig.pounds === l.pounds
-  );
+            const globalIndex = lines.findIndex(
+              (orig) =>
+                orig.box_no === l.box_no &&
+                orig.description_en === l.description_en &&
+                orig.form === l.form &&
+                orig.size === l.size &&
+                orig.pounds === l.pounds
+            );
 
             return (
               <div
                 key={i}
-                className="text-sm ml-4 flex items-center justify-between gap-4"
+                className="text-sm ml-4 flex items-center justify-between gap-4 mb-2"
               >
                 <div className="flex items-center gap-3 flex-wrap">
-                  {/* ✅ ESPECIE editable */}
+
+                  {/* 🔵 ESPECIE editable */}
                   <select
-                    value={l.species_code}
-                    onChange={(e) =>
-                      updateLine(globalIndex, {
-                        species_code: e.target.value,
-                      })
-                    }
-                    className="border rounded px-2 py-1 text-sm"
-                  >
-                    {/* aquí necesitas tu catálogo */}
-                  </select>
+  value={l.code ?? ""}
+  onChange={(e) => {
+    const selected = items.find(
+      (s) => s.code === e.target.value
+    );
+    if (!selected) return;
+
+    updateLine(globalIndex, {
+      code: selected.code,
+      description_en: selected.description_en,
+      scientific_name: selected.scientific_name ?? null,
+      form: selected.form,
+      size: selected.size,
+    });
+  }}
+  className="border rounded px-2 py-1 text-sm"
+>
+  {items.map((sp) => (
+    <option key={sp.code} value={sp.code}>
+      {sp.code} - {sp.description_en}
+    </option>
+  ))}
+</select>
 
                   {/* SIZE */}
                   <span className="text-gray-600">
                     {l.form} {l.size}
                   </span>
 
-                  {/* LBS editable */}
+                  {/* 🔵 LBS editable */}
                   <input
-  type="number"
-  value={l.pounds}
-  onChange={(e) =>
-    updateLine(globalIndex, {
-      pounds: Number(e.target.value),
-    })
-  }
-  className="w-20 border rounded px-2 py-1 text-sm"
-/>
+                    type="number"
+                    value={l.pounds}
+                    onChange={(e) =>
+                      updateLine(globalIndex, {
+                        pounds: Number(e.target.value),
+                      })
+                    }
+                    className="w-20 border rounded px-2 py-1 text-sm"
+                  />
                   <span className="text-xs text-gray-500">lbs</span>
                 </div>
 
-                {/* Botón eliminar línea */}
+                {/* ❌ Botón eliminar línea */}
                 <button
-                  onClick={() => {
-                    if (box.lines.length === 1) {
-                      if (confirm("¿Eliminar caja completa?"))
-                        removeBox(box.box_no as number);
-                    } else {
-                      if (confirm("¿Eliminar solo esta línea?"))
-                        removeLine(globalIndex);
-                    }
-                  }}
-                  className="text-red-600 text-xs hover:underline"
-                >
-                  ❌
-                </button>
+  onClick={() => {
+    if (box.lines.length === 1) {
+      if (confirm("¿Eliminar caja completa?"))
+        removeBox(box.box_no as number);
+    } else {
+      if (confirm("¿Eliminar solo esta línea?"))
+        removeLine(globalIndex);
+    }
+  }}
+  className="text-red-600 text-xs hover:underline flex items-center gap-1"
+>
+  <TrashIcon className="w-4 h-4" />
+  Eliminar
+</button>
+
               </div>
             );
           })}
 
-          <div className="ml-4 text-xs text-gray-600 mt-1">
-            <b>Total caja:</b>{" "}
-            {box.total_lbs} lbs
+          <div className="ml-4 text-xs text-gray-600 mt-2">
+            <b>Total caja:</b> {box.total_lbs} lbs
           </div>
         </div>
       ))}
