@@ -19,7 +19,7 @@ export async function PATCH(
   // 1) Traer packing
   const { data: packing, error } = await supabase
     .from("packings")
-    .select("id, status, client_code, internal_ref")
+    .select("id, status, client_name, internal_ref")
     .eq("id", packingId)
     .single();
 
@@ -31,7 +31,7 @@ export async function PATCH(
     return NextResponse.json({ ok: false, error: "Estado inválido" }, { status: 400 });
   }
 
-  if (!packing.client_code || !packing.internal_ref) {
+  if (!packing.client_name || !packing.internal_ref) {
     return NextResponse.json(
       { ok: false, error: "Cliente o identificador incompleto" },
       { status: 400 }
