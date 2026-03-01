@@ -8,7 +8,7 @@ import { fetchJSON } from "@/lib/fetchJSON";
 // 🔑 Tipo Row ahora con client_name
 type Row = {
   id: string;
-  client_name: string;   // ✅ usamos nombre en vez de código
+  client_name: string;
   internal_ref: string;
   created_at: string;
 };
