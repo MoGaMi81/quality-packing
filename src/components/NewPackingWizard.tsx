@@ -1,7 +1,7 @@
 "use client";
 
 import { TrashIcon } from "@heroicons/react/24/outline";
-
+import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
 import { usePackingStore } from "@/store/packingStore";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
@@ -37,6 +37,21 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [draft_id, setDraftId] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
+
+  const [clients, setClients] = useState<
+  { code: string; name: string }[]
+>([]);
+
+useEffect(() => {
+  (async () => {
+    const { data } = await supabase
+      .from("clients")
+      .select("code, name")
+      .order("name");
+
+    setClients(data ?? []);
+  })();
+}, []);
 
   const safeHeader = header ?? {
   client_code: "",
@@ -196,6 +211,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const totalCajas = grouped.length;
   const totalLbs = grouped.reduce((s, b) => s + b.total_lbs, 0);
 
+  function setOpenClientModal(arg0: boolean): void {
+    throw new Error("Function not implemented.");
+  }
+
   /* ================= UI ================= */
   return (
     <>
@@ -209,18 +228,34 @@ export default function NewPackingWizard({ open, onClose }: Props) {
           {step === 1 && (
             <>
               <label className="block font-semibold mb-1">
-                Cliente (código)
-              </label>
-              <input
-                className="border rounded px-3 py-2 w-full mb-3"
-                value={header?.client_code ?? ""}
-                onChange={(e) =>
-                  setHeader({
-                    ...(header ?? {}),
-                    client_code: e.target.value.toUpperCase(),
-                  })
-                }
-              />
+              Cliente
+            </label>
+
+            <select
+              className="border rounded px-3 py-2 w-full mb-3"
+            value={header?.client_code ?? ""}
+              onChange={(e) =>
+                setHeader({
+                  ...(header ?? {}),
+                  client_code: e.target.value,
+                })
+              }
+            >
+              <option value="">Seleccionar cliente</option>
+              {clients.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+  type="button"
+  onClick={() => setOpenClientModal(true)}
+  className="text-blue-600 text-sm mb-3"
+>
+  + Nuevo cliente
+</button>
 
               <label className="block font-semibold mb-1">
                 Identificador interno
