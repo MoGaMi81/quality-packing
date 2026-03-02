@@ -13,7 +13,7 @@ export async function GET() {
     .from("packing_drafts")
     .select(`
       id,
-      client_code,
+      client_name,
       internal_ref,
       created_at
     `)
@@ -34,7 +34,7 @@ export async function GET() {
   }
 
   // 🔵 resolver nombres
-  const codes = [...new Set(data.map(d => d.client_code))];
+  const codes = [...new Set(data.map(d => d.client_name))];
 
   const { data: clients } = await supabase
     .from("clients")
@@ -51,7 +51,7 @@ export async function GET() {
 
   const rowsWithName = data.map(d => ({
     ...d,
-    client_name: clientMap.get(d.client_code) ?? d.client_code
+    client_name: clientMap.get(d.client_name) ?? d.client_name
   }));
 
   return NextResponse.json(
