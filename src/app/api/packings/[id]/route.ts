@@ -13,19 +13,29 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params;
+  const { data: packing, error } = await supabase
+    .from("packings")
+    .select(`
+      id,
+      invoice_no,
+      client_code,
+      client_name,
+      created_at,
+      pricing_status
+    `)
+    .eq("id", params.id)
+    .single();
 
-  const { data, error } = await supabase
-  .from("packings")
-  .select(`
-    id,
-    invoice_no,
-    created_at,
-    pricing_status,
-    clients (
-      name
-    ),
-    packing_lines (
+  if (error || !packing) {
+    return NextResponse.json(
+      { ok: false, error: "Packing no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  const { data: lines } = await supabase
+    .from("packing_lines")
+    .select(`
       code,
       box_no,
       is_combined,
@@ -35,29 +45,24 @@ export async function GET(
       size,
       pounds,
       price
-    )
-  `)
-  .eq("id", params.id)
-  .single();
+    `)
+    .eq("packing_id", packing.id)
+    .order("box_no");
 
-  if (error || !data) {
-    return NextResponse.json(
-      { ok: false, error: "Packing no encontrado" },
-      { status: 404 }
-    );
-  }
-
- return NextResponse.json(
-  {
-    ok: true,
-    packing: data,
-  },
-  {
-    headers: {
-      "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
+  return NextResponse.json(
+    {
+      ok: true,
+      packing: {
+        ...packing,
+        packing_lines: lines ?? [],
+      },
     },
-  }
-);
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    }
+  );
 }
