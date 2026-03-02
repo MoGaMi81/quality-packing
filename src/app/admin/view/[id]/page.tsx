@@ -64,7 +64,7 @@ export default function ViewPacking() {
       {/* HEADER */}
       <div className="border rounded p-4 mb-6 space-y-1">
         <div>
-          <b>Cliente:</b> {packing.clients?.name ?? "—"}
+          <b>Cliente:</b> {packing.client_name ?? packing.client_code ?? "—"}
         </div>
         <div className="text-sm text-gray-500">
           {new Date(packing.created_at).toLocaleString()}
