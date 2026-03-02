@@ -97,7 +97,7 @@ export default function PricingModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 space-y-4">
+      <div className="bg-white rounded p-6 max-h-[85vh] overflow-y-auto">
         <h2 className="text-xl font-bold">Precios</h2>
 
         {reqs.map((req) => (
