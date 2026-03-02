@@ -1,64 +1,12 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-export const dynamic = "force-dynamic";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-export async function GET() {
-  const { data, error } = await supabase
-    .from("packing_drafts")
-    .select(`
-      id,
-      client_code,
-      internal_ref,
-      created_at
-    `)
-    .eq("status", "PROCESS_DONE")
-    .is("invoice_no", null)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    console.error("[FACTURACION_PENDING]", error);
-    return NextResponse.json(
-      { ok: false, error: error.message },
-      { status: 500 }
-    );
-  }
-
-  if (!data) {
-    return NextResponse.json({ ok: true, rows: [] });
-  }
-
-  // 🔵 resolver nombres
-  const codes = [...new Set(data.map(d => d.client_code))];
-
-  const { data: clients } = await supabase
-    .from("clients")
-    .select("code, name")
-    .in("code", codes);
-
-  const clientMap = new Map<string, string>();
-
-  if (clients) {
-    for (const c of clients) {
-      clientMap.set(c.code, c.name);
-    }
-  }
-
-  const rowsWithName = data.map(d => ({
-    ...d,
-    client_name: clientMap.get(d.client_code) ?? d.client_code
-  }));
-
-  return NextResponse.json(
-    { ok: true, rows: rowsWithName },
-    { headers: { "Cache-Control": "no-store" } }
-  );
-}
 
 export async function POST(
   req: Request,
@@ -103,45 +51,17 @@ export async function POST(
      2️⃣ Actualizar precios por clave code|form|size
      ===================================================== */
   for (const key of Object.keys(prices)) {
-    const price = prices[key];
+  const price = prices[key];
 
-    // 🔑 CASO ESPECIAL GROUPER_WG
-    if (key === "GROUPER_WG") {
-      const { error } = await supabase
-        .from("packing_lines")
-        .update({ price })
-        .eq("packing_id", packing_id)
-        .eq("form", "W&G")
-        .ilike("description_en", "%GROUPER%")
-        .not("description_en", "ilike", "%FILLET%");
-
-      if (error) {
-        return NextResponse.json(
-          { ok: false, error: error.message },
-          { status: 500 }
-        );
-      }
-
-      continue;
-    }
-
-    // 🔑 NORMAL: code|form|size
-    const [code, form, size] = key.split("|");
-
-    if (!code || !form || !size) {
-      return NextResponse.json(
-        { ok: false, error: `Clave inválida: ${key}` },
-        { status: 400 }
-      );
-    }
-
+  // 🔑 CASO ESPECIAL GROUPER_WG
+  if (key === "GROUPER_WG") {
     const { error } = await supabase
       .from("packing_lines")
       .update({ price })
       .eq("packing_id", packing_id)
-      .eq("code", code)
-      .eq("form", form)
-      .eq("size", size);
+      .eq("form", "W&G")
+      .ilike("description_en", "%GROUPER%")
+      .not("description_en", "ilike", "%FILLET%");
 
     if (error) {
       return NextResponse.json(
@@ -149,7 +69,35 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    continue;
   }
+
+  // 🔑 NORMAL: code|form|size
+  const [code, form, size] = key.split("|");
+
+  if (!code || !form || !size) {
+    return NextResponse.json(
+      { ok: false, error: `Clave inválida: ${key}` },
+      { status: 400 }
+    );
+  }
+
+  const { error } = await supabase
+    .from("packing_lines")
+    .update({ price })
+    .eq("packing_id", packing_id)
+    .eq("code", code)
+    .eq("form", form)
+    .eq("size", size);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
 
   /* =====================================================
      3️⃣ Marcar pricing como DONE
