@@ -75,19 +75,29 @@ export default function ViewPacking() {
       </div>
 
       {/* RESUMEN */}
-      <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm mb-6">
-        <div>
-          <b>Cajas:</b> {totalBoxes}
-        </div>
-        <div>
-          <b>Total lbs:</b> {totalLbs.toFixed(2)}
-        </div>
-        {totalUSD != null && (
-          <div>
-            <b>Total USD:</b> ${totalUSD.toFixed(2)}
-          </div>
-        )}
-      </div>
+<div className="border rounded p-4 grid grid-cols-3 gap-4 text-base mb-6">
+  <div>
+    <b>Cajas:</b> {totalBoxes}
+  </div>
+
+  <div>
+    <b>Total lbs:</b>{" "}
+    {totalLbs.toLocaleString("en-US", {
+      maximumFractionDigits: 0,
+    })}
+  </div>
+
+  {totalUSD != null && (
+    <div>
+      <b>Total USD:</b>{" "}
+      {totalUSD.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+      })}
+    </div>
+  )}
+</div>
 
       {/* ✅ Botones extra cuando pricing está DONE */}
       {packing.pricing_status === "DONE" && (
@@ -101,9 +111,7 @@ export default function ViewPacking() {
 
           <button
             onClick={() =>
-            router.push(
-  `/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`
-)
+            router.push(`/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`)
            }
             className="px-4 py-2 border rounded"
           >
