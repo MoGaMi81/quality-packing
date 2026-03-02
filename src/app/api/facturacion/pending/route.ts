@@ -30,8 +30,33 @@ export async function GET() {
     );
   }
 
+  if (!data) {
+    return NextResponse.json({ ok: true, rows: [] });
+  }
+
+  // 🔵 resolver nombres
+  const codes = [...new Set(data.map(d => d.client_code))];
+
+  const { data: clients } = await supabase
+    .from("clients")
+    .select("code, name")
+    .in("code", codes);
+
+  const clientMap = new Map<string, string>();
+
+  if (clients) {
+    for (const c of clients) {
+      clientMap.set(c.code, c.name);
+    }
+  }
+
+  const rowsWithName = data.map(d => ({
+    ...d,
+    client_name: clientMap.get(d.client_code) ?? d.client_code
+  }));
+
   return NextResponse.json(
-    { ok: true, rows: data ?? [] },
+    { ok: true, rows: rowsWithName },
     { headers: { "Cache-Control": "no-store" } }
   );
 }

@@ -70,7 +70,7 @@ export default function FacturacionPendingPage() {
   >
     <div>
       <div>
-        <b>Cliente:</b> {r.client_name || r.client_code}
+        <b>Cliente:</b> {r.client_name}
       </div>
       <div>
         <b>Referencia:</b> {r.internal_ref}
