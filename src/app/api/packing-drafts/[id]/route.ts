@@ -16,27 +16,42 @@ export async function GET(
   const id = params.id;
 
   const { data: draft, error } = await supabase
-    .from("packing_drafts")
-    .select("*")
-    .eq("id", id)
-    .single();
+  .from("packing_drafts")
+  .select(`
+    *,
+    client:clients(name)
+  `)
+  .eq("id", params.id)
+  .single();
 
-  if (error || !draft) {
-    return NextResponse.json(
-      { ok: false, error: "Draft no encontrado" },
-      { status: 404 }
-    );
-  }
+if (error || !draft) {
+  return NextResponse.json(
+    { ok: false, error: "Draft no encontrado" },
+    { status: 404 }
+  );
+}
 
-  const { data: lines } = await supabase
-    .from("draft_lines")
-    .select("*")
-    .eq("draft_id", id)
-    .order("box_no");
+const { data: lines, error: linesError } = await supabase
+  .from("draft_lines")
+  .select("*")
+  .eq("draft_id", params.id)
+  .order("box_no");
 
-  return NextResponse.json({
-    ok: true,
-    draft,
-    lines: lines ?? [],
-  });
+if (linesError) {
+  return NextResponse.json(
+    { ok: false, error: linesError.message },
+    { status: 500 }
+  );
+}
+
+const draftWithName = {
+  ...draft,
+  client_name: draft.client?.name ?? null,
+};
+
+return NextResponse.json({
+  ok: true,
+  draft: draftWithName,
+  lines: lines ?? [],
+});
 }
