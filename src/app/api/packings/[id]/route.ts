@@ -13,49 +13,54 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { data: packing, error } = await supabase
+  const { data, error } = await supabase
     .from("packings")
     .select(`
       id,
       invoice_no,
       client_code,
-      client_name,
       created_at,
-      pricing_status
+      pricing_status,
+      clients (
+        name
+      ),
+      packing_lines (
+        code,
+        box_no,
+        is_combined,
+        combined_with,
+        description_en,
+        form,
+        size,
+        pounds,
+        price
+      )
     `)
     .eq("id", params.id)
     .single();
 
-  if (error || !packing) {
+  if (error || !data) {
     return NextResponse.json(
       { ok: false, error: "Packing no encontrado" },
       { status: 404 }
     );
   }
 
-  const { data: lines } = await supabase
-    .from("packing_lines")
-    .select(`
-      code,
-      box_no,
-      is_combined,
-      combined_with,
-      description_en,
-      form,
-      size,
-      pounds,
-      price
-    `)
-    .eq("packing_id", packing.id)
-    .order("box_no");
+  // 🔥 Transformamos la estructura
+  const formattedPacking = {
+    id: data.id,
+    invoice_no: data.invoice_no,
+    client_code: data.client_code,
+    client_name: data.clients?.[0]?.name ?? data.client_code,
+    created_at: data.created_at,
+    pricing_status: data.pricing_status,
+    packing_lines: data.packing_lines ?? [],
+  };
 
   return NextResponse.json(
     {
       ok: true,
-      packing: {
-        ...packing,
-        packing_lines: lines ?? [],
-      },
+      packing: formattedPacking,
     },
     {
       headers: {
