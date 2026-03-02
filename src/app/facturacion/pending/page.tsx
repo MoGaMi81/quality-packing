@@ -1,13 +1,13 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 
 // 🔑 Tipo Row sin total_boxes ni total_lbs
 type Row = {
-  client_name: ReactNode;
+  client_name: string;
   id: string;
   client_code: string;
   internal_ref: string;
@@ -64,21 +64,21 @@ export default function FacturacionPendingPage() {
       {rows.length === 0 && <div>No hay pendientes.</div>}
 
       {rows.map((r) => (
-        <div
-          key={r.id}
-          className="border rounded p-4 flex justify-between"
-        >
-          <div>
-            <div>
-              <b>Cliente:</b> {r.client_name}
-            </div>
-            <div>
-              <b>Referencia:</b> {r.internal_ref}
-            </div>
-            <div className="text-sm text-gray-500">
-              {new Date(r.created_at).toLocaleString()}
-            </div>
-          </div>
+  <div
+    key={r.id}
+    className="border rounded p-4 flex justify-between"
+  >
+    <div>
+      <div>
+        <b>Cliente:</b> {r.client_name || r.client_code}
+      </div>
+      <div>
+        <b>Referencia:</b> {r.internal_ref}
+      </div>
+      <div className="text-sm text-gray-500">
+        {new Date(r.created_at).toLocaleString()}
+      </div>
+    </div>
 
           <Link
             href={`/facturacion/${r.id}`}
