@@ -14,7 +14,6 @@ export default function NewPackingPage() {
 
   const [open, setOpen] = useState(true);
 
-  // Si no viene draft, regresamos
   useEffect(() => {
     if (!id) {
       alert("Draft inválido");

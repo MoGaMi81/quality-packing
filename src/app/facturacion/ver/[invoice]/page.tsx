@@ -60,7 +60,6 @@ export default function VerFacturaPage() {
      const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
      const totalGross = totalNet * 1.31;
 
-  // ✅ Adaptación: usar nullish coalescing para evitar errores
   const totalAmount = data.lines.reduce(
     (s, l) => s + (l.amount ?? 0),
     0

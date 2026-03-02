@@ -228,7 +228,7 @@ useEffect(() => {
           {step === 1 && (
             <>
               <label className="block font-semibold mb-1">
-              Cliente
+               Cliente (código)
             </label>
 
             <select
@@ -237,7 +237,7 @@ useEffect(() => {
               onChange={(e) =>
                 setHeader({
                   ...(header ?? {}),
-                  client_code: e.target.value,
+                  client_code: e.target.value.toUpperCase(),
                 })
               }
             >

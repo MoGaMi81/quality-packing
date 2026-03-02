@@ -8,24 +8,25 @@ const supabase = createClient(
 
 export async function GET(
   req: Request,
-  { params }: { params: { invoice?: string } }
+  { params }: { params: { id?: string } }
 ) {
-  const invoice = params.invoice?.toUpperCase();
+  const invoice = params.id?.toUpperCase();
 
   if (!invoice) {
-    return NextResponse.json({ ok: false, error: "Invoice requerido" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "Invoice requerido" },
+      { status: 400 }
+    );
   }
 
   const { data: packing, error } = await supabase
-  .from("packings")
-  .select(`
-    *,
-    clients (
-      name
-    )
-  `)
-  .eq("invoice_no", invoice)
-  .single();
+    .from("packings")
+    .select(`
+      *,
+      client:clients(name)
+    `)
+    .eq("invoice_no", invoice)
+    .single();
 
   if (error || !packing) {
     return NextResponse.json(
@@ -47,9 +48,14 @@ export async function GET(
     );
   }
 
+  const packingWithName = {
+    ...packing,
+    client_name: packing.client?.name ?? null,
+  };
+
   return NextResponse.json({
     ok: true,
-    packing,
+    packing: packingWithName,
     lines: lines ?? [],
   });
 }
