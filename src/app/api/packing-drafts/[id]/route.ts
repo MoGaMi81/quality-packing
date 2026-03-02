@@ -17,10 +17,7 @@ export async function GET(
 
   const { data: draft, error } = await supabase
   .from("packing_drafts")
-  .select(`
-    *,
-    client:clients(name)
-  `)
+  .select("*")
   .eq("id", params.id)
   .single();
 
@@ -30,6 +27,13 @@ if (error || !draft) {
     { status: 404 }
   );
 }
+
+// 🔵 buscar nombre manualmente
+const { data: client } = await supabase
+  .from("clients")
+  .select("name")
+  .eq("code", draft.client_code)
+  .single();
 
 const { data: lines, error: linesError } = await supabase
   .from("draft_lines")
@@ -46,7 +50,7 @@ if (linesError) {
 
 const draftWithName = {
   ...draft,
-  client_name: draft.client?.name ?? null,
+  client_name: client?.name ?? null,
 };
 
 return NextResponse.json({
