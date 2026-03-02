@@ -145,9 +145,10 @@ export default function NewPackingWizard({ open, onClose }: Props) {
       if (!data.ok) return;
 
       setHeader({
-        client_code: data.draft.client_code,
-        internal_ref: data.draft.internal_ref,
-        date: new Date().toISOString().slice(0, 10),
+  client_code: data.draft.client_code,
+  client_name: data.draft.client_name ?? "",
+  internal_ref: data.draft.internal_ref,
+  date: new Date().toISOString().slice(0, 10),
       });
 
       setLines(data.lines ?? []);
@@ -208,13 +209,18 @@ export default function NewPackingWizard({ open, onClose }: Props) {
             <select
               className="border rounded px-3 py-2 w-full mb-3"
             value={header?.client_code ?? ""}
-              onChange={(e) =>
-                setHeader({
-                  ...(header ?? {}),
-                  client_code: e.target.value.toUpperCase(),
-                })
-              }
-            >
+  onChange={(e) => {
+    const selected = clients.find(
+      c => c.code === e.target.value
+    );
+
+    setHeader({
+      ...(header ?? {}),
+      client_code: e.target.value,
+      client_name: selected?.name ?? "",   // 👈 IMPORTANTE
+    });
+  }}
+>
               <option value="">Seleccionar cliente</option>
               {clients.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -263,10 +269,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   <>
     <p className="mb-3 text-sm">
       <b>Cliente:</b>{" "}
-        {
-  clients.find(c => c.code === header?.client_code)?.name
-  ?? "—"
-} <br />
+        {header?.client_name ?? "—"} <br />
       <b>Referencia:</b>{" "}
       {header?.internal_ref ?? ""}
     </p>
