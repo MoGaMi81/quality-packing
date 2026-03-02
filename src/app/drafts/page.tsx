@@ -10,6 +10,7 @@ import { getRole } from "@/lib/role";
 type Role = "admin" | "proceso" | "facturacion";
 
 type Draft = {
+  client_name: string;
   id: string;
   client_code: string;
   internal_ref: string;
@@ -147,7 +148,7 @@ export default function DraftsPage() {
           >
             <div>
               <div className="text-lg font-semibold">
-                {d.client_code} · {d.internal_ref}
+                {d.client_name ?? d.client_code} · {d.internal_ref}
               </div>
               <div className="text-sm text-gray-500">
                 {new Date(d.created_at).toLocaleString()}
