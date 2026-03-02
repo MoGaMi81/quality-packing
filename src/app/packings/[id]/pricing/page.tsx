@@ -101,18 +101,17 @@ export default function PricingPage({
       </div>
 
       {/* INFO */}
-      <div className="border rounded p-4 space-y-1">
-        <div>
-          <b>Factura:</b> {packing.invoice_no}
-        </div>
-        <div>
-          <b>Cliente:</b>{" "}
-          {packing.client_name || packing.client_code}
-        </div>
-        <div className="text-sm text-gray-500">
-          {new Date(packing.created_at).toLocaleString()}
-        </div>
-      </div>
+<div className="border rounded p-4 space-y-1">
+  <div>
+    <b>Factura:</b> {packing.invoice_no}
+  </div>
+  <div>
+    <b>Cliente:</b> {packing.client_name || packing.client_code}
+  </div>
+  <div className="text-sm text-gray-500">
+    {new Date(packing.created_at).toLocaleString()}
+  </div>
+</div>
 
       {/* RESUMEN */}
       <div className="border rounded p-4">
