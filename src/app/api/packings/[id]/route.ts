@@ -13,60 +13,60 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { data, error } = await supabase
+  const { data: packing, error } = await supabase
     .from("packings")
     .select(`
       id,
       invoice_no,
       client_code,
       created_at,
-      pricing_status,
-      clients (
-        name
-      ),
-      packing_lines (
-        code,
-        box_no,
-        is_combined,
-        combined_with,
-        description_en,
-        form,
-        size,
-        pounds,
-        price
-      )
+      pricing_status
     `)
     .eq("id", params.id)
     .single();
 
-  if (error || !data) {
+  if (error || !packing) {
     return NextResponse.json(
       { ok: false, error: "Packing no encontrado" },
       { status: 404 }
     );
   }
 
-  // 🔥 Transformamos la estructura
-  const formattedPacking = {
-    id: data.id,
-    invoice_no: data.invoice_no,
-    client_code: data.client_code,
-    client_name: data.clients?.[0]?.name ?? data.client_code,
-    created_at: data.created_at,
-    pricing_status: data.pricing_status,
-    packing_lines: data.packing_lines ?? [],
-  };
+  // 🔵 Resolver nombre manualmente
+  const { data: client } = await supabase
+    .from("clients")
+    .select("name")
+    .eq("code", packing.client_code)
+    .single();
+
+  const { data: lines } = await supabase
+    .from("packing_lines")
+    .select(`
+      code,
+      box_no,
+      is_combined,
+      combined_with,
+      description_en,
+      form,
+      size,
+      pounds,
+      price
+    `)
+    .eq("packing_id", packing.id)
+    .order("box_no");
 
   return NextResponse.json(
     {
       ok: true,
-      packing: formattedPacking,
+      packing: {
+        ...packing,
+        client_name: client?.name ?? packing.client_code,
+        packing_lines: lines ?? [],
+      },
     },
     {
       headers: {
-        "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "no-store",
       },
     }
   );
