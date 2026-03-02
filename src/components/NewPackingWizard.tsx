@@ -38,20 +38,7 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
 
-  const [clients, setClients] = useState<
-  { code: string; name: string }[]
->([]);
-
-useEffect(() => {
-  (async () => {
-    const { data } = await supabase
-      .from("clients")
-      .select("code, name")
-      .order("name");
-
-    setClients(data ?? []);
-  })();
-}, []);
+  const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
 
   const safeHeader = header ?? {
   client_code: "",
@@ -85,30 +72,17 @@ useEffect(() => {
 
   /* ================= CARGAR NOMBRE CLIENTE ================= */
   useEffect(() => {
-  if (!safeHeader.client_code) {
+  if (!header?.client_code) {
     setClientName(null);
     return;
   }
 
-  async function loadClient() {
-    try {
-      const res = await fetch(
-        `/api/clients/by-code/${safeHeader.client_code}`
-      );
-      const data = await res.json();
+  const match = clients.find(
+    (c) => c.code === header.client_code
+  );
 
-      if (data?.ok && typeof data.name === "string") {
-        setClientName(data.name);
-      } else {
-        setClientName(safeHeader.client_code ?? null);
-      }
-    } catch {
-      setClientName(safeHeader.client_code ?? null);
-    }
-  }
-
-  loadClient();
-}, [header]);
+  setClientName(match?.name ?? null);
+}, [header?.client_code, clients]);
 
   /* ================= GUARDAR BORRADOR ================= */
   async function saveDraftAndExit() {
@@ -289,7 +263,10 @@ useEffect(() => {
   <>
     <p className="mb-3 text-sm">
       <b>Cliente:</b>{" "}
-        {clientName ?? "—"} <br />
+        {
+  clients.find(c => c.code === header?.client_code)?.name
+  ?? "—"
+} <br />
       <b>Referencia:</b>{" "}
       {header?.internal_ref ?? ""}
     </p>
