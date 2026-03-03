@@ -132,13 +132,28 @@ const formatMoney = (n: number) =>
     </a>
 
     <button
-      onClick={() => {
-        alert("Editar precios - siguiente fase");
-      }}
-      className="px-4 py-2 border rounded"
-    >
-      Editar precios
-    </button>
+  onClick={async () => {
+    if (!confirm("¿Reabrir pricing para editar precios?")) return;
+
+    const res = await fetch(
+      `/api/packings/${data.packing_id}/reopen-pricing`,
+      { method: "PATCH" }
+    );
+
+    const json = await res.json();
+
+    if (!json.ok) {
+      alert(json.error || "Error reabriendo pricing");
+      return;
+    }
+
+    // 🔥 redirigimos al pricing existente
+    router.push(`/admin/pricing/${data.packing_id}`);
+  }}
+  className="px-4 py-2 border rounded"
+>
+  Editar precios
+</button>
   </div>
 )}
       {/* TABLE */}

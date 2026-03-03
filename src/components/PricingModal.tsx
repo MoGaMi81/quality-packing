@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import type { PackingLine } from "@/domain/packing/types";
 
-/**
- * Detecta GROUPER W&G (sin fillet)
- */
 function isGrouperWG(l: PackingLine) {
   return (
     l.form === "W&G" &&
@@ -14,16 +11,14 @@ function isGrouperWG(l: PackingLine) {
   );
 }
 
-/**
- * Clave de pricing REAL (con datos disponibles)
- */
+
 function priceKey(l: PackingLine) {
-  // 🔑 TODOS los Grouper W&G usan UNA sola clave
+  
   if (isGrouperWG(l)) {
-    return "GROUPER_WG"; // ← CLAVE ÚNICA
+    return "GROUPER_WG"; 
   }
 
-  // resto → por code + form + size
+ 
   return `${l.code}|${l.form}|${l.size}`;
 }
 
