@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 type LineDB = {
-  id: string; // 👈 ahora incluimos id
+  id: string; 
   box_no: string;
   code: string;
   description_en: string;
@@ -16,12 +16,12 @@ type LineDB = {
   size: string;
   pounds: number;
   price: number | null;
-  is_combined: boolean; // 👈 nuevo campo
-  combined_with: string | null; // 👈 nuevo campo
+  is_combined: boolean; // 
+  combined_with: string | null; 
 };
 
 type Row = {
-  line_id: string; // 👈 nuevo campo
+  line_id: string; 
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -167,23 +167,27 @@ if (speciesData) {
       const key = `${l.description_en}|||${l.form}|||${l.size}`;
 
       if (!normalMap.has(key)) {
-        normalMap.set(key, {
-          line_id: l.id,
-          boxes: 1,
-          pounds: l.pounds,
-          description: l.description_en,
-          size: l.size,
-          form: l.form,
-          scientific_name: speciesMap.get(l.code) ?? null,
-          price,
-          amount: l.pounds * price,
-        });
-      } else {
-        const row = normalMap.get(key)!;
-        row.boxes = (row.boxes as number) + 1;
-        row.pounds += l.pounds;
-        row.amount = row.pounds * row.price;
-      }
+  normalMap.set(key, {
+    line_id: l.id,
+    boxes: 1,
+    pounds: l.pounds,
+    description: l.description_en,
+    size: l.size,
+    form: l.form,
+    scientific_name: speciesMap.get(l.code) ?? null,
+    price,
+    amount: l.pounds * price,
+  });
+} else {
+  const row = normalMap.get(key)!;
+  row.boxes = (row.boxes as number) + 1;
+  row.pounds += l.pounds;
+
+  // 🔥 FORZAR ACTUALIZACIÓN DE PRECIO
+  row.price = price;
+
+  row.amount = row.pounds * row.price;
+}
     }
   }
 
