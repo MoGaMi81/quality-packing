@@ -66,7 +66,18 @@ export default function PricingModal({
     setReqs(r);
 
     const init: Record<string, string> = {};
-    r.forEach((x) => (init[x.key] = ""));
+
+for (const req of r) {
+  const exampleLine = lines.find(
+    (l) => priceKey(l) === req.key
+  );
+
+  if (exampleLine?.price != null) {
+    init[req.key] = exampleLine.price.toString();
+  } else {
+    init[req.key] = "";
+  }
+}
     setValues(init);
 
     setError("");
