@@ -28,7 +28,11 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
-  const role = getRole();
+  const [role, setRole] = useState<string | null>(null);
+
+useEffect(() => {
+  setRole(getRole());
+}, []);
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
