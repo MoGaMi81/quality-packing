@@ -401,133 +401,44 @@ for (let c = 1; c <= 8; c++) {
 }
 
 // ============================================================
-// 🔹 AGRUPAR POR CAJA REAL (RESPETA COMBINADAS)
+// 🔹 ORDENAR LÍNEAS
 // ============================================================
 
 const sortedLines = [...(lines ?? [])].sort(
   (a, b) => a.box_no - b.box_no
 );
 
-// 🔥 1️⃣ Agrupar líneas por caja real
-const boxesMap = new Map<number, typeof sortedLines>();
+// ============================================================
+// 🔹 CONTAR CAJAS REALES (RESPETA COMBINADAS)
+// ============================================================
 
-for (const line of sortedLines) {
-  if (!boxesMap.has(line.box_no)) {
-    boxesMap.set(line.box_no, []);
-  }
-  boxesMap.get(line.box_no)!.push(line);
+const uniqueBoxes = new Set<number>();
+
+for (const l of sortedLines) {
+  uniqueBoxes.add(l.box_no);
 }
 
-// Convertimos a arreglo ordenado de cajas reales
-const uniqueBoxes = Array.from(boxesMap.entries())
-  .map(([box_no, boxLines]) => ({
-    box_no,
-    lines: boxLines,
-  }))
-  .sort((a, b) => a.box_no - b.box_no);
+const totalBoxesPacking = uniqueBoxes.size;
 
 // ============================================================
-// 🔹 AGRUPAR POR RANGO CONSECUTIVO (PRODUCTO IGUAL)
+// 🔹 ESCRIBIR LÍNEAS (SIN AGRUPAR COMBINADAS)
 // ============================================================
 
-type PackingGroup = {
-  startBox: number;
-  endBox: number;
-  description: string;
-  form: string;
-  size: string;
-  poundsPerBox: number;
-  scientific: string;
-  boxCount: number;
-  totalWeight: number;
-};
+sortedLines.forEach((line) => {
+  packingSheet.getCell(`A${packingRow}`).value = line.box_no;
+  packingSheet.getCell(`B${packingRow}`).value = "";
+  packingSheet.getCell(`C${packingRow}`).value = "";
 
-const groups: PackingGroup[] = [];
-
-for (let i = 0; i < uniqueBoxes.length; i++) {
-  const currentBox = uniqueBoxes[i];
-  const firstLine = currentBox.lines[0];
-
-  const scientificName =
-    firstLine.species?.[0]?.scientific_name ?? "";
-
-  // 🔥 Peso real de la caja (importante para combinadas)
-  const totalBoxWeight = currentBox.lines.reduce(
-    (s, l) => s + l.pounds,
-    0
-  );
-
-  if (groups.length === 0) {
-    groups.push({
-      startBox: currentBox.box_no,
-      endBox: currentBox.box_no,
-      description: firstLine.description_en,
-      form: firstLine.form,
-      size: firstLine.size,
-      poundsPerBox: totalBoxWeight,
-      scientific: scientificName,
-      boxCount: 1,
-      totalWeight: totalBoxWeight,
-    });
-    continue;
-  }
-
-  const last = groups[groups.length - 1];
-
-  const sameProduct =
-    last.description === firstLine.description_en &&
-    last.form === firstLine.form &&
-    last.size === firstLine.size &&
-    last.poundsPerBox === totalBoxWeight &&
-    last.scientific === scientificName;
-
-  const consecutive =
-    currentBox.box_no === last.endBox + 1;
-
-  if (sameProduct && consecutive) {
-    last.endBox = currentBox.box_no;
-    last.boxCount++;
-    last.totalWeight += totalBoxWeight;
-  } else {
-    groups.push({
-      startBox: currentBox.box_no,
-      endBox: currentBox.box_no,
-      description: firstLine.description_en,
-      form: firstLine.form,
-      size: firstLine.size,
-      poundsPerBox: totalBoxWeight,
-      scientific: scientificName,
-      boxCount: 1,
-      totalWeight: totalBoxWeight,
-    });
-  }
-}
-
-// ============================================================
-// 🔹 ITEMS (PACKING GENERAL 8 COLUMNAS)
-// ============================================================
-
-groups.forEach((g) => {
-
-  const isRange = g.startBox !== g.endBox;
-
-  packingSheet.getCell(`A${packingRow}`).value = g.startBox;
-  packingSheet.getCell(`B${packingRow}`).value = isRange ? "-" : "";
-  packingSheet.getCell(`C${packingRow}`).value = isRange ? g.endBox : "";
-
-  packingSheet.getCell(`D${packingRow}`).value = g.description;
-  packingSheet.getCell(`E${packingRow}`).value = g.form;
-  packingSheet.getCell(`F${packingRow}`).value = g.poundsPerBox;
-  packingSheet.getCell(`G${packingRow}`).value = g.size;
-  packingSheet.getCell(`H${packingRow}`).value = g.totalWeight;
+  packingSheet.getCell(`D${packingRow}`).value = line.description_en;
+  packingSheet.getCell(`E${packingRow}`).value = line.form;
+  packingSheet.getCell(`F${packingRow}`).value = line.pounds;
+  packingSheet.getCell(`G${packingRow}`).value = line.size;
+  packingSheet.getCell(`H${packingRow}`).value = line.pounds;
 
   for (let col = 1; col <= 8; col++) {
     const cell = packingSheet.getCell(packingRow, col);
 
-    cell.font = {
-      name: "Calibri",
-      size: 12,
-    };
+    cell.font = { name: "Calibri", size: 12 };
 
     cell.border = {
       top: { style: "thin", color: { argb: "FFB7D7F0" } },
@@ -545,22 +456,24 @@ groups.forEach((g) => {
 // 🔹 TOTALES PACKING (UNA SOLA VEZ – FUERA DEL FOR)
 // ============================================================
 
-// Última fila usada
 const lastDataRow = packingRow - 1;
-
-// Exactamente 3 filas abajo
 const totalsRow = lastDataRow + 3;
 
-// Totales reales
-const totalBoxesPacking = groups.reduce(
-  (sum, g) => sum + g.boxCount,
+const totalWeightPacking = sortedLines.reduce(
+  (sum, l) => sum + l.pounds,
   0
 );
 
-const totalWeightPacking = groups.reduce(
-  (sum, g) => sum + g.totalWeight,
-  0
-);
+packingSheet.mergeCells(`A${totalsRow}:G${totalsRow}`);
+
+packingSheet.getCell(`A${totalsRow}`).value =
+  `TOTAL BOXES ${totalBoxesPacking}`;
+
+packingSheet.getCell(`H${totalsRow}`).value = totalWeightPacking;
+
+packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
+
+setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
 
 // Merge solo aquí (una vez)
 packingSheet.mergeCells(`A${totalsRow}:G${totalsRow}`);
