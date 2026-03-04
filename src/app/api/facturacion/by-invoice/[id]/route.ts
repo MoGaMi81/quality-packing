@@ -11,7 +11,7 @@ const supabase = createClient(
 );
 
 type LineDB = {
-  id: string; 
+  id: string;
   box_no: string;
   code: string;
   description_en: string;
@@ -20,12 +20,12 @@ type LineDB = {
   size: string;
   pounds: number;
   price: number | null;
-  is_combined: boolean; // 
-  combined_with: string | null; 
+  is_combined: boolean;
+  combined_with: string | null;
 };
 
 type Row = {
-  line_id: string; 
+  line_id: string;
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -68,16 +68,15 @@ export async function GET(
   }
 
   /* =====================================================
-   1️⃣ BIS - TRAER CLIENTE DESDE clients
-   ===================================================== */
+     1️⃣ BIS - TRAER CLIENTE DESDE clients
+     ===================================================== */
+  const { data: clientData } = await supabase
+    .from("clients")
+    .select("name")
+    .eq("code", packing.client_code)
+    .single();
 
-const { data: clientData } = await supabase
-  .from("clients")
-  .select("name")
-  .eq("code", packing.client_code)
-  .single();
-
-const clientName = clientData?.name ?? packing.client_code;
+  const clientName = clientData?.name ?? packing.client_code;
 
   /* =====================================================
      2️⃣ LÍNEAS
@@ -116,88 +115,86 @@ const clientName = clientData?.name ?? packing.client_code;
   const lines = data as LineDB[];
 
   /* =====================================================
-   2️⃣ BIS - TRAER SCIENTIFIC NAME DESDE SPECIES
-   ===================================================== */
+     2️⃣ BIS - TRAER SCIENTIFIC NAME DESDE SPECIES
+     ===================================================== */
+  const codes = [...new Set(lines.map(l => l.code))];
 
-const codes = [...new Set(lines.map(l => l.code))];
+  const { data: speciesData } = await supabase
+    .from("species")
+    .select("code, scientific_name")
+    .in("code", codes);
 
-const { data: speciesData } = await supabase
-  .from("species")
-  .select("code, scientific_name")
-  .in("code", codes);
+  const speciesMap = new Map<string, string | null>();
 
-const speciesMap = new Map<string, string | null>();
-
-if (speciesData) {
-  for (const s of speciesData) {
-    speciesMap.set(s.code, s.scientific_name);
+  if (speciesData) {
+    for (const s of speciesData) {
+      speciesMap.set(s.code, s.scientific_name);
+    }
   }
-}
 
   /* =====================================================
-   3️⃣ CONSTRUIR FILAS
-   ===================================================== */
-const rows: Row[] = [];
-const normalMap = new Map<string, Row>();
+     3️⃣ CONSTRUIR FILAS
+     ===================================================== */
+  const rows: Row[] = [];
+  const normalMap = new Map<string, Row>();
 
-const normalBoxes = new Set<string>();
-const combinedBoxes = new Set<string>();
+  const normalBoxes = new Set<string>();
+  const combinedBoxes = new Set<string>();
 
-for (const l of lines) {
-  const price = l.price ?? 0;
+  for (const l of lines) {
+    const price = l.price ?? 0;
 
-  // 👉 CAJA COMBINADA
-  if (l.is_combined) {
-    combinedBoxes.add(l.box_no); // 🔥 contamos cada box combinada real
+    // 👉 CAJA COMBINADA
+    if (l.is_combined) {
+      combinedBoxes.add(String(l.box_no));
 
-    rows.push({
-      line_id: l.id,
-      boxes: 1,
-      pounds: l.pounds,
-      description: l.description_en,
-      size: l.size,
-      form: l.form,
-      scientific_name: speciesMap.get(l.code) ?? null,
-      price,
-      amount: l.pounds * price,
-    });
+      rows.push({
+        line_id: l.id,
+        boxes: 1,
+        pounds: l.pounds,
+        description: l.description_en,
+        size: l.size,
+        form: l.form,
+        scientific_name: speciesMap.get(l.code) ?? null,
+        price,
+        amount: l.pounds * price,
+      });
 
-    continue;
+      continue;
+    }
+
+    // 👉 CAJA NORMAL
+    normalBoxes.add(String(l.box_no));
+
+    const key = `${l.description_en}|||${l.form}|||${l.size}`;
+
+    if (!normalMap.has(key)) {
+      normalMap.set(key, {
+        line_id: l.id,
+        boxes: 1,
+        pounds: l.pounds,
+        description: l.description_en,
+        size: l.size,
+        form: l.form,
+        scientific_name: speciesMap.get(l.code) ?? null,
+        price,
+        amount: l.pounds * price,
+      });
+    } else {
+      const row = normalMap.get(key)!;
+      row.boxes = (row.boxes as number) + 1;
+      row.pounds += l.pounds;
+
+      // 🔥 asegurar precio actualizado
+      row.price = price;
+      row.amount = row.pounds * row.price;
+    }
   }
 
-  // 👉 CAJA NORMAL
-  normalBoxes.add(l.box_no);
-
-  const key = `${l.description_en}|||${l.form}|||${l.size}`;
-
-  if (!normalMap.has(key)) {
-    normalMap.set(key, {
-      line_id: l.id,
-      boxes: 1,
-      pounds: l.pounds,
-      description: l.description_en,
-      size: l.size,
-      form: l.form,
-      scientific_name: speciesMap.get(l.code) ?? null,
-      price,
-      amount: l.pounds * price,
-    });
-  } else {
-    const row = normalMap.get(key)!;
-    row.boxes = (row.boxes as number) + 1;
-    row.pounds += l.pounds;
-
-    // 🔥 asegurar precio actualizado
-    row.price = price;
-
-    row.amount = row.pounds * row.price;
-  }
-}
-
-/* =====================================================
-   4️⃣ TOTAL DE CAJAS
-   ===================================================== */
-const total_boxes = normalBoxes.size + combinedBoxes.size;
+  /* =====================================================
+     4️⃣ TOTAL DE CAJAS
+     ===================================================== */
+  const total_boxes = normalBoxes.size + combinedBoxes.size;
 
   /* =====================================================
      5️⃣ RESPUESTA FINAL
