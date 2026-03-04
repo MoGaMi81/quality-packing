@@ -16,46 +16,45 @@ export async function GET(
   const id = params.id;
 
   const { data: draft, error } = await supabase
-  .from("packing_drafts")
-  .select("*")
-  .eq("id", params.id)
-  .single();
+    .from("packing_drafts")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-if (error || !draft) {
-  return NextResponse.json(
-    { ok: false, error: "Draft no encontrado" },
-    { status: 404 }
-  );
-}
+  if (error || !draft) {
+    return NextResponse.json(
+      { ok: false, error: "Draft no encontrado" },
+      { status: 404 }
+    );
+  }
 
-// 🔵 buscar nombre manualmente
-const { data: client } = await supabase
-  .from("clients")
-  .select("name")
-  .eq("code", draft.client_code)
-  .single();
+  // 🔵 buscar nombre manualmente
+  const { data: client } = await supabase
+    .from("clients")
+    .select("name")
+    .eq("code", draft.client_code)
+    .single();
 
-const { data: lines, error: linesError } = await supabase
-  .from("draft_lines")
-  .select("*")
-  .eq("draft_id", params.id)
-  .order("box_no");
+  const { data: lines, error: linesError } = await supabase
+    .from("draft_lines")
+    .select("*")
+    .eq("draft_id", id)
+    .order("box_no");
 
-if (linesError) {
-  return NextResponse.json(
-    { ok: false, error: linesError.message },
-    { status: 500 }
-  );
-}
+  if (linesError) {
+    return NextResponse.json(
+      { ok: false, error: linesError.message },
+      { status: 500 }
+    );
+  }
 
-const draftWithName = {
-  ...draft,
-  client_name: client?.name ?? null,
-};
-
-return NextResponse.json({
-  ok: true,
-  draft: draftWithName,
-  lines: lines ?? [],
-});
+  // 🔥 RESPUESTA EXACTA QUE ESPERA EL FRONT
+  return NextResponse.json({
+    id: draft.id,
+    client_code: draft.client_code,
+    client_name: client?.name ?? draft.client_code,
+    guide: draft.guide ?? null,
+    created_at: draft.created_at,
+    lines: lines ?? [],
+  });
 }
