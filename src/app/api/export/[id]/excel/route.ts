@@ -659,7 +659,7 @@ invoiceTaxCell.font = {
   name: "Seaford",
   size: 14,
   bold: true,
-  color: accentBlue,   // 🔵 azul
+  color: accentBlue,  
 };
 invoiceTaxCell.alignment = {
   horizontal: "left",

@@ -32,8 +32,16 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   const [guide, setGuide] = useState("");
 
   useEffect(() => {
-    fetchJSON<Draft>(`/api/packing-drafts/${draftId}`)
-      .then((r) => setData(r))
+    fetchJSON<{ ok: boolean; draft: Draft; lines: DraftLine[] }>(
+  `/api/packing-drafts/${draftId}`
+)
+  .then((r) => {
+    if (!r.ok) throw new Error();
+    setData({
+      ...r.draft,
+      lines: r.lines,
+    });
+  })
       .catch(() => alert("Error cargando draft"))
       .finally(() => setLoading(false));
   }, [draftId]);
