@@ -48,7 +48,7 @@ useEffect(() => {
   )
     .then((r) => {
       if (!r.ok) throw new Error("Factura no encontrada");
-      setData(r.invoice); // 👈 ESTA ES LA CLAVE
+      setData(r.invoice);
     })
     .catch(() => alert("Error cargando factura"))
     .finally(() => setLoading(false));
@@ -151,14 +151,38 @@ const formatMoney = (n: number) =>
       return;
     }
 
-    // 🔥 redirigimos al pricing existente
+    // pricio existente
     router.push(`/admin/pricing/${data.packing_id}`);
   }}
   className="px-4 py-2 border rounded"
 >
   Editar precios
 </button>
+
+<button
+  onClick={async () => {
+    if (!confirm("¿Reabrir este packing como Draft?")) return;
+
+    const res = await fetch(
+      `/api/packings/${data.packing_id}/reopen-draft`,
+      { method: "PATCH" }
+    );
+
+    const json = await res.json();
+
+    if (!json.ok) {
+      alert(json.error || "Error");
+      return;
+    }
+
+    router.push(`/proceso/${data.packing_id}`);
+  }}
+  className="px-4 py-2 border rounded text-red-600"
+>
+  Reabrir como Draft
+</button>
   </div>
+
 )}
       {/* TABLE */}
       <div className="overflow-auto">
