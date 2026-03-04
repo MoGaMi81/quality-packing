@@ -825,15 +825,20 @@ invoiceBoxesMap.forEach((box) => {
 
       const key = `${l.description_en}|${l.size}|${l.form}`;
 
+      const scientificName =
+        l.species?.[0]?.scientific_name ?? "";
+
+      const currentPrice = Number(l.price) || 0;
+
       if (!simpleMap.has(key)) {
         simpleMap.set(key, {
           desc: l.description_en,
-          sci: l.species?.scientific_name ?? "",
+          sci: scientificName,
           size: l.size,
           form: l.form,
           boxes: 1,
           pounds: l.pounds,
-          price: Number(l.price) || 0,   // 🔥 siempre precio actual
+          price: currentPrice,
         });
       } else {
         const g = simpleMap.get(key)!;
@@ -841,8 +846,8 @@ invoiceBoxesMap.forEach((box) => {
         g.boxes += 1;
         g.pounds += l.pounds;
 
-        // 🔥 FORZAR PRECIO ACTUAL SIEMPRE
-        g.price = Number(l.price) || 0;
+        // 🔥 SIEMPRE usar precio actual
+        g.price = currentPrice;
       }
     });
   }
