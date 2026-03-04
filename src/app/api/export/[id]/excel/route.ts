@@ -817,6 +817,8 @@ const simpleMap = new Map<
 
 const combinedBoxes: any[] = [];
 
+
+
 invoiceBoxesMap.forEach((box) => {
   if (box.is_combined) {
     combinedBoxes.push(box);
@@ -836,19 +838,19 @@ invoiceBoxesMap.forEach((box) => {
           sci: scientificName,
           size: l.size,
           form: l.form,
-          boxes: 1,
-          pounds: l.pounds,
-          price: currentPrice,
+          boxes: 0,
+          pounds: 0,
+          price: 0,
         });
-      } else {
-        const g = simpleMap.get(key)!;
-
-        g.boxes += 1;
-        g.pounds += l.pounds;
-
-        // 🔥 SIEMPRE usar precio actual
-        g.price = currentPrice;
       }
+
+      const g = simpleMap.get(key)!;
+
+      g.boxes += 1;
+      g.pounds += l.pounds;
+
+      // 🔥 SIEMPRE usar el precio actual
+      g.price = currentPrice;
     });
   }
 });
