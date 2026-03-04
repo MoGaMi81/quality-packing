@@ -401,12 +401,34 @@ for (let c = 1; c <= 8; c++) {
 }
 
 // ============================================================
-// 🔹 AGRUPAR POR RANGO (PACKING GENERAL)
+// 🔹 AGRUPAR POR CAJA REAL (RESPETA COMBINADAS)
 // ============================================================
 
 const sortedLines = [...(lines ?? [])].sort(
   (a, b) => a.box_no - b.box_no
 );
+
+// 🔥 1️⃣ Agrupar líneas por caja real
+const boxesMap = new Map<number, typeof sortedLines>();
+
+for (const line of sortedLines) {
+  if (!boxesMap.has(line.box_no)) {
+    boxesMap.set(line.box_no, []);
+  }
+  boxesMap.get(line.box_no)!.push(line);
+}
+
+// Convertimos a arreglo ordenado de cajas reales
+const uniqueBoxes = Array.from(boxesMap.entries())
+  .map(([box_no, boxLines]) => ({
+    box_no,
+    lines: boxLines,
+  }))
+  .sort((a, b) => a.box_no - b.box_no);
+
+// ============================================================
+// 🔹 AGRUPAR POR RANGO CONSECUTIVO (PRODUCTO IGUAL)
+// ============================================================
 
 type PackingGroup = {
   startBox: number;
@@ -422,23 +444,30 @@ type PackingGroup = {
 
 const groups: PackingGroup[] = [];
 
-for (let i = 0; i < sortedLines.length; i++) {
-  const current = sortedLines[i];
+for (let i = 0; i < uniqueBoxes.length; i++) {
+  const currentBox = uniqueBoxes[i];
+  const firstLine = currentBox.lines[0];
 
   const scientificName =
-    current.species?.[0]?.scientific_name ?? "";
+    firstLine.species?.[0]?.scientific_name ?? "";
+
+  // 🔥 Peso real de la caja (importante para combinadas)
+  const totalBoxWeight = currentBox.lines.reduce(
+    (s, l) => s + l.pounds,
+    0
+  );
 
   if (groups.length === 0) {
     groups.push({
-      startBox: current.box_no,
-      endBox: current.box_no,
-      description: current.description_en,
-      form: current.form,
-      size: current.size,
-      poundsPerBox: current.pounds,
+      startBox: currentBox.box_no,
+      endBox: currentBox.box_no,
+      description: firstLine.description_en,
+      form: firstLine.form,
+      size: firstLine.size,
+      poundsPerBox: totalBoxWeight,
       scientific: scientificName,
       boxCount: 1,
-      totalWeight: current.pounds,
+      totalWeight: totalBoxWeight,
     });
     continue;
   }
@@ -446,29 +475,30 @@ for (let i = 0; i < sortedLines.length; i++) {
   const last = groups[groups.length - 1];
 
   const sameProduct =
-    last.description === current.description_en &&
-    last.form === current.form &&
-    last.size === current.size &&
-    last.poundsPerBox === current.pounds &&
+    last.description === firstLine.description_en &&
+    last.form === firstLine.form &&
+    last.size === firstLine.size &&
+    last.poundsPerBox === totalBoxWeight &&
     last.scientific === scientificName;
 
-  const consecutive = current.box_no === last.endBox + 1;
+  const consecutive =
+    currentBox.box_no === last.endBox + 1;
 
   if (sameProduct && consecutive) {
-    last.endBox = current.box_no;
+    last.endBox = currentBox.box_no;
     last.boxCount++;
-    last.totalWeight += current.pounds;
+    last.totalWeight += totalBoxWeight;
   } else {
     groups.push({
-      startBox: current.box_no,
-      endBox: current.box_no,
-      description: current.description_en,
-      form: current.form,
-      size: current.size,
-      poundsPerBox: current.pounds,
+      startBox: currentBox.box_no,
+      endBox: currentBox.box_no,
+      description: firstLine.description_en,
+      form: firstLine.form,
+      size: firstLine.size,
+      poundsPerBox: totalBoxWeight,
       scientific: scientificName,
       boxCount: 1,
-      totalWeight: current.pounds,
+      totalWeight: totalBoxWeight,
     });
   }
 }
