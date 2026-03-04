@@ -476,7 +476,7 @@ packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
 setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
 
 // Merge solo aquí (una vez)
-packingSheet.mergeCells(`A${totalsRow}:G${totalsRow}`);
+safeMerge(packingSheet, `A${totalsRow}:G${totalsRow}`);
 
 const totalLabelCell = packingSheet.getCell(`A${totalsRow}`);
 totalLabelCell.value = `TOTAL BOXES ${totalBoxesPacking}`;
