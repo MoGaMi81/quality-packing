@@ -48,13 +48,15 @@ export async function GET(
     );
   }
 
-  // 🔥 RESPUESTA EXACTA QUE ESPERA EL FRONT
   return NextResponse.json({
+  ok: true,
+  draft: {
     id: draft.id,
     client_code: draft.client_code,
     client_name: client?.name ?? draft.client_code,
     guide: draft.guide ?? null,
     created_at: draft.created_at,
-    lines: lines ?? [],
-  });
+  },
+  lines: lines ?? [],
+});
 }
