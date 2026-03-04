@@ -822,7 +822,9 @@ invoiceBoxesMap.forEach((box) => {
     combinedBoxes.push(box);
   } else {
     box.lines.forEach((l: any) => {
-      const key = `${l.description_en}|${l.size}|${l.form}|${l.price}`;
+
+      const key = `${l.description_en}|${l.size}|${l.form}`;
+
       if (!simpleMap.has(key)) {
         simpleMap.set(key, {
           desc: l.description_en,
@@ -831,12 +833,16 @@ invoiceBoxesMap.forEach((box) => {
           form: l.form,
           boxes: 1,
           pounds: l.pounds,
-          price: l.price,
+          price: Number(l.price) || 0,   // 🔥 siempre precio actual
         });
       } else {
         const g = simpleMap.get(key)!;
+
         g.boxes += 1;
         g.pounds += l.pounds;
+
+        // 🔥 FORZAR PRECIO ACTUAL SIEMPRE
+        g.price = Number(l.price) || 0;
       }
     });
   }
