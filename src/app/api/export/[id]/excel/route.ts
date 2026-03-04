@@ -464,7 +464,6 @@ const totalWeightPacking = sortedLines.reduce(
   0
 );
 
-packingSheet.mergeCells(`A${totalsRow}:G${totalsRow}`);
 
 packingSheet.getCell(`A${totalsRow}`).value =
   `TOTAL BOXES ${totalBoxesPacking}`;
@@ -480,27 +479,15 @@ safeMerge(packingSheet, `A${totalsRow}:G${totalsRow}`);
 
 const totalLabelCell = packingSheet.getCell(`A${totalsRow}`);
 totalLabelCell.value = `TOTAL BOXES ${totalBoxesPacking}`;
-totalLabelCell.font = {
-  name: "Calibri",
-  bold: true,
-};
-totalLabelCell.alignment = {
-  horizontal: "right",
-  vertical: "middle",
-};
+totalLabelCell.font = { name: "Calibri", bold: true };
+totalLabelCell.alignment = { horizontal: "right", vertical: "middle" };
 
 const totalValueCell = packingSheet.getCell(`H${totalsRow}`);
 totalValueCell.value = totalWeightPacking;
-totalValueCell.font = {
-  name: "Calibri",
-  bold: true,
-};
-totalValueCell.alignment = {
-  horizontal: "right",
-};
+totalValueCell.font = { name: "Calibri", bold: true };
+totalValueCell.alignment = { horizontal: "right" };
 totalValueCell.numFmt = "#,##0";
 
-// Marco externo limpio
 setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
 
 
