@@ -164,18 +164,18 @@ const formatMoney = (n: number) =>
     if (!confirm("¿Reabrir este packing como Draft?")) return;
 
     const res = await fetch(
-      `/api/packings/${data.packing_id}/reopen-draft`,
-      { method: "PATCH" }
-    );
+  `/api/packings/${data.packing_id}/reopen-draft`,
+  { method: "PATCH" }
+);
 
-    const json = await res.json();
+const json = await res.json();
 
-    if (!json.ok) {
-      alert(json.error || "Error");
-      return;
-    }
+if (!json.ok) {
+  alert(json.error);
+  return;
+}
 
-    router.push(`/proceso/${data.packing_id}`);
+router.push(`/drafts/${json.draftId}`);
   }}
   className="px-4 py-2 border rounded text-red-600"
 >

@@ -16,7 +16,7 @@ export async function PATCH(
     .from("packing_drafts")
     .update({ status: "PROCESS_DONE" })
     .eq("id", id)
-    .eq("status", "PROCESS"); // blindaje
+    .eq("status", "PROCESS");
 
   if (error) {
     return NextResponse.json(

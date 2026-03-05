@@ -54,9 +54,9 @@ export async function GET(
     id: draft.id,
     client_code: draft.client_code,
     client_name: client?.name ?? draft.client_code,
-    internal_ref: draft.internal_ref ?? "",  // 🔥 AÑADIR ESTO
+    internal_ref: draft.internal_ref ?? "", 
     guide: draft.guide ?? null,
-    status: draft.status ?? "DRAFT",         // 🔥 Y ESTO
+    status: draft.status ?? "DRAFT",
     created_at: draft.created_at,
   },
   lines: lines ?? [],

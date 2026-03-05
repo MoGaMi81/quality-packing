@@ -27,7 +27,6 @@ export async function GET() {
     return NextResponse.json({ ok: true, drafts: [] });
   }
 
-  // 🔵 Resolver nombres de cliente
   const codes = [...new Set(data.map(d => d.client_code))];
 
   const { data: clients } = await supabase
