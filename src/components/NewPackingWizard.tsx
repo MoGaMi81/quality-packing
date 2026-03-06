@@ -166,31 +166,56 @@ const [guideValue, setGuideValue] = useState("");
 
   if (!confirm("¿Confirmas que el proceso está completo?")) return;
 
-  // 1️⃣ Guardar primero
-  await fetch(`/api/packing-drafts/${draft_id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      internal_ref: internalRef,
-      guide: guideValue
-    }),
-  });
+  const { lines: storeLines } = usePackingStore.getState();
 
-  // 2️⃣ Luego finalizar
-  const res = await fetch(
-    `/api/packing-drafts/${draft_id}/finish-process`,
-    { method: "PATCH" }
-  );
-
-  const data = await res.json();
-
-  if (!res.ok || !data.ok) {
-    alert(data?.error || "No se pudo finalizar");
+  if (!storeLines || storeLines.length === 0) {
+    alert("No hay líneas para finalizar.");
     return;
   }
 
-  alert("Proceso finalizado.");
-  router.replace("/drafts");
+  try {
+    // 1️⃣ Guardar borrador completo
+    const saveRes = await fetch("/api/packing-drafts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        draft_id,
+        header: {
+          client_code: safeHeader.client_code,
+          internal_ref: safeHeader.internal_ref,
+        },
+        lines: storeLines,
+        status: "PROCESS",
+      }),
+    });
+
+    const saveData = await saveRes.json();
+
+    if (!saveRes.ok || !saveData?.ok) {
+      alert(saveData?.error || "Error al guardar antes de finalizar");
+      return;
+    }
+
+    // 2️⃣ Cambiar estado a PROCESS_DONE
+    const finishRes = await fetch(
+      `/api/packing-drafts/${draft_id}/finish-process`,
+      { method: "PATCH" }
+    );
+
+    const finishData = await finishRes.json();
+
+    if (!finishRes.ok || !finishData.ok) {
+      alert(finishData?.error || "No se pudo finalizar");
+      return;
+    }
+
+    alert("Proceso finalizado correctamente.");
+    router.replace("/drafts");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error inesperado al finalizar");
+  }
 }
 
   /* ================= DERIVADOS ================= */

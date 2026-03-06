@@ -1,4 +1,18 @@
 {
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js"
+  "/login/page": "app/login/page.js",
+  "/drafts/page": "app/drafts/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/packing-drafts/list/route": "app/api/packing-drafts/list/route.js",
+  "/drafts/new/page": "app/drafts/new/page.js",
+  "/api/packing-drafts/save/route": "app/api/packing-drafts/save/route.js",
+  "/drafts/[id]/page": "app/drafts/[id]/page.js",
+  "/api/packing-drafts/[id]/route": "app/api/packing-drafts/[id]/route.js",
+  "/packings/new/page": "app/packings/new/page.js",
+  "/api/packing-drafts/[id]/finish-process/route": "app/api/packing-drafts/[id]/finish-process/route.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/facturacion/page": "app/facturacion/page.js",
+  "/facturacion/pending/page": "app/facturacion/pending/page.js",
+  "/facturacion/[id]/page": "app/facturacion/[id]/page.js",
+  "/api/facturacion/pending/route": "app/api/facturacion/pending/route.js"
 }
