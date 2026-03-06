@@ -25,7 +25,6 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   const router = useRouter();
   const draftId = params.id;
   
-
   const [data, setData] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
