@@ -68,12 +68,6 @@ function formatAmountInWords(amount: number): string {
 export const runtime = "nodejs";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
-const role = req.headers.get("x-role");
-
-if (role !== "admin") {
-  return NextResponse.json({ ok: false }, { status: 403 });
-}
-
 const wb = new ExcelJS.Workbook();
 const invoiceSheet = wb.addWorksheet("Invoice");
 const packingSheet = wb.addWorksheet("Packing");

@@ -10,13 +10,6 @@ export async function PATCH(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  
-const role = _req.headers.get("x-role");
-
-if (role !== "admin") {
-  return NextResponse.json({ ok: false }, { status: 403 });
-}
-  
   const { error } = await supabase
     .from("packings")
     .update({ pricing_status: "PENDING" })
