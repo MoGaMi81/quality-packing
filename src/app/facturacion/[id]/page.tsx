@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
-import { getRole } from "@/lib/role";
 
 type DraftLine = {
   box_no: number;
@@ -24,15 +23,9 @@ type Draft = {
 
 export default function FacturacionDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
-
-  // 🔒 Validación de rol
-  const role = getRole();
-  if (role !== "facturacion" && role !== "admin") {
-    router.replace("/inicio");
-    return null;
-  }
-
   const draftId = params.id;
+  
+
   const [data, setData] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -40,15 +33,15 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; draft: Draft; lines: DraftLine[] }>(
-      `/api/packing-drafts/${draftId}`
-    )
-      .then((r) => {
-        if (!r.ok) throw new Error();
-        setData({
-          ...r.draft,
-          lines: r.lines,
-        });
-      })
+  `/api/packing-drafts/${draftId}`
+)
+  .then((r) => {
+    if (!r.ok) throw new Error();
+    setData({
+      ...r.draft,
+      lines: r.lines,
+    });
+  })
       .catch(() => alert("Error cargando draft"))
       .finally(() => setLoading(false));
   }, [draftId]);

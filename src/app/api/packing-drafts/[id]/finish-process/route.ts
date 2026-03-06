@@ -12,13 +12,6 @@ export async function PATCH(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-
-  const role = _req.headers.get("x-role");
-
-if (role !== "admin") {
-  return NextResponse.json({ ok: false }, { status: 403 });
-}
-
   const { data: draft, error } = await supabase
     .from("packing_drafts")
     .select("id, status")
