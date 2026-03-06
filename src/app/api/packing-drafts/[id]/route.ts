@@ -9,6 +9,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const body = await req.json();
+
+  const { internal_ref, guide } = body;
+
+  const { error } = await supabase
+    .from("packing_drafts")
+    .update({
+      internal_ref,
+      guide,
+      status: "PROCESS", // 🔥 clave: cambia el estado
+    })
+    .eq("id", params.id);
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -49,16 +73,16 @@ export async function GET(
   }
 
   return NextResponse.json({
-  ok: true,
-  draft: {
-    id: draft.id,
-    client_code: draft.client_code,
-    client_name: client?.name ?? draft.client_code,
-    internal_ref: draft.internal_ref ?? "", 
-    guide: draft.guide ?? null,
-    status: draft.status ?? "DRAFT",
-    created_at: draft.created_at,
-  },
-  lines: lines ?? [],
-});
+    ok: true,
+    draft: {
+      id: draft.id,
+      client_code: draft.client_code,
+      client_name: client?.name ?? draft.client_code,
+      internal_ref: draft.internal_ref ?? "",
+      guide: draft.guide ?? null,
+      status: draft.status ?? "DRAFT",
+      created_at: draft.created_at,
+    },
+    lines: lines ?? [],
+  });
 }

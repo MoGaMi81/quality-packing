@@ -37,7 +37,8 @@ export default function NewPackingWizard({ open, onClose }: Props) {
   const [draft_id, setDraftId] = useState<string | null>(null);
   const [openBoxes, setOpenBoxes] = useState(false);
   const [editingBox, setEditingBox] = useState<number | null>(null);
-
+  const [internalRef, setInternalRef] = useState("");
+const [guideValue, setGuideValue] = useState("");
   const [clients, setClients] = useState<{ code: string; name: string }[]>([]);
 
   const safeHeader = header ?? {
@@ -161,25 +162,36 @@ export default function NewPackingWizard({ open, onClose }: Props) {
 
   /* ================= FINALIZAR ================= */
   async function finishProcess() {
-    if (!draft_id) return;
+  if (!draft_id) return;
 
-    if (!confirm("¿Confirmas que el proceso está completo?")) return;
+  if (!confirm("¿Confirmas que el proceso está completo?")) return;
 
-    const res = await fetch(
-      `/api/packing-drafts/${draft_id}/finish-process`,
-      { method: "PATCH" }
-    );
+  // 1️⃣ Guardar primero
+  await fetch(`/api/packing-drafts/${draft_id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      internal_ref: internalRef,
+      guide: guideValue
+    }),
+  });
 
-    const data = await res.json();
+  // 2️⃣ Luego finalizar
+  const res = await fetch(
+    `/api/packing-drafts/${draft_id}/finish-process`,
+    { method: "PATCH" }
+  );
 
-    if (!res.ok || !data.ok) {
-      alert(data?.error || "No se pudo finalizar");
-      return;
-    }
+  const data = await res.json();
 
-    alert("Proceso finalizado. Enviado a facturación.");
-    router.replace("/drafts");
+  if (!res.ok || !data.ok) {
+    alert(data?.error || "No se pudo finalizar");
+    return;
   }
+
+  alert("Proceso finalizado.");
+  router.replace("/drafts");
+}
 
   /* ================= DERIVADOS ================= */
   const grouped = groupBoxes(lines);
