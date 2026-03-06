@@ -6,6 +6,12 @@ import { getRole } from "@/lib/role";
 
 export default function Home() {
   const router = useRouter();
+  const role = getRole();
+
+if (role !== "admin") {
+  router.replace("/inicio");
+  return null;
+}
 
   useEffect(() => {
     const role = getRole();
