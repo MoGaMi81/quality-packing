@@ -1,9 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getRole } from "@/lib/role";
 
 export default function FacturacionHome() {
   const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const role = getRole();
+    if (!role) return; // esperar a que se resuelva
+
+    if (role !== "facturacion" && role !== "admin") {
+      router.replace("/inicio");
+    } else {
+      setAuthorized(true);
+    }
+  }, [router]);
 
   // ✅ Función de logout
   async function logout() {
@@ -11,6 +25,10 @@ export default function FacturacionHome() {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {}
     router.replace("/login");
+  }
+
+  if (!authorized) {
+    return <div>Cargando...</div>;
   }
 
   return (

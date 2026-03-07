@@ -1,9 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getRole } from "@/lib/role";
 
-export default function AdminDashboard() {
+export default function AdminPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    const role = getRole();
+
+    if (!role) return;
+
+    if (role !== "admin") {
+      router.replace("/inicio");
+    }
+  }, [router]);
 
   const Card = ({
     title,
