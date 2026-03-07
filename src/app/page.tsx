@@ -1,44 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getRole } from "@/lib/role";
 
 export default function Home() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-
-    const role = getRole();
+    const role = localStorage.getItem("role");
 
     if (!role) {
       router.replace("/login");
       return;
     }
 
-    if (role === "admin") {
-      router.replace("/admin");
-      return;
-    }
+    switch (role) {
+      case "admin":
+        router.replace("/admin");
+        break;
 
-    if (role === "proceso") {
-      router.replace("/drafts");
-      return;
-    }
+      case "proceso":
+        router.replace("/drafts");
+        break;
 
-    if (role === "facturacion") {
-      router.replace("/facturacion");
-      return;
-    }
-  }, [ready, router]);
+      case "facturacion":
+        router.replace("/facturacion");
+        break;
 
-  if (!ready) return null;
+      default:
+        router.replace("/login");
+    }
+  }, [router]);
 
   return <div style={{ padding: 24 }}>Redirigiendo…</div>;
 }
