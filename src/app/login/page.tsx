@@ -17,7 +17,9 @@ export default function LoginPage() {
     });
 
     let data: any = {};
-    try { data = await r.json(); } catch {}
+    try {
+      data = await r.json();
+    } catch {}
 
     if (!r.ok || !data.ok) {
       alert(data?.error || "Credenciales inválidas");
@@ -25,12 +27,22 @@ export default function LoginPage() {
     }
 
     // 🔥 GUARDAR ROL
-    localStorage.setItem("role", data.user.role);
+    const role = data.user.role;
+    localStorage.setItem("role", role);
 
     // opcional: guardar id
     localStorage.setItem("user_id", data.user.id);
 
-    window.location.href = "/";
+    // 🔀 REDIRECCIÓN SEGÚN ROL
+    if (role === "admin") {
+      window.location.href = "/admin";
+    } else if (role === "proceso") {
+      window.location.href = "/drafts";
+    } else if (role === "facturacion") {
+      window.location.href = "/facturacion";
+    } else {
+      window.location.href = "/login";
+    }
   };
 
   return (
