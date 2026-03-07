@@ -24,13 +24,13 @@ export default function LoginPage() {
       return;
     }
 
-    console.log("LOGIN OK:", data.user);
+    // 🔥 GUARDAR ROL
+    localStorage.setItem("role", data.user.role);
 
-    // ✅ SIEMPRE ir a raíz
-    // app/page.tsx decide a dónde mandarlo
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 200);
+    // opcional: guardar id
+    localStorage.setItem("user_id", data.user.id);
+
+    window.location.href = "/";
   };
 
   return (
