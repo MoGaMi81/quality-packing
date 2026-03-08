@@ -1111,7 +1111,7 @@ invoiceSheet.getCell("C56").value = "TOTAL BOXES";
 for (let c = 1; c <= 8; c++) {
   invoiceSheet.getCell(56, c).border = {};
 }
-invoiceSheet.getCell(`A${row}`).value = `TOTAL BOXES ${totalBoxes}`;
+invoiceSheet.getCell("B56").value = `${totalBoxes}`;
  // ============================================================
 // EXPORT
 // ============================================================
