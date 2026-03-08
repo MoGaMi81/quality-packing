@@ -943,6 +943,7 @@ combinedBoxes.forEach((box) => {
       sci: l.species?.scientific_name ?? "",
       price: l.price,
       amount,
+      
     });
   });
 });
@@ -1110,7 +1111,7 @@ invoiceSheet.getCell("C56").value = "TOTAL BOXES";
 for (let c = 1; c <= 8; c++) {
   invoiceSheet.getCell(56, c).border = {};
 }
-
+invoiceSheet.getCell(`A${row}`).value = `TOTAL BOXES ${totalBoxes}`;
  // ============================================================
 // EXPORT
 // ============================================================
