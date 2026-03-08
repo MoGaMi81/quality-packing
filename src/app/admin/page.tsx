@@ -13,7 +13,7 @@ export default function AdminPage() {
     if (!role) return;
 
     if (role !== "admin") {
-      router.replace("/inicio");
+      router.replace("/");
     }
   }, [router]);
 
