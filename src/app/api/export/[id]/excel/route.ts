@@ -830,8 +830,13 @@ invoiceBoxesMap.forEach((box) => {
 
       const key = `${l.description_en}|${l.size}|${l.form}`;
 
-      const scientificName =
-        l.species?.[0]?.scientific_name ?? "";
+      let scientificName = "";
+
+if (Array.isArray(l.species)) {
+  scientificName = l.species[0]?.scientific_name ?? "";
+} else if (l.species && typeof l.species === "object") {
+  scientificName = l.species.scientific_name ?? "";
+}
 
       const currentPrice = Number(l.price) || 0;
 
