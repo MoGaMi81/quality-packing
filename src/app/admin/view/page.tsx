@@ -5,6 +5,7 @@ export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
 
 type Packing = {
   id: string;
@@ -20,14 +21,14 @@ export default function AdminView() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/packings/latest", { cache: "no-store" })
-      .then(r => r.json())
+    secureFetch("/api/admin/packings/latest", { cache: "no-store" })   // ✅ secureFetch
+      .then(r => r.json())                                            // ✅ convertir a JSON
       .then(d => setLatest(d.packings ?? []));
   }, []);
 
   async function search() {
     if (!q.trim()) return setResults([]);
-    const r = await fetch(`/api/admin/packings/search?q=${encodeURIComponent(q)}`);
+    const r = await secureFetch(`/api/admin/packings/search?q=${encodeURIComponent(q)}`); // ✅ secureFetch
     const d = await r.json();
     setResults(d.packings ?? []);
   }

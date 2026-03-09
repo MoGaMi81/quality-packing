@@ -5,7 +5,7 @@ export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchJSON } from "@/lib/fetchJSON";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación cambiada
 import { groupBoxesForView } from "@/domain/packing/view";
 import type { ViewBox } from "@/domain/packing/view";
 
@@ -15,7 +15,8 @@ export default function ViewPacking() {
   const [packing, setPacking] = useState<any>(null);
 
   useEffect(() => {
-    fetchJSON(`/api/packings/${id}`, { cache: "no-store" })
+    secureFetch(`/api/packings/${id}`, { cache: "no-store" })   // ✅ secureFetch
+      .then((r) => r.json())                                   // ✅ convertir a JSON
       .then((res) => {
         if (!res?.ok) throw new Error();
         setPacking(res.packing);
@@ -75,29 +76,29 @@ export default function ViewPacking() {
       </div>
 
       {/* RESUMEN */}
-<div className="border rounded p-4 grid grid-cols-3 gap-4 text-base mb-6">
-  <div>
-    <b>Cajas:</b> {totalBoxes}
-  </div>
+      <div className="border rounded p-4 grid grid-cols-3 gap-4 text-base mb-6">
+        <div>
+          <b>Cajas:</b> {totalBoxes}
+        </div>
 
-  <div>
-    <b>Total lbs:</b>{" "}
-    {totalLbs.toLocaleString("en-US", {
-      maximumFractionDigits: 0,
-    })}
-  </div>
+        <div>
+          <b>Total lbs:</b>{" "}
+          {totalLbs.toLocaleString("en-US", {
+            maximumFractionDigits: 0,
+          })}
+        </div>
 
-  {totalUSD != null && (
-    <div>
-      <b>Total USD:</b>{" "}
-      {totalUSD.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-      })}
-    </div>
-  )}
-</div>
+        {totalUSD != null && (
+          <div>
+            <b>Total USD:</b>{" "}
+            {totalUSD.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+              minimumFractionDigits: 2,
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ✅ Botones extra cuando pricing está DONE */}
       {packing.pricing_status === "DONE" && (
@@ -111,8 +112,10 @@ export default function ViewPacking() {
 
           <button
             onClick={() =>
-            router.push(`/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`)
-           }
+              router.push(
+                `/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`
+              )
+            }
             className="px-4 py-2 border rounded"
           >
             Ver Factura / Resumen
