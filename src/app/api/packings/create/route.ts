@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireRole } from "@/lib/requireRole";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,6 +10,7 @@ const supabase = createClient(
 export async function POST(req: Request) {
   const body = await req.json();
   const { invoice_no, client_code, client_name, address, date } = body;
+  requireRole(req, ["proceso"]);
 
   if (!invoice_no || !client_code) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });

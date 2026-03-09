@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireRole } from "@/lib/requireRole"; // 🔥 agregado
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,6 @@ export async function GET() {
     return NextResponse.json({ ok: true, rows: [] });
   }
 
-  // 🔵 resolver nombres
   const codes = [...new Set(data.map(d => d.client_code))];
 
   const { data: clients } = await supabase
@@ -51,7 +51,7 @@ export async function GET() {
 
   const rowsWithName = data.map(d => ({
     ...d,
-    client_name: clientMap.get(d.client_code) ?? d.client_code
+    client_name: clientMap.get(d.client_code) ?? d.client_code,
   }));
 
   return NextResponse.json(
@@ -64,6 +64,9 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  // 🔒 Verificación de rol
+  requireRole(req, ["admin"]);
+
   const packing_id = params.id;
   const { prices } = (await req.json()) as {
     prices: Record<string, number>;
@@ -100,12 +103,11 @@ export async function POST(
   }
 
   /* =====================================================
-     2️⃣ Actualizar precios por clave code|form|size
+     2️⃣ Actualización precios por clave code|form|size
      ===================================================== */
   for (const key of Object.keys(prices)) {
     const price = prices[key];
 
-    // 🔑 CASO ESPECIAL GROUPER_WG
     if (key === "GROUPER_WG") {
       const { error } = await supabase
         .from("packing_lines")
@@ -125,7 +127,6 @@ export async function POST(
       continue;
     }
 
-    // 🔑 NORMAL: code|form|size
     const [code, form, size] = key.split("|");
 
     if (!code || !form || !size) {

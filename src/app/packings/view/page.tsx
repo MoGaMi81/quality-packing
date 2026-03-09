@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import BackButton from "@/components/BackButton";
-import { fetchJSON } from "@/lib/fetchJSON";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación cambiada
 import { getRole } from "@/lib/role";
 import InvoiceSummary from "@/components/InvoiceSummary";
 
@@ -19,9 +19,11 @@ export default function PackingViewPage() {
     if (!invoice?.trim()) return;
 
     try {
-      const res = await fetchJSON(`/api/packings/by-invoice/${invoice}`);
-      if (!res.ok) {
-        setErr(res.error || "No encontrado");
+      const r = await secureFetch(`/api/packings/by-invoice/${invoice}`); // ✅ secureFetch
+      const res = await r.json();                                         // ✅ convertir a JSON
+
+      if (!r.ok || !res.ok) {
+        setErr(res?.error || "No encontrado");
       } else {
         setData(res.packing);
       }

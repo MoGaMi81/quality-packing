@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PricingModal from "@/components/PricingModal";
 import { fetchJSON } from "@/lib/fetchJSON";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
 import type { PackingLine } from "@/domain/packing/types";
 
 type Packing = {
@@ -62,21 +63,25 @@ export default function PricingPage({
 
   /* ================= SAVE PRICES ================= */
   async function savePrices(prices: Record<string, number>) {
-    const r = await fetch(`/api/packings/${packingId}/pricing`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prices }),
-    });
+    try {
+      const r = await secureFetch(`/api/packings/${packingId}/pricing`, {
+        method: "POST",
+        body: JSON.stringify({ prices }),
+      });
 
-    const data = await r.json();
+      const data = await r.json();
 
-    if (!r.ok || !data.ok) {
-      alert(data?.error || "Error al guardar precios");
-      return;
+      if (!r.ok || !data.ok) {
+        alert(data?.error || "Error al guardar precios");
+        return;
+      }
+
+      alert("Pricing guardado correctamente");
+      router.replace("/admin");
+    } catch (e) {
+      console.error(e);
+      alert("Error en la conexión al guardar precios");
     }
-
-    alert("Pricing guardado correctamente");
-    router.replace("/admin");
   }
 
   const totalLbs = lines.reduce(
@@ -101,17 +106,17 @@ export default function PricingPage({
       </div>
 
       {/* INFO */}
-<div className="border rounded p-4 space-y-1">
-  <div>
-    <b>Factura:</b> {packing.invoice_no}
-  </div>
-  <div>
-    <b>Cliente:</b> {packing.client_name || packing.client_code}
-  </div>
-  <div className="text-sm text-gray-500">
-    {new Date(packing.created_at).toLocaleString()}
-  </div>
-</div>
+      <div className="border rounded p-4 space-y-1">
+        <div>
+          <b>Factura:</b> {packing.invoice_no}
+        </div>
+        <div>
+          <b>Cliente:</b> {packing.client_name || packing.client_code}
+        </div>
+        <div className="text-sm text-gray-500">
+          {new Date(packing.created_at).toLocaleString()}
+        </div>
+      </div>
 
       {/* RESUMEN */}
       <div className="border rounded p-4">

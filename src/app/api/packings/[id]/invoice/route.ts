@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireRole } from "@/lib/requireRole";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,6 +11,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  requireRole(_req, ["facturacion", "admin"]);
   const packingId = decodeURIComponent(params.id);
 
 const { data, error } = await supabase

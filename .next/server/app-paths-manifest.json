@@ -1,18 +1,10 @@
 {
-  "/page": "app/page.js",
   "/login/page": "app/login/page.js",
-  "/drafts/page": "app/drafts/page.js",
+  "/page": "app/page.js",
+  "/api/admin/packings/latest/route": "app/api/admin/packings/latest/route.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/packing-drafts/list/route": "app/api/packing-drafts/list/route.js",
-  "/drafts/new/page": "app/drafts/new/page.js",
-  "/api/packing-drafts/save/route": "app/api/packing-drafts/save/route.js",
-  "/drafts/[id]/page": "app/drafts/[id]/page.js",
-  "/api/packing-drafts/[id]/route": "app/api/packing-drafts/[id]/route.js",
-  "/packings/new/page": "app/packings/new/page.js",
-  "/api/packing-drafts/[id]/finish-process/route": "app/api/packing-drafts/[id]/finish-process/route.js",
-  "/api/auth/logout/route": "app/api/auth/logout/route.js",
-  "/facturacion/page": "app/facturacion/page.js",
-  "/facturacion/pending/page": "app/facturacion/pending/page.js",
-  "/facturacion/[id]/page": "app/facturacion/[id]/page.js",
-  "/api/facturacion/pending/route": "app/api/facturacion/pending/route.js"
+  "/api/packings/[id]/route": "app/api/packings/[id]/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/view/[id]/page": "app/admin/view/[id]/page.js",
+  "/admin/view/page": "app/admin/view/page.js"
 }

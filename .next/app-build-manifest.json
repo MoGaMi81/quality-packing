@@ -16,40 +16,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
     ],
-    "/drafts/page": [
+    "/admin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/drafts/page.js"
+      "static/chunks/app/admin/page.js"
     ],
-    "/drafts/new/page": [
+    "/admin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/drafts/new/page.js"
+      "static/chunks/app/admin/layout.js"
     ],
-    "/drafts/[id]/page": [
+    "/admin/view/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/drafts/[id]/page.js"
+      "static/chunks/app/admin/view/page.js"
     ],
-    "/packings/new/page": [
+    "/admin/view/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/packings/new/page.js"
-    ],
-    "/facturacion/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/facturacion/page.js"
-    ],
-    "/facturacion/pending/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/facturacion/pending/page.js"
-    ],
-    "/facturacion/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/facturacion/[id]/page.js"
+      "static/chunks/app/admin/view/[id]/page.js"
     ]
   }
 }

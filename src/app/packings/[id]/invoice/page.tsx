@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchJSON } from "@/lib/fetchJSON";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación cambiada
 import Link from "next/link";
 
 type Line = {
@@ -20,7 +20,8 @@ export default function InvoicePage({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJSON(`/api/packings/${params.id}/invoice`)
+    secureFetch(`/api/packings/${params.id}/invoice`)   // ✅ Uso de secureFetch
+      .then(res => res.json())                         // ✅ Convertimos la respuesta en JSON
       .then(setData)
       .finally(() => setLoading(false));
   }, [params.id]);
@@ -67,7 +68,6 @@ export default function InvoicePage({
             </tr>
           ))}
         </tbody>
-
       </table>
 
       {/* ✅ Bloque de exportación a Excel */}
