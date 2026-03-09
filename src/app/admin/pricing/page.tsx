@@ -5,6 +5,7 @@ export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
 
 type Packing = {
   id: string;
@@ -24,9 +25,7 @@ export default function AdminHome() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/admin/packings", {
-          cache: "no-store",
-        });
+        const res = await secureFetch("/api/admin/packings", { cache: "no-store" }); // ✅ secureFetch
         const data = await res.json();
         setPackings(data.packings ?? []);
       } catch (e) {
@@ -64,12 +63,12 @@ export default function AdminHome() {
             </div>
             <div className="text-sm mt-1 text-gray-500">—</div>
           </div>
-         <button
-          onClick={() => router.push(`/admin/pricing/${p.id}`)}
-          className="bg-green-700 text-white px-4 py-2 rounded"
-        >
-          Pricing
-        </button>
+          <button
+            onClick={() => router.push(`/admin/pricing/${p.id}`)}
+            className="bg-green-700 text-white px-4 py-2 rounded"
+          >
+            Pricing
+          </button>
         </div>
       ))}
     </div>

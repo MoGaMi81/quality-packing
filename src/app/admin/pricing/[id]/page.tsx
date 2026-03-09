@@ -5,6 +5,7 @@ export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
 import PricingModal from "@/components/PricingModal";
 import type { PackingLine } from "@/domain/packing/types";
 
@@ -35,9 +36,9 @@ export default function PricingPage({
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/packings/${packingId}`, {
+        const res = await secureFetch(`/api/packings/${packingId}`, {
           cache: "no-store",
-        });
+        }); // ✅ secureFetch
         const json = await res.json();
 
         if (!json?.ok || !json?.packing) {
@@ -68,22 +69,26 @@ export default function PricingPage({
 
   /* ================= SAVE PRICES ================= */
   async function savePrices(prices: Record<string, number>) {
-    const r = await fetch(`/api/packings/${packingId}/pricing`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prices }),
-    });
+    try {
+      const r = await secureFetch(`/api/packings/${packingId}/pricing`, {
+        method: "POST",
+        body: JSON.stringify({ prices }),
+      }); // ✅ secureFetch
 
-    const data = await r.json();
+      const data = await r.json();
 
-    if (!r.ok || !data.ok) {
-      alert(data?.error || "Error al guardar precios");
-      return;
+      if (!r.ok || !data.ok) {
+        alert(data?.error || "Error al guardar precios");
+        return;
+      }
+
+      alert("Pricing guardado correctamente");
+      router.replace("/admin/pricing");
+      setTimeout(() => router.refresh(), 0);
+    } catch (e) {
+      console.error(e);
+      alert("Error en la conexión al guardar precios");
     }
-
-    alert("Pricing guardado correctamente");
-    router.replace("/admin/pricing");
-    setTimeout(() => router.refresh(), 0);
   }
 
   const totalLbs = lines.reduce((sum, l) => sum + (l.pounds ?? 0), 0);
