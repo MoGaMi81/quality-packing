@@ -14,32 +14,50 @@ export async function GET(
   requireRole(_req, ["facturacion", "admin"]);
   const packingId = decodeURIComponent(params.id);
 
-const { data, error } = await supabase
-  .from("packings")
-  .select(`
-    id,
-    invoice_no,
-    client_code,
-    created_at,
-    clients (
-      name
-    ),
-    packing_lines (
-      description_en,
-      form,
-      size,
-      pounds,
-      price
-    )
-  `)
-  .eq("id", params.id)
-  .single();
+  // ✅ Validación previa al generar factura
+  const { data: packing, error: packingError } = await supabase
+    .from("packings")
+    .select("status")
+    .eq("id", packingId)
+    .single();
+
+  if (packingError || !packing) {
+    return NextResponse.json({ error: "Packing not found" }, { status: 404 });
+  }
+
+  if (packing.status !== "TO_ADMIN") {
+    return NextResponse.json(
+      { error: "Packing not ready for invoice" },
+      { status: 400 }
+    );
+  }
+
+  // ✅ Consulta de datos completos para la factura
+  const { data, error } = await supabase
+    .from("packings")
+    .select(`
+      id,
+      invoice_no,
+      client_code,
+      created_at,
+      clients (
+        name
+      ),
+      packing_lines (
+        description_en,
+        form,
+        size,
+        pounds,
+        price
+      )
+    `)
+    .eq("id", packingId)
+    .single();
 
   if (error || !data) {
     return NextResponse.json({ error: "Packing not found" }, { status: 404 });
   }
 
-  // 🔹 líneas ya pricadas (solo lectura)
   const lines = (data.packing_lines ?? []).map((l: any) => ({
     pricing_key: l.pricing_key,
     species: l.species_name,
@@ -54,13 +72,13 @@ const { data, error } = await supabase
     total_usd: lines.reduce((s: number, l: any) => s + l.total, 0),
   };
 
- return NextResponse.json({
-  header: {
-    invoice: data.invoice_no,
-    client_name: data.clients?.[0]?.name ?? data.client_code ?? "",
-    date: data.created_at,
-  },
-  lines,
-  totals,
-});
+  return NextResponse.json({
+    header: {
+      invoice: data.invoice_no,
+      client_name: data.clients?.[0]?.name ?? data.client_code ?? "",
+      date: data.created_at,
+    },
+    lines,
+    totals,
+  });
 }

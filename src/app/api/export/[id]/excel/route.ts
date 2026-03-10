@@ -1115,6 +1115,11 @@ const cell = invoiceSheet.getCell("B56");
 cell.value = totalBoxes; // solo el número
 cell.alignment = { horizontal: "right" };
 
+await supabase
+  .from("packings")
+  .update({ status: "COMPLETED" })
+  .eq("id", params.id);
+
  // ============================================================
 // EXPORT
 // ============================================================
