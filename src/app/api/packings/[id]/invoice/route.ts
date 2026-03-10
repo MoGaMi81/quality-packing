@@ -12,9 +12,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   requireRole(_req, ["facturacion", "admin"]);
+
   const packingId = decodeURIComponent(params.id);
 
-  // ✅ Validación previa al generar factura
   const { data: packing, error: packingError } = await supabase
     .from("packings")
     .select("status")
@@ -32,7 +32,6 @@ export async function GET(
     );
   }
 
-  // ✅ Consulta de datos completos para la factura
   const { data, error } = await supabase
     .from("packings")
     .select(`

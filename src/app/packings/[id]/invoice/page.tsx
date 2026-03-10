@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { secureFetch } from "@/lib/secureFetch"; 
+import { secureFetch } from "@/lib/secureFetch";
 import Link from "next/link";
 
 type Line = {
@@ -20,8 +20,8 @@ export default function InvoicePage({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    secureFetch(`/api/packings/${params.id}/invoice`) 
-      .then(res => res.json())                        
+    secureFetch(`/api/packings/${params.id}/invoice`)
+      .then(res => res.json())
       .then(setData)
       .finally(() => setLoading(false));
   }, [params.id]);
@@ -33,22 +33,26 @@ export default function InvoicePage({
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
+
       <header>
-  <h1 className="text-2xl font-bold">Factura / Resumen</h1>
+        <h1 className="text-2xl font-bold">Factura / Resumen</h1>
 
-  <p><b>Cliente:</b> {header.client_name}</p>
-  <p><b>Invoice:</b> {header.invoice}</p>
-  <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
+        <p><b>Cliente:</b> {header.client_name}</p>
+        <p><b>Invoice:</b> {header.invoice}</p>
+        <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
 
-  <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
+        {/* ✅ Cajas agregadas */}
+        <p><b>Cajas chicas:</b> {totals.small_boxes}</p>
+        <p><b>Cajas grandes:</b> {totals.large_boxes}</p>
+        <p><b>Total cajas:</b> {totals.total_boxes}</p>
+      </header>
 
-  <p className="text-lg font-bold">
-    Total USD: ${totals.total_usd.toFixed(2)}
-  </p>
-  <p><b>Cajas chicas:</b> {totals.small_boxes}</p>
-<p><b>Cajas grandes:</b> {totals.large_boxes}</p>
-<p><b>Total cajas:</b> {totals.total_boxes}</p>
-</header>
+      <div className="text-right space-y-1">
+        <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
+        <p className="text-lg font-bold">
+          Total USD: ${totals.total_usd.toFixed(2)}
+        </p>
+      </div>
 
       <table className="w-full border text-sm">
         <thead className="bg-gray-100">
@@ -60,6 +64,7 @@ export default function InvoicePage({
             <th className="border p-2 text-right">Total</th>
           </tr>
         </thead>
+
         <tbody>
           {lines.map((l: Line, i: number) => (
             <tr key={i}>
@@ -73,7 +78,6 @@ export default function InvoicePage({
         </tbody>
       </table>
 
-      {/* ✅ Bloque de exportación a Excel */}
       <div className="mt-6 flex justify-end gap-4">
         <a
           href={`/api/export/${params.id}/excel`}
