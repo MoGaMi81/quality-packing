@@ -34,18 +34,18 @@ export default function InvoicePage({
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Factura / Resumen</h1>
-        <p><b>Cliente:</b> {header.client_name}</p>
-        <p><b>Invoice:</b> {header.invoice}</p>
-        <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
-      </header>
+  <h1 className="text-2xl font-bold">Factura / Resumen</h1>
 
-      <div className="text-right space-y-1">
-        <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
-        <p className="text-lg font-bold">
-          Total USD: ${totals.total_usd.toFixed(2)}
-        </p>
-      </div>
+  <p><b>Cliente:</b> {header.client_name}</p>
+  <p><b>Invoice:</b> {header.invoice}</p>
+  <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
+
+  <p><b>Total lbs:</b> {totals.total_lbs.toFixed(2)}</p>
+
+  <p className="text-lg font-bold">
+    Total USD: ${totals.total_usd.toFixed(2)}
+  </p>
+</header>
 
       <table className="w-full border text-sm">
         <thead className="bg-gray-100">
