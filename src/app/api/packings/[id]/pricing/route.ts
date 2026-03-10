@@ -65,6 +65,30 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   // 🔒 Verificación de rol
+   requireRole(req, ["proceso", "facturacion", "admin"]);
+  requireRole(req, ["admin"]); // ✅ agregado
+
+  const { data: packing, error } = await supabase
+    .from("packings")
+    .select("status")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !packing) {
+    return NextResponse.json(
+      { error: "Packing not found" },
+      { status: 404 }
+    );
+  }
+
+  if (packing.status !== "TO_BILLING") {
+    return NextResponse.json(
+      { error: "Packing not ready for pricing" },
+      { status: 400 }
+    );
+  }
+
+  // 🔒 Verificación de rol
   requireRole(req, ["admin"]);
 
   const packing_id = params.id;
@@ -82,26 +106,25 @@ export async function POST(
   /* =====================================================
      1️⃣ Obtener packing
      ===================================================== */
-  const { data: packing, error: packingError } = await supabase
+  const { data: packing2, error: packingError } = await supabase
     .from("packings")
     .select("id, status, pricing_status")
     .eq("id", packing_id)
     .single();
 
-  if (packingError || !packing) {
+  if (packingError || !packing2) {
     return NextResponse.json(
       { ok: false, error: "Packing no encontrado" },
       { status: 404 }
     );
   }
 
-  if (packing.status !== "READY" || packing.pricing_status !== "PENDING") {
+  if (packing2.status !== "READY" || packing2.pricing_status !== "PENDING") {
     return NextResponse.json(
       { ok: false, error: "Packing no disponible para pricing" },
       { status: 400 }
     );
   }
-
   /* =====================================================
      2️⃣ Actualización precios por clave code|form|size
      ===================================================== */
