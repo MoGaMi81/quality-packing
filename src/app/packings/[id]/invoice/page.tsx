@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación cambiada
+import { secureFetch } from "@/lib/secureFetch"; 
 import Link from "next/link";
 
 type Line = {
@@ -20,8 +20,8 @@ export default function InvoicePage({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    secureFetch(`/api/packings/${params.id}/invoice`)   // ✅ Uso de secureFetch
-      .then(res => res.json())                         // ✅ Convertimos la respuesta en JSON
+    secureFetch(`/api/packings/${params.id}/invoice`) 
+      .then(res => res.json())                        
       .then(setData)
       .finally(() => setLoading(false));
   }, [params.id]);
