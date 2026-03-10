@@ -45,6 +45,9 @@ export default function InvoicePage({
   <p className="text-lg font-bold">
     Total USD: ${totals.total_usd.toFixed(2)}
   </p>
+  <p><b>Cajas chicas:</b> {totals.small_boxes}</p>
+<p><b>Cajas grandes:</b> {totals.large_boxes}</p>
+<p><b>Total cajas:</b> {totals.total_boxes}</p>
 </header>
 
       <table className="w-full border text-sm">

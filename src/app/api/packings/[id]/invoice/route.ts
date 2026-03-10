@@ -68,8 +68,11 @@ export async function GET(
   }));
 
   const totals = {
+    total_boxes: (data.packing_lines ?? []).length,
     total_lbs: lines.reduce((s: number, l: any) => s + l.lbs, 0),
     total_usd: lines.reduce((s: number, l: any) => s + l.total, 0),
+    small_boxes: (data.packing_lines ?? []).filter((l: any) => l.size === "SMALL").length,
+    large_boxes: (data.packing_lines ?? []).filter((l: any) => l.size === "LARGE").length,
   };
 
   return NextResponse.json({
