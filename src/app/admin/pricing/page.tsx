@@ -64,10 +64,10 @@ export default function AdminHome() {
             <div className="text-sm mt-1 text-gray-500">—</div>
           </div>
           <button
-            onClick={() => router.push(`/admin/pricing/${p.id}`)}
+            onClick={() => router.replace(`/admin/pricing/${p.id}`)}
             className="bg-green-700 text-white px-4 py-2 rounded"
           >
-            Pricing
+            Poner Precios
           </button>
         </div>
       ))}
