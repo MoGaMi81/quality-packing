@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRole } from "@/lib/role";
 
@@ -23,6 +23,8 @@ function getStatusBadge(status: string, pricing_status: string) {
 export default function AdminPage() {
   const router = useRouter();
 
+  const [pendingPricing, setPendingPricing] = useState(0);
+
   useEffect(() => {
     const role = getRole();
 
@@ -32,6 +34,13 @@ export default function AdminPage() {
       router.replace("/");
     }
   }, [router]);
+
+  // ✅ Nuevo useEffect para traer el conteo de pendientes
+  useEffect(() => {
+    fetch("/api/admin/pricing/pending-count")
+      .then((r) => r.json())
+      .then((d) => setPendingPricing(d.count ?? 0));
+  }, []);
 
   const Card = ({
     title,
@@ -57,7 +66,7 @@ export default function AdminPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card
-          title="Poner Precios"
+          title={`Precio (${pendingPricing} pendientes)`}
           desc="Packings pendientes de precios"
           onClick={() => router.push("/admin/pricing")}
         />
