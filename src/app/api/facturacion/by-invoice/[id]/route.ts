@@ -213,6 +213,7 @@ export async function GET(
       date: packing.created_at,
       total_boxes,
       lines: [...normalMap.values(), ...rows],
+      raw_lines: lines,
     },
   });
 }
