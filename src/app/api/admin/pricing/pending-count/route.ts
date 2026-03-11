@@ -7,18 +7,18 @@ const supabase = createClient(
 );
 
 export async function GET() {
-  const { count, error } = await supabase
+
+  const { data, error } = await supabase
     .from("packings")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "TO_ADMIN")
+    .select("id, pricing_status")
     .eq("pricing_status", "PENDING");
 
   if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ count: count ?? 0 });
+  return NextResponse.json({
+    count: data?.length ?? 0
+  });
+
 }
