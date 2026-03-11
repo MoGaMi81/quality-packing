@@ -26,6 +26,7 @@ type LineDB = {
 
 type Row = {
   line_id: string;
+  box_no: number;
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -150,6 +151,7 @@ export async function GET(
 
       rows.push({
         line_id: l.id,
+        box_no: Number(l.box_no),
         boxes: 1,
         pounds: l.pounds,
         description: l.description_en,
@@ -169,8 +171,9 @@ export async function GET(
     const key = `${l.description_en}|||${l.form}|||${l.size}`;
 
     if (!normalMap.has(key)) {
-      normalMap.set(key, {
+        normalMap.set(key, {
         line_id: l.id,
+        box_no: Number(l.box_no),
         boxes: 1,
         pounds: l.pounds,
         description: l.description_en,
