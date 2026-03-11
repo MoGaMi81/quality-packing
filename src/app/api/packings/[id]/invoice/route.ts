@@ -70,8 +70,13 @@ export async function GET(
     total_boxes: (data.packing_lines ?? []).length,
     total_lbs: lines.reduce((s: number, l: any) => s + l.lbs, 0),
     total_usd: lines.reduce((s: number, l: any) => s + l.total, 0),
-    small_boxes: (data.packing_lines ?? []).filter((l: any) => l.size === "SMALL").length,
-    large_boxes: (data.packing_lines ?? []).filter((l: any) => l.size === "LARGE").length,
+    small_boxes: (data.packing_lines ?? []).filter((l: any) =>
+  ["1-2","2-4","3/4-1"].includes(l.size)
+).length,
+
+large_boxes: (data.packing_lines ?? []).filter((l: any) =>
+  ["4-6","6-8","8-10","10UP"].includes(l.size)
+).length,
   };
 
   return NextResponse.json({

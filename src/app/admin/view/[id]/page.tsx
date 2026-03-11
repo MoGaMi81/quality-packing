@@ -58,9 +58,24 @@ export default function ViewPacking() {
         ← Volver
       </button>
 
-      <h1 className="text-2xl font-bold mb-4">
-        Factura: {packing.invoice_no}
-      </h1>
+      <div className="flex justify-between items-start mb-4">
+  <h1 className="text-2xl font-bold">
+    Factura: {packing.invoice_no}
+  </h1>
+
+  {totalUSD != null && (
+    <div className="text-right">
+      <div className="text-sm text-gray-500">TOTAL USD</div>
+      <div className="text-xl font-bold">
+        {totalUSD.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+        })}
+      </div>
+    </div>
+  )}
+</div>
 
       {/* HEADER */}
       <div className="border rounded p-4 mb-6 space-y-1">
@@ -87,17 +102,6 @@ export default function ViewPacking() {
             maximumFractionDigits: 0,
           })}
         </div>
-
-        {totalUSD != null && (
-          <div>
-            <b>Total USD:</b>{" "}
-            {totalUSD.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
-              minimumFractionDigits: 2,
-            })}
-          </div>
-        )}
       </div>
 
       {/* ✅ Botones extra cuando pricing está DONE */}
@@ -112,7 +116,7 @@ export default function ViewPacking() {
 
           <button
             onClick={() =>
-              router.push(
+              router.replace(
                 `/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`
               )
             }

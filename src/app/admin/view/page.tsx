@@ -16,20 +16,33 @@ type Packing = {
   pricing_status: string;
 };
 
-function getStatusBadge(status: string, pricing_status: string) {
-  if (status === "READY" && pricing_status === "PENDING") {
-    return { label: "READY FOR PRICING", color: "bg-yellow-200 text-yellow-800" };
+function getStatusBadge(status: string, pricing: string) {
+
+  if (status === "READY" && pricing === "PENDING") {
+    return {
+      label: "READY FOR PRICING",
+      color: "bg-yellow-200 text-yellow-800"
+    };
   }
 
-  if (status === "READY" && pricing_status === "DONE") {
-    return { label: "PRICED", color: "bg-blue-200 text-blue-800" };
+  if (status === "READY" && pricing === "DONE") {
+    return {
+      label: "PRICED",
+      color: "bg-blue-200 text-blue-800"
+    };
   }
 
   if (status === "COMPLETED") {
-    return { label: "EXPORTED", color: "bg-green-200 text-green-800" };
+    return {
+      label: "EXPORTED",
+      color: "bg-green-200 text-green-800"
+    };
   }
 
-  return { label: status, color: "bg-gray-200 text-gray-800" };
+  return {
+    label: status,
+    color: "bg-gray-200 text-gray-800"
+  };
 }
 
 export default function AdminView() {
@@ -84,13 +97,15 @@ export default function AdminView() {
               onClick={() => router.push(`/admin/view/${p.id}`)}
             >
               <span>
-                {p.invoice_no} · {p.clients?.name} ·{" "}
-                {new Date(p.created_at).toLocaleDateString()}
-              </span>
+  {p.invoice_no} · {p.clients?.name} ·{" "}
+  {new Date(p.created_at).toLocaleDateString()}
+</span>
 
-              <span className={`px-2 py-1 text-xs rounded font-semibold ${badge.color}`}>
-                {badge.label}
-              </span>
+<span
+  className={`ml-3 px-2 py-1 rounded text-xs font-medium ${badge.color}`}
+>
+  {badge.label}
+</span>
             </li>
           );
         })}
