@@ -20,21 +20,21 @@ function getStatusBadge(status: string, pricing: string) {
 
   if (status === "READY" && pricing === "PENDING") {
     return {
-      label: "READY FOR PRICING",
+      label: "SIN PRECIOS",
       color: "bg-yellow-200 text-yellow-800"
     };
   }
 
   if (status === "READY" && pricing === "DONE") {
     return {
-      label: "PRICED",
+      label: "CON PRECIOS",
       color: "bg-blue-200 text-blue-800"
     };
   }
 
   if (status === "COMPLETED") {
     return {
-      label: "EXPORTED",
+      label: "EXPORTADO",
       color: "bg-green-200 text-green-800"
     };
   }

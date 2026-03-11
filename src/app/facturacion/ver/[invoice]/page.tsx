@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams  } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
 
@@ -30,9 +30,9 @@ type Invoice = {
 export default function VerFacturaPage() {
   const [role, setRole] = useState<string | null>(null);
 
-useEffect(() => {
-  setRole(getRole());
-}, []);
+  useEffect(() => {
+    setRole(getRole());
+  }, []);
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
@@ -43,16 +43,16 @@ useEffect(() => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  fetchJSON<{ ok: boolean; invoice: Invoice }>(
-    `/api/facturacion/by-invoice/${invoice}`
-  )
-    .then((r) => {
-      if (!r.ok) throw new Error("Factura no encontrada");
-      setData(r.invoice);
-    })
-    .catch(() => alert("Error cargando factura"))
-    .finally(() => setLoading(false));
-}, [invoice]);
+    fetchJSON<{ ok: boolean; invoice: Invoice }>(
+      `/api/facturacion/by-invoice/${invoice}`
+    )
+      .then((r) => {
+        if (!r.ok) throw new Error("Factura no encontrada");
+        setData(r.invoice);
+      })
+      .catch(() => alert("Error cargando factura"))
+      .finally(() => setLoading(false));
+  }, [invoice]);
 
   if (loading) return <main className="p-6">Cargando factura…</main>;
   if (!data) return null;
@@ -60,38 +60,42 @@ useEffect(() => {
   /* =============================
      TOTALES
      ============================= */
-     
-     const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
-     const totalGross = totalNet * 1.31;
+  const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
+  const totalGross = totalNet * 1.31;
 
-  const totalAmount = data.lines.reduce(
-    (s, l) => s + (l.amount ?? 0),
-    0
-  );
+  // ✅ Cálculo de cajas chicas y grandes
+  const smallSizes = ["1-2", "2-4", "3/4-1"];
+  const smallBoxes = data.lines
+    .filter((l) => smallSizes.includes(l.size))
+    .reduce((s, l) => s + (typeof l.boxes === "number" ? l.boxes : 0), 0);
+
+  const largeBoxes = data.total_boxes - smallBoxes;
+
+  const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
   const formatInt = (n: number) =>
-  n.toLocaleString("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
+    n.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
 
-const formatMoney = (n: number) =>
-  n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const formatMoney = (n: number) =>
+    n.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   return (
     <main className="p-6 space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <button
           onClick={() => {
             if (from === "admin" && returnId) {
               router.replace(`/admin/view/${returnId}`);
             } else {
               router.replace("/facturacion");
-             }
+            }
           }}
           className="px-3 py-1 border rounded"
         >
@@ -100,11 +104,16 @@ const formatMoney = (n: number) =>
 
         <h1 className="text-2xl font-bold">Factura {data.invoice_no}</h1>
 
-        <div />
+        <div className="text-right">
+          <div className="text-sm text-gray-500">TOTAL USD</div>
+          <div className="text-2xl font-bold">
+            ${formatMoney(totalAmount)}
+          </div>
+        </div>
       </div>
 
       {/* INFO */}
-      <div className="border rounded p-4 grid grid-cols-2 gap-2 text-sm">
+      <div className="border rounded p-4 grid grid-cols-3 gap-2 text-sm">
         <div>
           <b>Cliente:</b> {data.client_name} ({data.client_code})
         </div>
@@ -118,6 +127,12 @@ const formatMoney = (n: number) =>
           <b>Total cajas:</b> {data.total_boxes}
         </div>
         <div>
+          <b>Cajas chicas:</b> {smallBoxes}
+        </div>
+        <div>
+          <b>Cajas grandes:</b> {largeBoxes}
+        </div>
+        <div>
           <b>NET WEIGHT:</b> {formatInt(totalNet)} lbs
         </div>
         <div>
@@ -126,64 +141,63 @@ const formatMoney = (n: number) =>
       </div>
 
       {/* BOTONES SOLO ADMIN */}
-{role === "admin" && data?.packing_id && (
-  <div className="flex justify-end gap-4 mt-4">
-    <a
-      href={`/api/export/${data.packing_id}/excel`}
-      className="px-4 py-2 bg-black text-white rounded"
-    >
-      Exportar Excel
-    </a>
+      {role === "admin" && data?.packing_id && (
+        <div className="flex justify-end gap-4 mt-4">
+          <a
+            href={`/api/export/${data.packing_id}/excel`}
+            className="px-4 py-2 bg-black text-white rounded"
+          >
+            Exportar Excel
+          </a>
 
-    <button
-  onClick={async () => {
-    if (!confirm("¿Reabrir pricing para editar precios?")) return;
+          <button
+            onClick={async () => {
+              if (!confirm("¿Reabrir pricing para editar precios?")) return;
 
-    const res = await fetch(
-      `/api/packings/${data.packing_id}/reopen-pricing`,
-      { method: "PATCH" }
-    );
+              const res = await fetch(
+                `/api/packings/${data.packing_id}/reopen-pricing`,
+                { method: "PATCH" }
+              );
 
-    const json = await res.json();
+              const json = await res.json();
 
-    if (!json.ok) {
-      alert(json.error || "Error reabriendo pricing");
-      return;
-    }
+              if (!json.ok) {
+                alert(json.error || "Error reabriendo pricing");
+                return;
+              }
 
-    // pricio existente
-    router.push(`/admin/pricing/${data.packing_id}`);
-  }}
-  className="px-4 py-2 border rounded"
->
-  Editar precios
-</button>
+              router.replace(`/admin/pricing/${data.packing_id}`);
+            }}
+            className="px-4 py-2 border rounded"
+          >
+            Editar precios
+          </button>
 
-<button
-  onClick={async () => {
-    if (!confirm("¿Reabrir este packing como Draft?")) return;
+          <button
+            onClick={async () => {
+              if (!confirm("¿Reabrir este packing como Draft?")) return;
 
-    const res = await fetch(
-  `/api/packings/${data.packing_id}/reopen-draft`,
-  { method: "PATCH" }
-);
+              const res = await fetch(
+                `/api/packings/${data.packing_id}/reopen-draft`,
+                { method: "PATCH" }
+              );
 
-const json = await res.json();
+              const json = await res.json();
 
-if (!json.ok) {
-  alert(json.error);
-  return;
-}
+              if (!json.ok) {
+                alert(json.error);
+                return;
+              }
 
-router.push(`/drafts/${json.draftId}`);
-  }}
-  className="px-4 py-2 border rounded text-red-600"
->
-  Reabrir como Draft
-</button>
-  </div>
+              router.replace(`/drafts/${json.draftId}`);
+            }}
+            className="px-4 py-2 border rounded text-red-600"
+          >
+            Reabrir como Draft
+          </button>
+        </div>
+      )}
 
-)}
       {/* TABLE */}
       <div className="overflow-auto">
         <table className="w-full border text-sm">
@@ -211,7 +225,6 @@ router.push(`/drafts/${json.draftId}`);
                 <td className="border px-2 py-1">{l.form}</td>
                 <td className="border px-2 py-1">{l.scientific_name}</td>
 
-                {/* ✅ Adaptación: price y amount seguros */}
                 <td className="border px-2 py-1 text-right">
                   {l.price != null ? l.price.toFixed(2) : "-"}
                 </td>
