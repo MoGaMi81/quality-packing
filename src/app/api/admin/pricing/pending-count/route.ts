@@ -10,7 +10,7 @@ export async function GET() {
   const { count, error } = await supabase
     .from("packings")
     .select("*", { count: "exact", head: true })
-    .eq("status", "READY")
+    .eq("status", "TO_ADMIN")
     .eq("pricing_status", "PENDING");
 
   if (error) {

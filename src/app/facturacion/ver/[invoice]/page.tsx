@@ -113,32 +113,26 @@ export default function VerFacturaPage() {
       </div>
 
       {/* INFO */}
-      <div className="border rounded p-4 grid grid-cols-3 gap-2 text-sm">
-        <div>
-          <b>Cliente:</b> {data.client_name} ({data.client_code})
-        </div>
-        <div>
-          <b>Guía:</b> {data.guide || "-"}
-        </div>
-        <div>
-          <b>Fecha:</b> {new Date(data.date).toLocaleString()}
-        </div>
-        <div>
-          <b>Total cajas:</b> {data.total_boxes}
-        </div>
-        <div>
-          <b>Cajas chicas:</b> {smallBoxes}
-        </div>
-        <div>
-          <b>Cajas grandes:</b> {largeBoxes}
-        </div>
-        <div>
-          <b>NET WEIGHT:</b> {formatInt(totalNet)} lbs
-        </div>
-        <div>
-          <b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs
-        </div>
-      </div>
+      <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm">
+
+  <div>
+    <div><b>Cliente:</b> {data.client_name}</div>
+    <div><b>Guía:</b> {data.guide || "-"}</div>
+    <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
+  </div>
+
+  <div>
+    <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
+    <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
+  </div>
+
+  <div>
+    <div><b>Caja chica:</b> {smallBoxes}</div>
+    <div><b>Caja grande:</b> {largeBoxes}</div>
+    <div><b>Total cajas:</b> {data.total_boxes}</div>
+  </div>
+
+</div>
 
       {/* BOTONES SOLO ADMIN */}
       {role === "admin" && data?.packing_id && (
