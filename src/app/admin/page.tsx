@@ -53,13 +53,13 @@ export default function AdminPage() {
         <Card
           title={`Precio (${pendingPricing} pendientes)`}
           desc="Packings pendientes de precios"
-          onClick={() => router.replace("/admin/pricing")}
+          onClick={() => router.push("/admin/pricing")}
         />
 
         <Card
           title="Ver"
           desc="Consulta general de packings"
-          onClick={() => router.replace("/admin/view")}
+          onClick={() => router.push("/admin/view")}
         />
       </div>
     </div>
