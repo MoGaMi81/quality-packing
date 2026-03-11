@@ -16,11 +16,13 @@ export async function GET(req: Request) {
   let { data, error } = await supabase
     .from("packings")
     .select(`
-      id,
-      invoice_no,
-      created_at,
-      clients ( name )
-    `)
+  id,
+  invoice_no,
+  created_at,
+  status,
+  pricing_status,
+  clients(name)
+`)
     .eq("pricing_status", "DONE")
     .eq("invoice_no", q)
     .order("created_at", { ascending: false });
@@ -34,11 +36,13 @@ export async function GET(req: Request) {
     const res = await supabase
       .from("packings")
       .select(`
-        id,
-        invoice_no,
-        created_at,
-        clients ( name )
-      `)
+  id,
+  invoice_no,
+  created_at,
+  status,
+  pricing_status,
+  clients(name)
+`)
       .eq("pricing_status", "DONE")
       .ilike("invoice_no", `%${q}%`)
       .order("created_at", { ascending: false })

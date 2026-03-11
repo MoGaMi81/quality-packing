@@ -13,11 +13,13 @@ export async function GET() {
   const { data, error } = await supabase
     .from("packings")
     .select(`
-      id,
-      invoice_no,
-      created_at,
-      clients ( name )
-    `)
+  id,
+  invoice_no,
+  created_at,
+  status,
+  pricing_status,
+  clients(name)
+`)
     .eq("pricing_status", "DONE")
     .order("created_at", { ascending: false })
     .limit(5);
