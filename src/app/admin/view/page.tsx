@@ -5,14 +5,32 @@ export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
+import { secureFetch } from "@/lib/secureFetch";
 
 type Packing = {
   id: string;
   invoice_no: string;
   created_at: string;
   clients: { name: string } | null;
+  status: string;
+  pricing_status: string;
 };
+
+function getStatusBadge(status: string, pricing_status: string) {
+  if (status === "READY" && pricing_status === "PENDING") {
+    return { label: "READY FOR PRICING", color: "bg-yellow-200 text-yellow-800" };
+  }
+
+  if (status === "READY" && pricing_status === "DONE") {
+    return { label: "PRICED", color: "bg-blue-200 text-blue-800" };
+  }
+
+  if (status === "COMPLETED") {
+    return { label: "EXPORTED", color: "bg-green-200 text-green-800" };
+  }
+
+  return { label: status, color: "bg-gray-200 text-gray-800" };
+}
 
 export default function AdminView() {
   const router = useRouter();
@@ -21,14 +39,14 @@ export default function AdminView() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    secureFetch("/api/admin/packings/latest", { cache: "no-store" })   // ✅ secureFetch
-      .then(r => r.json())                                            // ✅ convertir a JSON
+    secureFetch("/api/admin/packings/latest", { cache: "no-store" })
+      .then(r => r.json())
       .then(d => setLatest(d.packings ?? []));
   }, []);
 
   async function search() {
     if (!q.trim()) return setResults([]);
-    const r = await secureFetch(`/api/admin/packings/search?q=${encodeURIComponent(q)}`); // ✅ secureFetch
+    const r = await secureFetch(`/api/admin/packings/search?q=${encodeURIComponent(q)}`);
     const d = await r.json();
     setResults(d.packings ?? []);
   }
@@ -55,33 +73,53 @@ export default function AdminView() {
 
       {/* Últimos */}
       <h2 className="text-xl font-semibold mb-3">Últimos completos</h2>
-      <ul className="mb-8">
-        {latest.map(p => (
-          <li
-            key={p.id}
-            className="cursor-pointer hover:underline"
-            onClick={() => router.push(`/admin/view/${p.id}`)}
-          >
-            {p.invoice_no} · {p.clients?.name} ·{" "}
-            {new Date(p.created_at).toLocaleDateString()}
-          </li>
-        ))}
+      <ul className="mb-8 space-y-2">
+        {latest.map(p => {
+          const badge = getStatusBadge(p.status, p.pricing_status);
+
+          return (
+            <li
+              key={p.id}
+              className="cursor-pointer hover:underline flex items-center justify-between"
+              onClick={() => router.push(`/admin/view/${p.id}`)}
+            >
+              <span>
+                {p.invoice_no} · {p.clients?.name} ·{" "}
+                {new Date(p.created_at).toLocaleDateString()}
+              </span>
+
+              <span className={`px-2 py-1 text-xs rounded font-semibold ${badge.color}`}>
+                {badge.label}
+              </span>
+            </li>
+          );
+        })}
       </ul>
 
       {/* Resultados */}
       {results.length > 0 && (
         <>
           <h2 className="text-xl font-semibold mb-3">Resultados</h2>
-          <ul>
-            {results.map(p => (
-              <li
-                key={p.id}
-                className="cursor-pointer hover:underline"
-                onClick={() => router.push(`/admin/view/${p.id}`)}
-              >
-                {p.invoice_no} · {p.clients?.name}
-              </li>
-            ))}
+          <ul className="space-y-2">
+            {results.map(p => {
+              const badge = getStatusBadge(p.status, p.pricing_status);
+
+              return (
+                <li
+                  key={p.id}
+                  className="cursor-pointer hover:underline flex items-center justify-between"
+                  onClick={() => router.push(`/admin/view/${p.id}`)}
+                >
+                  <span>
+                    {p.invoice_no} · {p.clients?.name}
+                  </span>
+
+                  <span className={`px-2 py-1 text-xs rounded font-semibold ${badge.color}`}>
+                    {badge.label}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </>
       )}

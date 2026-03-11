@@ -4,6 +4,22 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getRole } from "@/lib/role";
 
+function getStatusBadge(status: string, pricing_status: string) {
+  if (status === "READY" && pricing_status === "PENDING") {
+    return { label: "READY FOR PRICING", color: "bg-yellow-200 text-yellow-800" };
+  }
+
+  if (status === "READY" && pricing_status === "DONE") {
+    return { label: "PRICED", color: "bg-blue-200 text-blue-800" };
+  }
+
+  if (status === "COMPLETED") {
+    return { label: "EXPORTED", color: "bg-green-200 text-green-800" };
+  }
+
+  return { label: status, color: "bg-gray-200 text-gray-800" };
+}
+
 export default function AdminPage() {
   const router = useRouter();
 
@@ -47,21 +63,9 @@ export default function AdminPage() {
         />
 
         <Card
-          title="Exportar"
-          desc="Packings listos para exportación"
-          onClick={() => router.push("/admin/export")}
-        />
-
-        <Card
           title="Ver"
           desc="Consulta general de packings"
           onClick={() => router.push("/admin/view")}
-        />
-
-        <Card
-          title="Editar"
-          desc="Edición administrativa"
-          onClick={() => router.push("/admin/edit")}
         />
       </div>
     </div>
