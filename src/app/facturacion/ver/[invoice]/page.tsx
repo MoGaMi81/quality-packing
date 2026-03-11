@@ -6,6 +6,7 @@ import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
 
 type Line = {
+  box_no: number;
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -63,29 +64,37 @@ export default function VerFacturaPage() {
      ============================= */
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalGross = totalNet * 1.31;
+const totalAmount = data.lines.reduce(
+  (s, l) => s + (l.amount ?? 0),
+  0
+);
+  type BoxInfo = {
+  total_lbs: number;
+};
 
-  const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
-
- let smallBoxes = 0;
-let largeBoxes = 0;
+const invoiceBoxesMap = new Map<number, BoxInfo>();
 
 for (const l of data.lines) {
 
-  const boxes =
-    typeof l.boxes === "number" ? l.boxes : 0;
+  const boxNo = Number(l.box_no);
+  const pounds = Number(l.pounds) || 0;
 
-  if (!boxes) continue;
-
-  const lbsPerBox = l.pounds / boxes;
-
-  if (lbsPerBox >= 70) {
-    largeBoxes += boxes;
-  } else {
-    smallBoxes += boxes;
+  if (!invoiceBoxesMap.has(boxNo)) {
+    invoiceBoxesMap.set(boxNo, { total_lbs: 0 });
   }
 
+  invoiceBoxesMap.get(boxNo)!.total_lbs += pounds;
 }
 
+let smallBoxes = 0;
+let largeBoxes = 0;
+
+invoiceBoxesMap.forEach((b) => {
+  if (b.total_lbs < 70) smallBoxes++;
+  else largeBoxes++;
+});
+
+const totalBoxes = invoiceBoxesMap.size;
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
       minimumFractionDigits: 0,
