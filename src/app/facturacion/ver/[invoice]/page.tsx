@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
+import { calculateBoxStats } from "@/domain/packing/boxStats"; // ✅ nuevo import
 
 type Line = {
   box_no: number;
@@ -27,7 +28,6 @@ type Invoice = {
   total_boxes: number;
   lines: Line[];
 };
-
 
 export default function VerFacturaPage() {
   const [role, setRole] = useState<string | null>(null);
@@ -64,37 +64,11 @@ export default function VerFacturaPage() {
      ============================= */
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalGross = totalNet * 1.31;
-const totalAmount = data.lines.reduce(
-  (s, l) => s + (l.amount ?? 0),
-  0
-);
-  type BoxInfo = {
-  total_lbs: number;
-};
+  const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
-const invoiceBoxesMap = new Map<number, BoxInfo>();
+  // ✅ Nuevo cálculo de cajas usando calculateBoxStats
+  const { smallBoxes, largeBoxes, totalBoxes } = calculateBoxStats(data.lines);
 
-for (const l of data.lines) {
-
-  const boxNo = Number(l.box_no);
-  const pounds = Number(l.pounds) || 0;
-
-  if (!invoiceBoxesMap.has(boxNo)) {
-    invoiceBoxesMap.set(boxNo, { total_lbs: 0 });
-  }
-
-  invoiceBoxesMap.get(boxNo)!.total_lbs += pounds;
-}
-
-let smallBoxes = 0;
-let largeBoxes = 0;
-
-invoiceBoxesMap.forEach((b) => {
-  if (b.total_lbs < 70) smallBoxes++;
-  else largeBoxes++;
-});
-
-const totalBoxes = invoiceBoxesMap.size;
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
       minimumFractionDigits: 0,
@@ -147,12 +121,12 @@ const totalBoxes = invoiceBoxesMap.size;
           <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
         </div>
 
-        {/* ✅ Reemplazo de cajas */}
+        {/* ✅ Mostrar cajas con calculateBoxStats */}
         <div>
-  <div><b>Caja chica:</b> {smallBoxes}</div>
-  <div><b>Caja grande:</b> {largeBoxes}</div>
-  <div><b>Total cajas:</b> {data.total_boxes}</div>
-</div>
+          <div><b>Caja chica:</b> {smallBoxes}</div>
+          <div><b>Caja grande:</b> {largeBoxes}</div>
+          <div><b>Total cajas:</b> {totalBoxes}</div>
+        </div>
       </div>
 
       {/* BOTONES SOLO ADMIN */}
