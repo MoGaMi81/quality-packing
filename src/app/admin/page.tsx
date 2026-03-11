@@ -4,21 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRole } from "@/lib/role";
 
-function getStatusBadge(status: string, pricing_status: string) {
-  if (status === "READY" && pricing_status === "PENDING") {
-    return { label: "READY FOR PRICING", color: "bg-yellow-200 text-yellow-800" };
-  }
-
-  if (status === "READY" && pricing_status === "DONE") {
-    return { label: "PRICED", color: "bg-blue-200 text-blue-800" };
-  }
-
-  if (status === "COMPLETED") {
-    return { label: "EXPORTED", color: "bg-green-200 text-green-800" };
-  }
-
-  return { label: status, color: "bg-gray-200 text-gray-800" };
-}
 
 export default function AdminPage() {
   const router = useRouter();
@@ -68,13 +53,13 @@ export default function AdminPage() {
         <Card
           title={`Precio (${pendingPricing} pendientes)`}
           desc="Packings pendientes de precios"
-          onClick={() => router.push("/admin/pricing")}
+          onClick={() => router.replace("/admin/pricing")}
         />
 
         <Card
           title="Ver"
           desc="Consulta general de packings"
-          onClick={() => router.push("/admin/view")}
+          onClick={() => router.replace("/admin/view")}
         />
       </div>
     </div>
