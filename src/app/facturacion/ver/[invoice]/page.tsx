@@ -6,6 +6,7 @@ import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
 
 type Line = {
+  box_no: string | number;
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -29,22 +30,31 @@ type Invoice = {
 
 function calcBoxes(lines: Line[]) {
 
-  let small = 0;
-  let large = 0;
+  const boxesMap: Record<string, number> = {};
 
   for (const l of lines) {
 
-    const boxes = Number(l.boxes) || 0;
+    const boxId = String(l.box_no ?? l.boxes ?? "0");
     const pounds = Number(l.pounds) || 0;
 
-    if (!boxes) continue;
+    if (!boxesMap[boxId]) {
+      boxesMap[boxId] = 0;
+    }
 
-    const lbsPerBox = pounds / boxes;
+    boxesMap[boxId] += pounds;
+  }
 
-    if (lbsPerBox < 70) {
-      small += boxes;
+  let small = 0;
+  let large = 0;
+
+  for (const boxId in boxesMap) {
+
+    const totalLbs = boxesMap[boxId];
+
+    if (totalLbs < 70) {
+      small += 1;
     } else {
-      large += boxes;
+      large += 1;
     }
 
   }
