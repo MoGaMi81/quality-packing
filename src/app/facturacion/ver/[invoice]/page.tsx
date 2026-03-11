@@ -27,6 +27,30 @@ type Invoice = {
   lines: Line[];
 };
 
+// ✅ Nueva función para calcular cajas
+function calcBoxes(lines: Line[]) {
+  let small = 0;
+  let large = 0;
+
+  for (const l of lines) {
+    const boxes = Number(l.boxes) || 0;
+
+    if (["1-2", "2-4", "3/4-1"].includes(l.size)) {
+      small += boxes;
+    }
+
+    if (["4-6", "6-8", "8-10", "10UP"].includes(l.size)) {
+      large += boxes;
+    }
+  }
+
+  return {
+    small,
+    large,
+    total: small + large,
+  };
+}
+
 export default function VerFacturaPage() {
   const [role, setRole] = useState<string | null>(null);
 
@@ -63,15 +87,10 @@ export default function VerFacturaPage() {
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalGross = totalNet * 1.31;
 
-  // ✅ Cálculo de cajas chicas y grandes
-  const smallSizes = ["1-2", "2-4", "3/4-1"];
-  const smallBoxes = data.lines
-    .filter((l) => smallSizes.includes(l.size))
-    .reduce((s, l) => s + (typeof l.boxes === "number" ? l.boxes : 0), 0);
-
-  const largeBoxes = data.total_boxes - smallBoxes;
-
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
+
+  // ✅ Usar calcBoxes
+  const { small, large, total } = calcBoxes(data.lines);
 
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
@@ -114,25 +133,24 @@ export default function VerFacturaPage() {
 
       {/* INFO */}
       <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm">
+        <div>
+          <div><b>Cliente:</b> {data.client_name}</div>
+          <div><b>Guía:</b> {data.guide || "-"}</div>
+          <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
+        </div>
 
-  <div>
-    <div><b>Cliente:</b> {data.client_name}</div>
-    <div><b>Guía:</b> {data.guide || "-"}</div>
-    <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
-  </div>
+        <div>
+          <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
+          <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
+        </div>
 
-  <div>
-    <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
-    <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
-  </div>
-
-  <div>
-    <div><b>Caja chica:</b> {smallBoxes}</div>
-    <div><b>Caja grande:</b> {largeBoxes}</div>
-    <div><b>Total cajas:</b> {data.total_boxes}</div>
-  </div>
-
-</div>
+        {/* ✅ Reemplazo de cajas */}
+        <div>
+          <div><b>Caja chica:</b> {small}</div>
+          <div><b>Caja grande:</b> {large}</div>
+          <div><b>Total cajas:</b> {total}</div>
+        </div>
+      </div>
 
       {/* BOTONES SOLO ADMIN */}
       {role === "admin" && data?.packing_id && (
