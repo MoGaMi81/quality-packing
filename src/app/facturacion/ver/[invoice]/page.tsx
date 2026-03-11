@@ -66,14 +66,25 @@ export default function VerFacturaPage() {
 
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
- // ✅ Cálculo correcto de cajas
-const smallSizes = ["1-2", "2-4", "3/4-1"];
+ let smallBoxes = 0;
+let largeBoxes = 0;
 
-const smallBoxes = data.lines
-  .filter((l) => smallSizes.includes(l.size))
-  .reduce((s, l) => s + (typeof l.boxes === "number" ? l.boxes : 0), 0);
+for (const l of data.lines) {
 
-const largeBoxes = data.total_boxes - smallBoxes;
+  const boxes =
+    typeof l.boxes === "number" ? l.boxes : 0;
+
+  if (!boxes) continue;
+
+  const lbsPerBox = l.pounds / boxes;
+
+  if (lbsPerBox >= 70) {
+    largeBoxes += boxes;
+  } else {
+    smallBoxes += boxes;
+  }
+
+}
 
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
