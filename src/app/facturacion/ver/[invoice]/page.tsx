@@ -6,7 +6,6 @@ import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
 
 type Line = {
-  box_no: string | number;
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -28,43 +27,6 @@ type Invoice = {
   lines: Line[];
 };
 
-function calcBoxes(lines: Line[]) {
-
-  const boxesMap: Record<string, number> = {};
-
-  for (const l of lines) {
-
-    const boxId = String(l.box_no ?? l.boxes ?? "0");
-    const pounds = Number(l.pounds) || 0;
-
-    if (!boxesMap[boxId]) {
-      boxesMap[boxId] = 0;
-    }
-
-    boxesMap[boxId] += pounds;
-  }
-
-  let small = 0;
-  let large = 0;
-
-  for (const boxId in boxesMap) {
-
-    const totalLbs = boxesMap[boxId];
-
-    if (totalLbs < 70) {
-      small += 1;
-    } else {
-      large += 1;
-    }
-
-  }
-
-  return {
-    small,
-    large,
-    total: small + large
-  };
-}
 
 export default function VerFacturaPage() {
   const [role, setRole] = useState<string | null>(null);
@@ -104,8 +66,14 @@ export default function VerFacturaPage() {
 
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
-  // ✅ Usar calcBoxes
-  const { small, large, total } = calcBoxes(data.lines);
+ // ✅ Cálculo correcto de cajas
+const smallSizes = ["1-2", "2-4", "3/4-1"];
+
+const smallBoxes = data.lines
+  .filter((l) => smallSizes.includes(l.size))
+  .reduce((s, l) => s + (typeof l.boxes === "number" ? l.boxes : 0), 0);
+
+const largeBoxes = data.total_boxes - smallBoxes;
 
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
@@ -161,10 +129,10 @@ export default function VerFacturaPage() {
 
         {/* ✅ Reemplazo de cajas */}
         <div>
-          <div><b>Caja chica:</b> {small}</div>
-          <div><b>Caja grande:</b> {large}</div>
-          <div><b>Total cajas:</b> {total}</div>
-        </div>
+  <div><b>Caja chica:</b> {smallBoxes}</div>
+  <div><b>Caja grande:</b> {largeBoxes}</div>
+  <div><b>Total cajas:</b> {data.total_boxes}</div>
+</div>
       </div>
 
       {/* BOTONES SOLO ADMIN */}
