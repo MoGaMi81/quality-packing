@@ -27,27 +27,32 @@ type Invoice = {
   lines: Line[];
 };
 
-// ✅ Nueva función para calcular cajas
 function calcBoxes(lines: Line[]) {
+
   let small = 0;
   let large = 0;
 
   for (const l of lines) {
+
     const boxes = Number(l.boxes) || 0;
+    const pounds = Number(l.pounds) || 0;
 
-    if (["1-2", "2-4", "3/4-1"].includes(l.size)) {
+    if (!boxes) continue;
+
+    const lbsPerBox = pounds / boxes;
+
+    if (lbsPerBox < 70) {
       small += boxes;
-    }
-
-    if (["4-6", "6-8", "8-10", "10UP"].includes(l.size)) {
+    } else {
       large += boxes;
     }
+
   }
 
   return {
     small,
     large,
-    total: small + large,
+    total: small + large
   };
 }
 
