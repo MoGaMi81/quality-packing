@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { requireRole } from "@/lib/requireRole"; // 🔥 agregado
+import { requireRole } from "@/lib/requireRole";
+import { canEditPricing } from "@/domain/packing/status";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,7 @@ export async function POST(
     );
   }
 
-  if (packing.status !== "READY" || packing.pricing_status !== "PENDING") {
+  if (!canEditPricing(packing.status)) {
     return NextResponse.json(
       { ok: false, error: "Packing no disponible para pricing" },
       { status: 400 }
