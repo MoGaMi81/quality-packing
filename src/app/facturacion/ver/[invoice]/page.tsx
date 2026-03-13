@@ -19,6 +19,7 @@ type Line = {
 };
 
 type Invoice = {
+  raw_lines: any[];
   packing_id: string;
   invoice_no: string;
   client_code: string;
@@ -66,8 +67,13 @@ export default function VerFacturaPage() {
   const totalGross = totalNet * 1.31;
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
-  // ✅ Nuevo cálculo de cajas usando calculateBoxStats
-  const { smallBoxes, largeBoxes, totalBoxes } = calculateBoxStats(data.lines);
+  // ✅ Cálculo de cajas chicas y grandes
+  const smallSizes = ["1-2", "2-4", "3/4-1"];
+  const smallBoxes = data.lines
+    .filter((l) => smallSizes.includes(l.size))
+    .reduce((s, l) => s + (typeof l.boxes === "number" ? l.boxes : 0), 0);
+
+  const largeBoxes = data.total_boxes - smallBoxes;
 
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
@@ -125,7 +131,7 @@ export default function VerFacturaPage() {
         <div>
           <div><b>Caja chica:</b> {smallBoxes}</div>
           <div><b>Caja grande:</b> {largeBoxes}</div>
-          <div><b>Total cajas:</b> {totalBoxes}</div>
+          <div><b>Total cajas:</b> {data.total_boxes}</div>
         </div>
       </div>
 
