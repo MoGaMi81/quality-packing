@@ -23,7 +23,7 @@ export const PRICING_STATUS = {
 // ============================================================
 
 export function canEditPricing(status: string) {
-  return ["READY", "PRICED"].includes(status);
+  return status !== "DRAFT";
 }
 
 export function isPricingPending(pricing_status: string) {
