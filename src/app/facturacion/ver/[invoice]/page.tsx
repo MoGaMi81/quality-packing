@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { getRole } from "@/lib/role";
+import { calculateBoxStats } from "@/domain/packing/boxStats"; // ✅ nuevo import
 
 type Line = {
+  box_no: number;
   boxes: number | "MX";
   pounds: number;
   description: string;
@@ -17,6 +19,7 @@ type Line = {
 };
 
 type Invoice = {
+  raw_lines: any[];
   packing_id: string;
   invoice_no: string;
   client_code: string;
@@ -62,16 +65,10 @@ export default function VerFacturaPage() {
      ============================= */
   const totalNet = data.lines.reduce((s, l) => s + l.pounds, 0);
   const totalGross = totalNet * 1.31;
-
-  // ✅ Cálculo de cajas chicas y grandes
-  const smallSizes = ["1-2", "2-4", "3/4-1"];
-  const smallBoxes = data.lines
-    .filter((l) => smallSizes.includes(l.size))
-    .reduce((s, l) => s + (typeof l.boxes === "number" ? l.boxes : 0), 0);
-
-  const largeBoxes = data.total_boxes - smallBoxes;
-
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
+
+  // ✅ Nuevo cálculo de cajas usando calculateBoxStats
+  const { smallBoxes, largeBoxes, totalBoxes } = calculateBoxStats(data.raw_lines);
 
   const formatInt = (n: number) =>
     n.toLocaleString("en-US", {
@@ -114,25 +111,24 @@ export default function VerFacturaPage() {
 
       {/* INFO */}
       <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm">
+        <div>
+          <div><b>Cliente:</b> {data.client_name}</div>
+          <div><b>Guía:</b> {data.guide || "-"}</div>
+          <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
+        </div>
 
-  <div>
-    <div><b>Cliente:</b> {data.client_name}</div>
-    <div><b>Guía:</b> {data.guide || "-"}</div>
-    <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
-  </div>
+        <div>
+          <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
+          <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
+        </div>
 
-  <div>
-    <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
-    <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
-  </div>
-
-  <div>
-    <div><b>Caja chica:</b> {smallBoxes}</div>
-    <div><b>Caja grande:</b> {largeBoxes}</div>
-    <div><b>Total cajas:</b> {data.total_boxes}</div>
-  </div>
-
-</div>
+        {/* ✅ Mostrar cajas con calculateBoxStats */}
+        <div>
+          <div><b>Caja chica:</b> {smallBoxes}</div>
+          <div><b>Caja grande:</b> {largeBoxes}</div>
+          <div><b>Total cajas:</b> {totalBoxes}</div>
+        </div>
+      </div>
 
       {/* BOTONES SOLO ADMIN */}
       {role === "admin" && data?.packing_id && (
