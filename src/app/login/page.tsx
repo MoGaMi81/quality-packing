@@ -27,10 +27,12 @@ export default function LoginPage() {
     }
 
     const role = data.user.role;
-    localStorage.setItem("role", role);
-    localStorage.setItem("user_name", data.user.name);
 
-   
+localStorage.setItem("role", role);
+localStorage.setItem("user_id", data.user.id);
+
+// 🔥 sincronizar con sistema actual de roles
+document.body.dataset.role = role;
 
     // REDIRECCIÓN SEGÚN ROL
     if (role === "admin") {

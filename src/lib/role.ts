@@ -5,13 +5,19 @@ export type Role = "admin" | "proceso" | "facturacion" | null;
 
 export function getRole(): Role {
   if (typeof document === "undefined") return null;
-  const r = document.body.dataset.role;
+
+  const r =
+    document.body.dataset.role ||
+    localStorage.getItem("role");
+
   if (!r) return null;
 
   const role = r.toLowerCase();
+
   if (role === "admin" || role === "proceso" || role === "facturacion") {
     return role;
   }
+
   return null;
 }
 
