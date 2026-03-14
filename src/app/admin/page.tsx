@@ -57,19 +57,27 @@ export default function AdminPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Admin</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card
-          title={`Precio (${pendingPricing} pendientes)`}
-          desc="Packings pendientes de precios"
-          onClick={() => router.push("/admin/pricing")}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <Card
-          title="Ver"
-          desc="Consulta general de packings"
-          onClick={() => router.push("/admin/view")}
-        />
-      </div>
+  <Card
+    title={`Precio (${pendingPricing} pendientes)`}
+    desc="Packings pendientes de precios"
+    onClick={() => router.push("/admin/pricing")}
+  />
+
+  <Card
+    title="Ver"
+    desc="Consulta general de packings"
+    onClick={() => router.push("/admin/view")}
+  />
+
+  <Card
+    title="Usuarios"
+    desc="Administrar usuarios del sistema"
+    onClick={() => router.push("/admin/users")}
+  />
+
+</div>
     </div>
   );
 }
