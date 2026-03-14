@@ -30,7 +30,7 @@ export default function LoginPage() {
     localStorage.setItem("role", role);
     localStorage.setItem("user_name", data.user.name);
 
-    localStorage.setItem("user_id", data.user.id);
+   
 
     // REDIRECCIÓN SEGÚN ROL
     if (role === "admin") {
