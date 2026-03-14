@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const { data: user, error } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
+    .eq("email", email.toLowerCase())
     .single();
 
   if (error || !user) {
@@ -45,15 +45,19 @@ export async function POST(req: Request) {
   }
 
   const res = NextResponse.json({
-    ok: true,
+  ok: true,
+  user: {
+    id: user.id,
     role: user.role,
     name: user.name,
-  });
+    email: user.email
+  }
+});
 
-  res.cookies.set("role", user.role, {
-    httpOnly: false,
-    path: "/",
-  });
+res.cookies.set("role", user.role, {
+  httpOnly: false,
+  path: "/",
+});
 
-  return res;
+return res;
 }

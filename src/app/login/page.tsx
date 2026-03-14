@@ -26,14 +26,13 @@ export default function LoginPage() {
       return;
     }
 
-    // 🔥 GUARDAR ROL
     const role = data.user.role;
     localStorage.setItem("role", role);
+    localStorage.setItem("user_name", data.user.name);
 
-    // opcional: guardar id
     localStorage.setItem("user_id", data.user.id);
 
-    // 🔀 REDIRECCIÓN SEGÚN ROL
+    // REDIRECCIÓN SEGÚN ROL
     if (role === "admin") {
       window.location.href = "/admin";
     } else if (role === "proceso") {
