@@ -43,7 +43,7 @@ export default function PricingPage({
 
         if (!json?.ok || !json?.packing) {
           alert(json?.error || "Packing no encontrado");
-          router.replace("/admin");
+          router.replace("/admin?refresh=1");
           return;
         }
 

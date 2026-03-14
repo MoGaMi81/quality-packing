@@ -21,7 +21,7 @@ export default function ViewPacking() {
         if (!res?.ok) throw new Error();
         setPacking(res.packing);
       })
-      .catch(() => router.replace("/admin/view")); // ❌ ya no usamos replace
+      .catch(() => router.replace("/admin/view"));
   }, [id, router]);
 
   if (!packing) return <div className="p-6">Cargando…</div>;
