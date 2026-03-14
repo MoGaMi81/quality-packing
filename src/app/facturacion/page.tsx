@@ -10,7 +10,7 @@ export default function FacturacionHome() {
 
   useEffect(() => {
     const role = getRole();
-    if (!role) return; // esperar a que se resuelva
+    if (!role) return;
 
     if (role !== "facturacion" && role !== "admin") {
       router.replace("/inicio");
@@ -44,7 +44,6 @@ export default function FacturacionHome() {
 
         <h1 className="text-2xl font-bold">Facturación</h1>
 
-        {/* ✅ Botón cerrar sesión */}
         <button
           onClick={logout}
           className="px-3 py-1 border rounded text-sm bg-red-600 text-white"

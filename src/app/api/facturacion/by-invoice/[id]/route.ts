@@ -145,7 +145,7 @@ export async function GET(
   for (const l of lines) {
     const price = l.price ?? 0;
 
-    // 👉 CAJA COMBINADA
+    //  CAJA COMBINADA
     if (l.is_combined) {
       combinedBoxes.add(String(l.box_no));
 
@@ -165,7 +165,7 @@ export async function GET(
       continue;
     }
 
-    // 👉 CAJA NORMAL
+    // CAJA NORMAL
     normalBoxes.add(String(l.box_no));
 
     const key = `${l.description_en}|||${l.form}|||${l.size}`;
@@ -188,7 +188,6 @@ export async function GET(
       row.boxes = (row.boxes as number) + 1;
       row.pounds += l.pounds;
 
-      // 🔥 asegurar precio actualizado
       row.price = price;
       row.amount = row.pounds * row.price;
     }

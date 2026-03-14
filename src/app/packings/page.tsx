@@ -9,14 +9,14 @@ import NewPackingWizard from "@/components/NewPackingWizard";
 import BoxesWizardModal from "@/components/BoxesWizardModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 
-// Convierte "2025-11-30" → "11/30/2025"
+
 function isoToDisplay(iso: string) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${m}/${d}/${y}`;
 }
 
-// Convierte "11/30/2025" → "2025-11-30"
+
 function displayToIso(display: string) {
   const parts = display.split("/");
   if (parts.length !== 3) return display;

@@ -61,7 +61,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
         <div><b>Fecha Draft:</b> {new Date(data.created_at).toLocaleDateString()}</div>
       </div>
 
-      {/* Campos para facturar */}
+      
       <div className="border rounded p-4 space-y-4">
         <div>
           <label className="block text-sm font-semibold">Número de factura</label>
@@ -108,7 +108,6 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
               return;
             }
 
-            // 🔥 Redirigir a invoice real
             router.push("/facturacion");
           }}
         >
@@ -116,7 +115,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
         </button>
       </div>
 
-      {/* Mostrar líneas solo informativo */}
+      
       <table className="border-collapse border w-full text-sm">
         <thead>
           <tr>

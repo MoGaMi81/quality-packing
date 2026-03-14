@@ -16,7 +16,7 @@ export async function PATCH(
 ) {
   const packingId = params.id;
 
-  // 1) Traer packing
+ 
   const { data: packing, error } = await supabase
     .from("packings")
     .select("id, status, client_code, internal_ref")
@@ -38,7 +38,7 @@ export async function PATCH(
     );
   }
 
-  // 2) Verificar que tenga líneas
+ 
   const { count } = await supabase
     .from("packing_lines")
     .select("*", { count: "exact", head: true })
@@ -51,7 +51,7 @@ export async function PATCH(
     );
   }
 
-  // 3) Cambiar estado
+  
   const { error: err2 } = await supabase
     .from("packings")
     .update({

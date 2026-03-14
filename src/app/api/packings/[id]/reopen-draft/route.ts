@@ -62,7 +62,7 @@ export async function PATCH(
     await supabase.from("draft_lines").insert(draftLines);
   }
 
-  // 4️⃣ Opcional: limpiar packing original
+
   await supabase
     .from("packings")
     .update({

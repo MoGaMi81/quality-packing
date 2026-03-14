@@ -34,7 +34,6 @@ export async function GET(
     );
   }
 
-  // 🔵 Resolver nombre manualmente
   const { data: client } = await supabase
     .from("clients")
     .select("name")
