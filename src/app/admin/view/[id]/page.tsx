@@ -122,7 +122,7 @@ export default function ViewPacking() {
             }
             className="px-4 py-2 border rounded"
           >
-            Ver Factura / Resumen
+            Ver Factura
           </button>
         </div>
       )}
