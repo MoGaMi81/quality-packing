@@ -52,7 +52,8 @@ export default function PricingPage({
       } catch (e) {
         console.error(e);
         alert("Error cargando packing");
-        router.replace("/admin?refresh=1");
+        router.push("/admin");
+        router.refresh();
       } finally {
         setLoading(false);
       }

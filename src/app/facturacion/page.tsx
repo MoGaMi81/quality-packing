@@ -19,7 +19,6 @@ export default function FacturacionHome() {
     }
   }, [router]);
 
-  // ✅ Función de logout
   async function logout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });

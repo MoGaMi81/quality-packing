@@ -23,10 +23,17 @@ export default function AdminPage() {
   }, [router]);
 
   useEffect(() => {
-  fetch("/api/admin/pricing/pending-count", { cache: "no-store" })
-    .then((r) => r.json())
-    .then((d) => setPendingPricing(d.count ?? 0));
-}, [refresh]);
+  const load = async () => {
+    const r = await fetch("/api/admin/pricing/pending-count", {
+      cache: "no-store",
+    });
+
+    const d = await r.json();
+    setPendingPricing(d.count ?? 0);
+  };
+
+  load();
+}, []);
 
   const Card = ({
     title,

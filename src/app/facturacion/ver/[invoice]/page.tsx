@@ -67,7 +67,6 @@ export default function VerFacturaPage() {
   const totalGross = totalNet * 1.31;
   const totalAmount = data.lines.reduce((s, l) => s + (l.amount ?? 0), 0);
 
-  // ✅ Nuevo cálculo de cajas usando calculateBoxStats
   const { smallBoxes, largeBoxes, totalBoxes } = calculateBoxStats(data.raw_lines);
 
   const formatInt = (n: number) =>
