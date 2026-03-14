@@ -20,7 +20,7 @@ export default function FacturacionPendingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJSON<{ ok: boolean; rows: Row[] }>("/api/facturacion/pending")
+    fetchJSON<{ ok: boolean; rows: Row[] }>("/api/facturacion/pending?refresh=1")
       .then((r) => {
         if (r.ok) setRows(r.rows);
       })
