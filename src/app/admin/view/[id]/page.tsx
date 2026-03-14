@@ -104,7 +104,7 @@ export default function ViewPacking() {
         </div>
       </div>
 
-      {/* ✅ Botones extra cuando pricing está DONE */}
+      {/* ✅ Botones extras */}
       {packing.pricing_status === "DONE" && (
         <div className="mt-6 flex justify-end gap-4">
           <a
