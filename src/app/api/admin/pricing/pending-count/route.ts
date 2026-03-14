@@ -11,25 +11,20 @@ const supabase = createClient(
 
 export async function GET() {
 
-  const { data, error } = await supabase
+  const { count, error } = await supabase
     .from("packings")
-    .select("id")
-    .eq("status", "COMPLETED")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "READY")
     .eq("pricing_status", "PENDING");
 
   if (error) {
     return NextResponse.json(
-      { ok: false, error: error.message },
+      { error: error.message },
       { status: 500 }
     );
   }
 
-  return NextResponse.json(
-    { count: data?.length ?? 0 },
-    {
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    }
-  );
+  return NextResponse.json({
+    count: count ?? 0
+  });
 }
