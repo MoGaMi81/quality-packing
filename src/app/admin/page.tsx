@@ -18,7 +18,7 @@ export default function AdminPage() {
     if (!role) return;
 
     if (role !== "admin") {
-      router.replace("/refresh");
+      router.replace("/");
     }
   }, [router]);
 
