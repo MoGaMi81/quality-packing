@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { requireRole } from "@/lib/requireRole";
+import { getRoleFromRequest } from "@/lib/role-server";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,50 +9,33 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
 
-  requireRole(req, ["admin"]);
+  const role = await getRoleFromRequest();
 
-  const { email, password, name, role } = await req.json();
-
-  if (!email || !password || !role) {
+  if (role !== "admin") {
     return NextResponse.json(
-      { ok: false, error: "Datos incompletos" },
-      { status: 400 }
+      { ok:false, error:"No autorizado" },
+      { status:403 }
     );
   }
 
-  /* crear usuario en auth */
+  const { email, password, name, role: userRole } = await req.json();
 
-  const { data: authUser, error: authError } =
-    await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-
-  if (authError) {
-    return NextResponse.json(
-      { ok: false, error: authError.message },
-      { status: 500 }
-    );
-  }
-
-  /* guardar en tabla users */
-
-  const { error: insertError } = await supabase
+  const { error } = await supabase
     .from("users")
     .insert({
-      id: authUser.user.id,
-      email,
+      email: email.toLowerCase(),
+      password,
       name,
-      role,
+      role: userRole,
+      active: true
     });
 
-  if (insertError) {
+  if (error) {
     return NextResponse.json(
-      { ok: false, error: insertError.message },
-      { status: 500 }
+      { ok:false, error:error.message },
+      { status:500 }
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok:true });
 }
