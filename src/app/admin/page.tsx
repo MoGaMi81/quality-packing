@@ -23,7 +23,7 @@ export default function AdminPage() {
   }, [router]);
 
   useEffect(() => {
-    fetch("/api/admin/pricing/pending-count")
+    fetch("/api/admin/pricing/pending-count", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setPendingPricing(d.count ?? 0));
   }, [refresh]);
