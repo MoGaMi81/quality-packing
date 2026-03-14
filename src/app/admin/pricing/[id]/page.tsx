@@ -98,7 +98,7 @@ export default function PricingPage({
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <button
-          onClick={() => router.replace("/admin")}
+          onClick={() => router.replace("/admin?refresh=1")}
           className="px-3 py-1 border rounded"
         >
           ← Volver

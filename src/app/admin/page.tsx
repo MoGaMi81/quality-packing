@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getRole } from "@/lib/role";
 
 
 export default function AdminPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refresh = searchParams.get("refresh");
 
   const [pendingPricing, setPendingPricing] = useState(0);
 
@@ -20,12 +22,11 @@ export default function AdminPage() {
     }
   }, [router]);
 
-  // ✅ Nuevo useEffect para traer el conteo de pendientes
   useEffect(() => {
     fetch("/api/admin/pricing/pending-count")
       .then((r) => r.json())
       .then((d) => setPendingPricing(d.count ?? 0));
-  }, []);
+  }, [refresh]);
 
   const Card = ({
     title,

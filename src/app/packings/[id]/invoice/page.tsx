@@ -35,7 +35,7 @@ export default function InvoicePage({
     <div className="max-w-5xl mx-auto p-6 space-y-6">
 
       <header>
-        <h1 className="text-2xl font-bold">Factura / Resumen</h1>
+        <h1 className="text-2xl font-bold">FACTURA</h1>
 
         <p><b>Cliente:</b> {header.client_name}</p>
         <p><b>Invoice:</b> {header.invoice}</p>
