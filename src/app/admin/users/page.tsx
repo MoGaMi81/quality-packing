@@ -97,6 +97,8 @@ export default function AdminUsers() {
                         active: u.active,
                       }),
                     });
+
+                    loadUsers();
                   }}
                 >
                   <option value="admin">admin</option>
