@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +8,6 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-
   const { email, password } = await req.json();
 
   if (!email || !password) {
@@ -38,29 +37,47 @@ export async function POST(req: Request) {
     );
   }
 
-  const valid = await bcrypt.compare(password,user.password)
+  // 🔑 Validación híbrida + migración automática
+  let valid = false;
 
-if(!valid){
-  return NextResponse.json(
-    { ok:false,error:"Contraseña incorrecta" },
-    { status:401 }
-  )
-}
+  if (user.password.startsWith("$2b$")) {
+    // contraseña encriptada con bcrypt
+    valid = await bcrypt.compare(password, user.password);
+  } else {
+    // contraseña antigua en texto plano
+    valid = user.password === password;
+
+    // si es válida, migrar automáticamente a bcrypt
+    if (valid) {
+      const hash = await bcrypt.hash(password, 10);
+      await supabase
+        .from("users")
+        .update({ password: hash })
+        .eq("id", user.id);
+    }
+  }
+
+  if (!valid) {
+    return NextResponse.json(
+      { ok: false, error: "Contraseña incorrecta" },
+      { status: 401 }
+    );
+  }
 
   const res = NextResponse.json({
-  ok: true,
-  user: {
-    id: user.id,
-    role: user.role,
-    name: user.name,
-    email: user.email
-  }
-});
+    ok: true,
+    user: {
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+    },
+  });
 
-res.cookies.set("role", user.role, {
-  httpOnly: false,
-  path: "/",
-});
+  res.cookies.set("role", user.role, {
+    httpOnly: false,
+    path: "/",
+  });
 
-return res;
+  return res;
 }

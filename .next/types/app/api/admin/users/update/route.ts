@@ -1,8 +1,8 @@
-// File: C:\Users\logis\OneDrive\Desktop\Proyecto\Poyecto Web\Packing List\quality-packing\src\app\api\admin\users\create\route.ts
-import * as entry from '../../../../../../../src/app/api/admin/users/create/route.js'
+// File: C:\Users\logis\OneDrive\Desktop\Proyecto\Poyecto Web\Packing List\quality-packing\src\app\api\admin\users\update\route.ts
+import * as entry from '../../../../../../../src/app/api/admin/users/update/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../../../src/app/api/admin/users/create/route.js')
+type TEntry = typeof import('../../../../../../../src/app/api/admin/users/update/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{
