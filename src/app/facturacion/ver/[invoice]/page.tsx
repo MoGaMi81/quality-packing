@@ -182,7 +182,7 @@ export default function VerFacturaPage() {
             }}
             className="px-4 py-2 border rounded text-red-600"
           >
-            Reabrir como Draft
+            Editar Especies
           </button>
         </div>
       )}
