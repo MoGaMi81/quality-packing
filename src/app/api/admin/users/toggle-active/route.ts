@@ -1,18 +1,36 @@
-import { supabase } from "@/lib/supabaseClient"
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { getRoleFromRequest } from "@/lib/role-server";
 
-export async function PATCH(req:Request){
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
- const {id, active} = await req.json()
+export async function POST(req: Request) {
 
- const {error} = await supabase
-   .from("users")
-   .update({active})
-   .eq("id",id)
+  const role = await getRoleFromRequest();
 
- if(error){
-  return NextResponse.json({ok:false,error:error.message})
- }
+  if (role !== "admin") {
+    return NextResponse.json(
+      { ok:false, error:"No autorizado" },
+      { status:403 }
+    );
+  }
 
- return NextResponse.json({ok:true})
+  const { id, active } = await req.json();
+
+  const { error } = await supabase
+    .from("users")
+    .update({ active })
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok:false, error:error.message },
+      { status:500 }
+    );
+  }
+
+  return NextResponse.json({ ok:true });
 }
