@@ -75,9 +75,11 @@ export async function POST(req: Request) {
   });
 
   res.cookies.set("role", user.role, {
-    httpOnly: false,
-    path: "/",
-  });
+  httpOnly: false,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+});
 
   return res;
 }

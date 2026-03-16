@@ -11,8 +11,8 @@ export async function getRoleFromRequest(): Promise<Role> {
 
   // Ajusta el nombre si tu cookie se llama distinto
   const roleCookie =
-    cookieStore.get("qp_role")?.value ||
-    cookieStore.get("role")?.value;
+  cookieStore.get("role")?.value ||
+  cookieStore.get("qp_role")?.value;
 
   if (!roleCookie) return null;
 
