@@ -14,7 +14,9 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
 
   async function loadUsers() {
-    const r = await fetch("/api/admin/users/list");
+    const r = await fetch("/api/admin/users/list", {
+  cache: "no-store",
+});
     const d = await r.json();
 
     if (d.ok) {
@@ -50,18 +52,18 @@ export default function AdminUsers() {
           const name = prompt("Nombre");
           const role = prompt("Rol (admin/proceso/facturacion)");
 
-          await fetch("/api/admin/users/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email,
-              password,
-              name,
-              role,
-            }),
-          });
+         await fetch("/api/admin/users/create", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email,
+    password,
+    name,
+    role,
+  }),
+});
 
-          location.reload();
+loadUsers();
         }}
       >
         Crear usuario
