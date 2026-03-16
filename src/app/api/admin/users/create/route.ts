@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getRoleFromRequest } from "@/lib/role-server";
+import bcrypt from "bcrypt"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,12 +20,13 @@ export async function POST(req: Request) {
   }
 
   const { email, password, name, role: userRole } = await req.json();
+  const hash = await bcrypt.hash(password,10)
 
   const { error } = await supabase
     .from("users")
     .insert({
       email: email.toLowerCase(),
-      password,
+      password: hash,
       name,
       role: userRole,
       active: true

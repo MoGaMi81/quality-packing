@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcrypt"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,12 +38,14 @@ export async function POST(req: Request) {
     );
   }
 
-  if (user.password !== password) {
-    return NextResponse.json(
-      { ok: false, error: "Contraseña incorrecta" },
-      { status: 401 }
-    );
-  }
+  const valid = await bcrypt.compare(password,user.password)
+
+if(!valid){
+  return NextResponse.json(
+    { ok:false,error:"Contraseña incorrecta" },
+    { status:401 }
+  )
+}
 
   const res = NextResponse.json({
   ok: true,
