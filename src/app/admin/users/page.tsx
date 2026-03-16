@@ -133,7 +133,27 @@ export default function AdminUsers() {
                 >
                   Eliminar
                 </button>
-              </td>
+              <button
+    onClick={async () => {
+      const password = prompt("Nueva contraseña");
+      if (!password) return;
+
+      await fetch("/api/admin/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: u.id,
+          password,
+        }),
+      });
+
+      alert("Contraseña actualizada");
+    }}
+  >
+    Reset password
+  </button>
+</td>
+
             </tr>
           ))}
         </tbody>
