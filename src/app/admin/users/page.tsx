@@ -16,6 +16,7 @@ export default function AdminUsers() {
   async function loadUsers() {
     const r = await fetch("/api/admin/users/list", {
   cache: "no-store",
+  credentials: "include",
 });
     const d = await r.json();
 
@@ -31,6 +32,7 @@ export default function AdminUsers() {
   async function toggleActive(user: User) {
     await fetch("/api/admin/users/toggle-active", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: user.id,
@@ -92,6 +94,7 @@ loadUsers();
                   onChange={async (e) => {
                     await fetch("/api/admin/users/update", {
                       method: "PATCH",
+                      credentials: "include",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         id: u.id,
@@ -126,6 +129,7 @@ loadUsers();
 
       await fetch("/api/admin/users/delete", {
         method: "DELETE",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: u.id }),
       });
