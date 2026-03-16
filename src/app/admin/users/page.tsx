@@ -116,24 +116,25 @@ export default function AdminUsers() {
                 </button>
               </td>
 
-              <td>
-                <button
-                  style={{ color: "red" }}
-                  onClick={async () => {
-                    if (!confirm("Eliminar usuario?")) return;
+              <td className="space-x-2">
+  <button
+    style={{ color: "red" }}
+    onClick={async () => {
+      if (!confirm("Eliminar usuario?")) return;
 
-                    await fetch("/api/admin/users/delete", {
-                      method: "DELETE",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ id: u.id }),
-                    });
+      await fetch("/api/admin/users/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: u.id }),
+      });
 
-                    loadUsers();
-                  }}
-                >
-                  Eliminar
-                </button>
-              <button
+      loadUsers();
+    }}
+  >
+    Eliminar
+  </button>
+
+  <button
     onClick={async () => {
       const password = prompt("Nueva contraseña");
       if (!password) return;
