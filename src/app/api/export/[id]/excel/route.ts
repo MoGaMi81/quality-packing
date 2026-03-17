@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
 import fs from "fs";
 import path from "path";
+import { buildSeaLionExcel } from "@/lib/export/seaLionExcel";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -123,6 +124,10 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
     : "";
 
   const clientTaxId = clientData?.tax_id ?? "";
+
+  const isSeaLion =
+  packing.client_code === "SEALION" ||
+  packing.client_name?.toUpperCase().includes("SEA LION");
 
   // ============================================================
   // 3️⃣ LÍNEAS
@@ -359,11 +364,9 @@ countryCell.fill = {
 };
 setOuterBorder(packingSheet, 12, 12, 5, 8);
 
-// 🔹 BORDES
 setOuterBorder(packingSheet, 1, 12, 1, 4);
 setOuterBorder(packingSheet, 1, 8, 5, 8);
 
-// 🔹 Fondo blanco header completo (Packing)
 for (let r = 1; r <= 12; r++) {
   for (let c = 1; c <= 8; c++) {
     packingSheet.getCell(r, c).fill = {
@@ -427,7 +430,7 @@ const totalBoxesPacking = uniqueBoxes.size;
 // 🔹 ESCRIBIR LÍNEAS (SIN AGRUPAR COMBINADAS)
 // ============================================================
 
-sortedLines.forEach((line) => {
+  sortedLines.forEach((line) => {
   packingSheet.getCell(`A${packingRow}`).value = line.box_no;
   packingSheet.getCell(`B${packingRow}`).value = "";
   packingSheet.getCell(`C${packingRow}`).value = "";
@@ -467,7 +470,6 @@ const totalWeightPacking = sortedLines.reduce(
   0
 );
 
-
 packingSheet.getCell(`A${totalsRow}`).value =
   `TOTAL BOXES ${totalBoxesPacking}`;
 
@@ -477,7 +479,6 @@ packingSheet.getCell(`H${totalsRow}`).numFmt = "#,##0";
 
 setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
 
-// Merge solo aquí (una vez)
 safeMerge(packingSheet, `A${totalsRow}:G${totalsRow}`);
 
 const totalLabelCell = packingSheet.getCell(`A${totalsRow}`);
@@ -715,7 +716,7 @@ invoiceSheet.getCell("E11").value = "DATE";
 invoiceSheet.getCell("E11").font = headerFontMedium;
 
 invoiceSheet.getCell("G11").value =
-  packing.created_at?.slice(0, 10) ?? "";
+packing.created_at?.slice(0, 10) ?? "";
 
 invoiceSheet.getCell("G11").font = headerFontMedium;
 invoiceSheet.getCell("G11").alignment = {
@@ -768,7 +769,7 @@ for (let c = 5; c <= 8; c++) {
   };
 }
 
-// Fondo blanco header completo
+// Fondo blanco header
 for (let r = 1; r <= 13; r++) {
   for (let c = 1; c <= 8; c++) {
     invoiceSheet.getCell(r, c).fill = {
@@ -820,8 +821,6 @@ const simpleMap = new Map<
 
 const combinedBoxes: any[] = [];
 
-
-
 invoiceBoxesMap.forEach((box) => {
   if (box.is_combined) {
     combinedBoxes.push(box);
@@ -857,7 +856,6 @@ if (Array.isArray(l.species)) {
       g.boxes += 1;
       g.pounds += l.pounds;
 
-      // 🔥 SIEMPRE usar el precio actual
       g.price = currentPrice;
     });
   }
@@ -949,7 +947,7 @@ combinedBoxes.forEach((box) => {
 });
 
 // ============================================================
-// 🔹 SMALL / LARGE BOXES
+// 🔹 CAJAS CHICAS Y GRANDES
 // ============================================================
 
 let smallBoxes = 0;
@@ -992,7 +990,7 @@ for (let r = 13; r <= 49; r++) {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFF2F8FF" }, // azul claro
+      fgColor: { argb: "FFF2F8FF" },
     };
 
     // líneas internas azul suave
@@ -1007,7 +1005,7 @@ for (let r = 13; r <= 49; r++) {
 
 setOuterBorder(invoiceSheet, 13, 50, 1, 8);
 
-  invoiceSheet.mergeCells("G52:H52");
+invoiceSheet.mergeCells("G52:H52");
 
 const cell52 = invoiceSheet.getCell("G52");
 
@@ -1129,13 +1127,16 @@ const safeClient =
 
 const filename = `Packing_Invoice_${safeClient}_${packing.invoice_no}.xlsx`;
 
-const buffer = await wb.xlsx.writeBuffer();
+if (isSeaLion) {
+  const wb = await buildSeaLionExcel(packing);
 
-return new NextResponse(buffer, {
-  headers: {
-    "Content-Type":
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "Content-Disposition": `attachment; filename="${filename}"`,
-  },
-});
-}
+  const buffer = await wb.xlsx.writeBuffer();
+
+  return new Response(buffer, {
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename=invoice-${packing.invoice_no}.xlsx`,
+    },
+  });
+}}
