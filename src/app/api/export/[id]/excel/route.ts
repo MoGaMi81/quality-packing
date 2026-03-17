@@ -115,22 +115,22 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
     .eq("code", packing.client_code)
     .single();
 
-  const clientName =
+    const clientName =
     clientData?.name ?? packing.client_name ?? "";
 
-  const clientAddressLine1 =
+    const clientAddressLine1 =
     clientData?.address ?? "";
 
-  const clientAddressLine2 = clientData
+    const clientAddressLine2 = clientData
     ? `${clientData.city ?? ""}, ${clientData.state ?? ""} ${clientData.zip ?? ""}`
     : "";
 
-  const clientTaxId = clientData?.tax_id ?? "";
+    const clientTaxId = clientData?.tax_id ?? "";
 
   const code = packing.client_code?.toUpperCase() || "";
-const name = packing.client_name?.toUpperCase() || "";
+  const name = packing.client_name?.toUpperCase() || "";
 
-const isSeaLion = packing.client_code === "SL";
+  const isSeaLion = packing.client_code === "SL";
 
   // ============================================================
   // 3️⃣ LÍNEAS
@@ -158,6 +158,11 @@ const isSeaLion = packing.client_code === "SL";
   }
 
   const headerRow = packingSheet.getRow(13);
+  const packingForSeaLion = {
+  ...packing,
+  lines: lines ?? [],
+  clientData,
+};
 
 // ============================================================
 // 🔧 UTILIDADES (ARRIBA DEL TODO)
@@ -1131,17 +1136,17 @@ const safeClient =
 const filename = `Packing_Invoice_${safeClient}_${packing.invoice_no}.xlsx`;
 
 if (isSeaLion) {
-  const wbSea = await buildSeaLionExcel(packing);
+  const wbSea = await buildSeaLionExcel(packingForSeaLion);
 
-  const buffer = await wb.xlsx.writeBuffer();
+  const buffer = await wbSea.xlsx.writeBuffer();
 
-return new Response(buffer, {
-  headers: {
-    "Content-Type":
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "Content-Disposition": `attachment; filename=${filename}`,
-  },
-});
+  return new Response(buffer, {
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename=${filename}`,
+    },
+  });
 }
 // ============================================================
 // EXPORT NORMAL (TU CÓDIGO ACTUAL)
