@@ -11,35 +11,35 @@ export async function buildSeaLionPackingSheet(
   // 🔷 HEADER SUPERIOR (TIPO TEMPLATE SEA LION)
   // ============================================================
 
-  sheet.getCell("A1").value = "SEA LION INTERNATIONAL";
-  sheet.getCell("A1").font = { bold: true, size: 16 };
+  sheet.getCell("A1:A3").value = "SEA LION INTERNATIONAL";
+  sheet.getCell("A1:A3").font = { bold: true, size: 16 };
 
-  sheet.getCell("D1").value = "PACKING LIST / ORDER TEMPLATE";
-  sheet.getCell("D1").font = { bold: true, size: 14 };
+  sheet.getCell("B1:G3").value = "PACKING LIST / ORDER TEMPLATE";
+  sheet.getCell("B1:G3").font = { bold: true, size: 14 };
 
   // ROW 3
-  sheet.getCell("A3").value = "VENDOR CODE (DO NOT MODIFY)";
-  sheet.getCell("B3").value = "VENDOR";
-  sheet.getCell("C3").value = "COUNTRY OF ORIGIN";
-  sheet.getCell("D3").value = "DESTINATION WAREHOUSE";
-  sheet.getCell("E3").value = "FACTURA #";
-  sheet.getCell("F3").value = "GUIA #";
-  sheet.getCell("G3").value = "FECHA";
+  sheet.getCell("A4").value = "VENDOR CODE (DO NOT MODIFY)";
+  sheet.getCell("B4").value = "VENDOR";
+  sheet.getCell("C4").value = "COUNTRY OF ORIGIN";
+  sheet.getCell("D4").value = "DESTINATION WAREHOUSE";
+  sheet.getCell("E4").value = "FACTURA #";
+  sheet.getCell("F4").value = "GUIA #";
+  sheet.getCell("G4").value = "FECHA";
 
   // ROW 4 (VALUES)
-  sheet.getCell("A4").value = "V0320"; // 🔧 puedes hacerlo dinámico después
-  sheet.getCell("B4").value = "QUALITY FISH S.C DE R.L DE C.V";
-  sheet.getCell("C4").value = "MEXICO-WILD";
-  sheet.getCell("D4").value = "MIT";
-  sheet.getCell("E4").value = packing.invoice_no;
-  sheet.getCell("F4").value = packing.guide ?? "";
-  sheet.getCell("G4").value = new Date(packing.created_at).toLocaleDateString("es-MX");
+  sheet.getCell("A5").value = "V0320"; // 🔧 puedes hacerlo dinámico después
+  sheet.getCell("B5").value = "QUALITY FISH S.C DE R.L DE C.V";
+  sheet.getCell("C5").value = "MEXICO-WILD";
+  sheet.getCell("D5").value = "MIT";
+  sheet.getCell("E5").value = packing.invoice_no;
+  sheet.getCell("F5").value = packing.guide ?? "";
+  sheet.getCell("G5").value = new Date(packing.created_at).toLocaleDateString("es-MX");
 
   // ============================================================
   // 🔷 TABLA HEADER
   // ============================================================
 
-  const startRow = 6;
+  const startRow = 7;
 
   sheet.getRow(startRow).values = [
     "Item Name/Producto",
