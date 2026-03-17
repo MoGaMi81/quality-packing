@@ -15,7 +15,7 @@ type Props = {
 
 export default function BoxesWizardModal({ open, onClose }: Props) {
   const { lines, addLines } = usePackingStore();
-  const { getByCode, loading } = useSpeciesCatalog();
+  const { getByCode, loading, reload } = useSpeciesCatalog();
 
   const [mode, setMode] = useState<Mode>("SIMPLE");
 
@@ -107,6 +107,14 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
      UI
   ===================== */
   const species = getByCode(code);
+
+  function setErr(arg0: null) {
+    throw new Error("Function not implemented.");
+  }
+
+  function setSuccess(arg0: string) {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
@@ -226,15 +234,18 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   open={openNewSpecies}
   presetCode={pendingCode}
   onClose={() => setOpenNewSpecies(false)}
-  onCreated={(payload) => {
-    setOpenNewSpecies(false);
+  onCreated={async (payload) => {
+    setErr(null);
+    setSuccess("Especie guardada");
+  setOpenNewSpecies(false);
 
-    // 🔥 clave nueva creada
-    const newCode = payload.map.code;
+  // 🔄 refrescar catálogo
+  await reload();
 
-    // setear automáticamente en input
-    setCode(newCode);
-  }}
+  // 🔥 ahora sí ya existe en memoria
+  const newCode = payload.map.code;
+  setCode(newCode);
+}}
 />
     </div>
   );
