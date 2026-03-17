@@ -69,6 +69,8 @@ function formatAmountInWords(amount: number): string {
 export const runtime = "nodejs";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
+
+
 const wb = new ExcelJS.Workbook();
 const invoiceSheet = wb.addWorksheet("Invoice");
 const packingSheet = wb.addWorksheet("Packing");
@@ -1132,11 +1134,25 @@ if (isSeaLion) {
 
   const buffer = await wb.xlsx.writeBuffer();
 
-  return new Response(buffer, {
-    headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename=invoice-${packing.invoice_no}.xlsx`,
-    },
-  });
-}}
+return new Response(buffer, {
+  headers: {
+    "Content-Type":
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename=${filename}`,
+  },
+});
+}
+// ============================================================
+// EXPORT NORMAL (TU CÓDIGO ACTUAL)
+// ============================================================
+
+const buffer = await wb.xlsx.writeBuffer();
+
+return new Response(buffer, {
+  headers: {
+    "Content-Type":
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename=${filename}`,
+  },
+});
+}
