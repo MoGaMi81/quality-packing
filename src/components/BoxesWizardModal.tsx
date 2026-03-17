@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 import { usePackingStore } from "@/store/packingStore";
 import type { PackingLine } from "@/domain/packing/types";
+import NewSpeciesBundleModal from "@/components/NewSpeciesBundleModal";
 
 type Mode = "SIMPLE" | "COMBINADA";
 
@@ -22,8 +23,10 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
   const [pounds, setPounds] = useState(0);
+  const [openNewSpecies, setOpenNewSpecies] = useState(false);
+  const [pendingCode, setPendingCode] = useState("");
 
-  // 🔑 buffer SOLO para combinadas
+ 
   const [combinedLines, setCombinedLines] = useState<PackingLine[]>([]);
 
   if (!open) return null;
@@ -138,9 +141,21 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
           className="border p-2 rounded w-full"
         />
 
-        {code && !loading && !getByCode(code) && (
-          <div className="text-red-600 text-sm mt-1">Clave no encontrada</div>
-        )}
+        {code && !loading && !species && (
+  <div className="mt-2 text-sm">
+    <span className="text-red-600">Clave no encontrada</span>
+
+    <button
+      className="ml-3 text-blue-600 underline"
+      onClick={() => {
+        setPendingCode(code);
+        setOpenNewSpecies(true);
+      }}
+    >
+      Crear especie nueva
+    </button>
+  </div>
+)}
 
         {/* ✅ INFO DE LA ESPECIE */}
         {code && species && (
@@ -207,6 +222,20 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
           Cerrar
         </button>
       </div>
+      <NewSpeciesBundleModal
+  open={openNewSpecies}
+  presetCode={pendingCode}
+  onClose={() => setOpenNewSpecies(false)}
+  onCreated={(payload) => {
+    setOpenNewSpecies(false);
+
+    // 🔥 clave nueva creada
+    const newCode = payload.map.code;
+
+    // setear automáticamente en input
+    setCode(newCode);
+  }}
+/>
     </div>
   );
 }
