@@ -1,123 +1,90 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-import { readJson, writeJson } from "@/lib/json-db";
-import type { NewSpeciesBundleInput } from "@/domain/models/newInputs";
+import { createClient } from "@supabase/supabase-js";
 
-const norm = (s?: string) => (s ?? "")?.trim();
-const up = (s?: string) => norm(s).toUpperCase();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-// ======================================================
-//  ✔ GET — Devuelve todo el catálogo resolviendo claves
-// ======================================================
-export async function GET() {
-  const speciesCodes = await readJson<any[]>("species_codes.json", []);
-  const species = await readJson<any[]>("species.json", []);
-  const sizes = await readJson<any[]>("sizes.json", []);
-  const forms = await readJson<any[]>("forms.json", []);
-
-  const bundle = speciesCodes.map((row) => {
-    const sp = species.find((s) => s.id === row.species_id);
-    const sz = sizes.find((s) => s.id === row.size_id);
-    const fm = forms.find((f) => f.id === row.form_id);
-
-    return {
-      code: row.code,
-      name_en: sp?.name_en ?? "",
-      scientific_name: sp?.scientific_name ?? "",
-      size: sz?.name ?? "",
-      form: fm?.name ?? "",
-    };
-  });
-
-  return NextResponse.json(bundle);
-}
-
-// ======================================================
-//  ✔ POST — Registrar nueva clave + especie + tamaño + form
-// ======================================================
 export async function POST(req: Request) {
-  const body = (await req.json()) as NewSpeciesBundleInput;
+  try {
+    const body = await req.json();
 
-  const code = up(body.code);
-  const name_en = norm(body.name_en);
-  const scientific_name = norm(body.scientific_name);
-  const sizeName = norm(body.size);
-  const formName = norm(body.form) || "W&G";
+    const code = body.code?.trim().toUpperCase();
+    const description_en = body.name_en?.trim().toUpperCase();
+    const scientific_name = body.scientific_name?.trim().toUpperCase();
+    const size = body.size?.trim();
+    const form = body.form?.trim() || "W&G";
 
-  if (!code || !name_en || !sizeName) {
-    return NextResponse.json(
-      { error: "code, name_en and size are required" },
-      { status: 400 }
-    );
-  }
+    if (!code || !description_en || !size) {
+      return NextResponse.json(
+        { error: "code, name_en, size required" },
+        { status: 400 }
+      );
+    }
 
-  const species = await readJson<any[]>("species.json", []);
-  const sizes = await readJson<any[]>("sizes.json", []);
-  const forms = await readJson<any[]>("forms.json", []);
-  const speciesCodes = await readJson<any[]>("species_codes.json", []);
+    // 🔴 1. validar duplicado por código
+    const { data: existingCode } = await supabase
+      .from("species")
+      .select("*")
+      .eq("code", code)
+      .maybeSingle();
 
-  // evitar duplicación de clave
-  if (speciesCodes.find((x) => up(x.code) === code)) {
-    return NextResponse.json(
-      { error: "Species code already exists" },
-      { status: 409 }
-    );
-  }
+    if (existingCode) {
+      return NextResponse.json(
+        { error: "Code already exists" },
+        { status: 409 }
+      );
+    }
 
-  // crear o reusar especie
-  const spKey = (s: any) =>
-    `${up(s.name_en)}|${up(s.scientific_name)}`;
-  let sp = species.find(
-    (s) => spKey(s) === `${up(name_en)}|${up(scientific_name)}`
-  );
+    // 🔴 2. validar duplicado por especie real
+    const { data: existingSpecies } = await supabase
+      .from("species")
+      .select("*")
+      .eq("description_en", description_en)
+      .eq("size", size)
+      .eq("form", form)
+      .maybeSingle();
 
-  if (!sp) {
-    sp = {
-      id: randomUUID(),
-      name_en,
-      scientific_name,
-      form_default: formName,
-    };
-    species.push(sp);
-  }
+    if (existingSpecies) {
+      return NextResponse.json(
+        { error: "Species already exists with different code" },
+        { status: 409 }
+      );
+    }
 
-  // crear o reusar size
-  let sz = sizes.find((s) => up(s.name) === up(sizeName));
-  if (!sz) {
-    sz = { id: randomUUID(), name: sizeName };
-    sizes.push(sz);
-  }
+    // ✅ insertar
+    const { data, error } = await supabase
+      .from("species")
+      .insert({
+        code,
+        description_en,
+        scientific_name,
+        size,
+        form,
+      })
+      .select()
+      .single();
 
-  // crear o reusar form
-  let fm = forms.find((f) => up(f.name) === up(formName));
-  if (!fm) {
-    fm = { id: randomUUID(), name: formName };
-    forms.push(fm);
-  }
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
 
-  // guardar mapping code → ids
-  const map = { code, species_id: sp.id, size_id: sz.id, form_id: fm.id };
-  speciesCodes.push(map);
-
-  await Promise.all([
-    writeJson("species.json", species),
-    writeJson("sizes.json", sizes),
-    writeJson("forms.json", forms),
-    writeJson("species_codes.json", speciesCodes),
-  ]);
-
-  return NextResponse.json(
-    {
+    return NextResponse.json({
       ok: true,
-      map: { code },
-      species: {
-        name_en: sp.name_en,
-        scientific_name: sp.scientific_name,
-      },
-      size: { name: sz.name },
-      form: { name: fm.name },
-    },
-    { status: 201 }
-  );
+      map: { code: data.code },
+      species: data,
+      size: { name: data.size },
+      form: { name: data.form },
+    });
+  } catch (err: any) {
+    console.error(err);
+    return NextResponse.json(
+      { error: err.message },
+      { status: 500 }
+    );
+  }
 }
-
