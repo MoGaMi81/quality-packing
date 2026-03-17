@@ -6,31 +6,44 @@ export async function buildSeaLionPackingSheet(
 ) {
   const lines = packing.lines ?? [];
 
-  // HEADER EXACTO (IMPORTANTE para su sistema)
+  // ============================================================
+  // 🔹 HEADER (IGUAL AL TEMPLATE)
+  // ============================================================
+
   sheet.columns = [
-    { header: "Boxes", key: "boxes", width: 10 },
-    { header: "Pounds", key: "pounds", width: 12 },
-    { header: "Description", key: "desc", width: 35 },
-    { header: "Size", key: "size", width: 10 },
-    { header: "Form", key: "form", width: 10 },
-    { header: "Scientific Name", key: "sci", width: 25 },
-    { header: "Price", key: "price", width: 10 },
-    { header: "Amount", key: "amount", width: 12 },
+    { header: "Item Name/Producto", key: "desc", width: 40 },
+    { header: "Presentation/Presentacion", key: "form", width: 18 },
+    { header: "Size/Talla", key: "size", width: 12 },
+    { header: "Box Weight (in LBS)/Peso Por Caja (Libras)", key: "lbs", width: 28 },
+    { header: "Box No / # de Caja", key: "box", width: 16 },
+    { header: "Unit Price (Per LB)/Precio por Libra", key: "price", width: 28 },
   ];
 
-  // 🔴 IMPORTANTE: NO agrupes si Sea Lion no lo quiere
-  for (const l of lines) {
-    const amount = (l.pounds ?? 0) * (l.price ?? 0);
+  // 🔹 HEADER STYLE (opcional ligero)
+  const headerRow = sheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.alignment = { horizontal: "center", vertical: "middle" };
 
+  // ============================================================
+  // 🔹 ORDEN EXACTO (IMPORTANTE)
+  // ============================================================
+
+  const sortedLines = [...lines].sort(
+    (a, b) => a.box_no - b.box_no
+  );
+
+  // ============================================================
+  // 🔹 DATA (SIN AGRUPAR)
+  // ============================================================
+
+  for (const l of sortedLines) {
     sheet.addRow({
-      boxes: 1,
-      pounds: l.pounds,
       desc: l.description_en,
-      size: l.size,
       form: l.form,
-      sci: l.species?.scientific_name ?? "",
-      price: l.price,
-      amount,
+      size: l.size,
+      lbs: l.pounds,
+      box: l.box_no,
+      price: l.price ?? "",
     });
   }
 }
