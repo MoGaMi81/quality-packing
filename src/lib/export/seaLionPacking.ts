@@ -5,45 +5,81 @@ export async function buildSeaLionPackingSheet(
   packing: any
 ) {
   const lines = packing.lines ?? [];
+  const client = packing.clientData ?? {};
 
   // ============================================================
-  // 🔹 HEADER (IGUAL AL TEMPLATE)
+  // 🔷 HEADER SUPERIOR (TIPO TEMPLATE SEA LION)
   // ============================================================
 
-  sheet.columns = [
-    { header: "Item Name/Producto", key: "desc", width: 40 },
-    { header: "Presentation/Presentacion", key: "form", width: 18 },
-    { header: "Size/Talla", key: "size", width: 12 },
-    { header: "Box Weight (in LBS)/Peso Por Caja (Libras)", key: "lbs", width: 28 },
-    { header: "Box No / # de Caja", key: "box", width: 16 },
-    { header: "Unit Price (Per LB)/Precio por Libra", key: "price", width: 28 },
+  sheet.getCell("A1").value = "SEA LION INTERNATIONAL";
+  sheet.getCell("A1").font = { bold: true, size: 16 };
+
+  sheet.getCell("D1").value = "PACKING LIST / ORDER TEMPLATE";
+  sheet.getCell("D1").font = { bold: true, size: 14 };
+
+  // ROW 3
+  sheet.getCell("A3").value = "VENDOR CODE (DO NOT MODIFY)";
+  sheet.getCell("B3").value = "VENDOR";
+  sheet.getCell("C3").value = "COUNTRY OF ORIGIN";
+  sheet.getCell("D3").value = "DESTINATION WAREHOUSE";
+  sheet.getCell("E3").value = "FACTURA #";
+  sheet.getCell("F3").value = "GUIA #";
+  sheet.getCell("G3").value = "FECHA";
+
+  // ROW 4 (VALUES)
+  sheet.getCell("A4").value = "V0320"; // 🔧 puedes hacerlo dinámico después
+  sheet.getCell("B4").value = "QUALITY FISH S.C DE R.L DE C.V";
+  sheet.getCell("C4").value = "MEXICO-WILD";
+  sheet.getCell("D4").value = "MIT";
+  sheet.getCell("E4").value = packing.invoice_no;
+  sheet.getCell("F4").value = packing.guide ?? "";
+  sheet.getCell("G4").value = new Date(packing.created_at).toLocaleDateString("es-MX");
+
+  // ============================================================
+  // 🔷 TABLA HEADER
+  // ============================================================
+
+  const startRow = 6;
+
+  sheet.getRow(startRow).values = [
+    "Item Name/Producto",
+    "Presentation/Presentacion",
+    "Size/Talla",
+    "Box Weight (in LBS)/Peso Por Caja (Libras)",
+    "Box No / # de Caja",
+    "Unit Price (Per LB)/Precio por Libra",
   ];
 
-  // 🔹 HEADER STYLE (opcional ligero)
-  const headerRow = sheet.getRow(1);
-  headerRow.font = { bold: true };
-  headerRow.alignment = { horizontal: "center", vertical: "middle" };
+  sheet.getRow(startRow).font = { bold: true };
+
+  // Column widths
+  sheet.getColumn(1).width = 40;
+  sheet.getColumn(2).width = 18;
+  sheet.getColumn(3).width = 12;
+  sheet.getColumn(4).width = 28;
+  sheet.getColumn(5).width = 16;
+  sheet.getColumn(6).width = 28;
 
   // ============================================================
-  // 🔹 ORDEN EXACTO (IMPORTANTE)
+  // 🔷 DATA (SIN AGRUPAR)
   // ============================================================
 
   const sortedLines = [...lines].sort(
     (a, b) => a.box_no - b.box_no
   );
 
-  // ============================================================
-  // 🔹 DATA (SIN AGRUPAR)
-  // ============================================================
+  let row = startRow + 1;
 
   for (const l of sortedLines) {
-    sheet.addRow({
-      desc: l.description_en,
-      form: l.form,
-      size: l.size,
-      lbs: l.pounds,
-      box: l.box_no,
-      price: l.price ?? "",
-    });
+    sheet.getRow(row).values = [
+      l.description_en,
+      l.form,
+      l.size,
+      l.pounds,
+      l.box_no,
+      l.price ?? "",
+    ];
+
+    row++;
   }
 }
