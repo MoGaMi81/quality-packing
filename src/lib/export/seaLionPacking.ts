@@ -1,42 +1,90 @@
 import ExcelJS from "exceljs";
+import fs from "fs";
+import path from "path";
 
 export async function buildSeaLionPackingSheet(
   sheet: ExcelJS.Worksheet,
   packing: any
 ) {
   const lines = packing.lines ?? [];
-  const client = packing.clientData ?? {};
 
   // ============================================================
-  // 🔷 HEADER SUPERIOR (TIPO TEMPLATE SEA LION)
+  // 🔷 MERGES HEADER
   // ============================================================
 
-  sheet.getCell("A1:A3").value = "SEA LION INTERNATIONAL";
-  sheet.getCell("A1:A3").font = { bold: true, size: 16 };
-
-  sheet.getCell("B1:G3").value = "PACKING LIST / ORDER TEMPLATE";
-  sheet.getCell("B1:G3").font = { bold: true, size: 14 };
-
-  // ROW 3
-  sheet.getCell("A4").value = "VENDOR CODE (DO NOT MODIFY)";
-  sheet.getCell("B4").value = "VENDOR";
-  sheet.getCell("C4").value = "COUNTRY OF ORIGIN";
-  sheet.getCell("D4").value = "DESTINATION WAREHOUSE";
-  sheet.getCell("E4").value = "FACTURA #";
-  sheet.getCell("F4").value = "GUIA #";
-  sheet.getCell("G4").value = "FECHA";
-
-  // ROW 4 (VALUES)
-  sheet.getCell("A5").value = "V0320"; // 🔧 puedes hacerlo dinámico después
-  sheet.getCell("B5").value = "QUALITY FISH S.C DE R.L DE C.V";
-  sheet.getCell("C5").value = "MEXICO-WILD";
-  sheet.getCell("D5").value = "MIT";
-  sheet.getCell("E5").value = packing.invoice_no;
-  sheet.getCell("F5").value = packing.guide ?? "";
-  sheet.getCell("G5").value = new Date(packing.created_at).toLocaleDateString("es-MX");
+  sheet.mergeCells("A1:A3");
+  sheet.mergeCells("B1:G3");
 
   // ============================================================
-  // 🔷 TABLA HEADER
+  // 🖼️ LOGO SEA LION (A1:A3)
+  // ============================================================
+
+ try {
+  const imagePath = path.join(process.cwd(), "public", "sea-lion.png");
+
+  const file = fs.readFileSync(imagePath);
+  const buffer = Buffer.from(file);
+
+  const imageId = sheet.workbook.addImage({
+  buffer: Buffer.from(file) as any,
+  extension: "png",
+});
+
+  sheet.addImage(imageId, {
+    tl: { col: 0, row: 0 },
+    ext: { width: 120, height: 70 },
+  });
+
+} catch (e) {
+  console.log("Logo error:", e);
+}
+
+  // ============================================================
+  // 🔷 TITULO
+  // ============================================================
+
+  const titleCell = sheet.getCell("B1");
+
+  titleCell.value = "PACKING LIST / ORDER TEMPLATE";
+  titleCell.font = { bold: true, size: 16 };
+
+  titleCell.alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  // ============================================================
+  // 🔷 HEADERS FILA 4
+  // ============================================================
+
+  sheet.getRow(4).values = [
+    "VENDOR CODE (DO NOT MODIFY)",
+    "VENDOR",
+    "COUNTRY OF ORIGIN",
+    "DESTINATION WAREHOUSE",
+    "FACTURA #",
+    "GUIA #",
+    "FECHA",
+  ];
+
+  sheet.getRow(4).font = { bold: true };
+
+  // ============================================================
+  // 🔷 VALUES FILA 5
+  // ============================================================
+
+  sheet.getRow(5).values = [
+    "V0320",
+    "QUALITY FISH S.C DE R.L DE C.V",
+    "MEXICO-WILD",
+    "MIT",
+    packing.invoice_no,
+    packing.guide ?? "",
+    new Date(packing.created_at).toLocaleDateString("es-MX"),
+  ];
+
+  // ============================================================
+  // 🔷 TABLA
   // ============================================================
 
   const startRow = 7;
@@ -61,7 +109,7 @@ export async function buildSeaLionPackingSheet(
   sheet.getColumn(6).width = 28;
 
   // ============================================================
-  // 🔷 DATA (SIN AGRUPAR)
+  // 🔷 DATA (ORDEN EXACTO)
   // ============================================================
 
   const sortedLines = [...lines].sort(
