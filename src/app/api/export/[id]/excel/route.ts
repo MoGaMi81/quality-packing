@@ -171,12 +171,11 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
   let packingSheet;
 
   if (isSeaLion) {
-    packingSheet = wb.addWorksheet("Purchase Order Lines");
-    await buildSeaLionPackingSheet(packingSheet, packingForSeaLion);
-  } else {
-    packingSheet = wb.addWorksheet("Packing");
-    await buildSeaLionPackingSheet(packingSheet, lines ?? []);
-  }
+  packingSheet = wb.addWorksheet("Purchase Order Lines");
+  await buildSeaLionPackingSheet(packingSheet, packingForSeaLion);
+} else {
+  packingSheet = wb.addWorksheet("Packing");
+}
    const headerRow = packingSheet.getRow(13);
 
 // ============================================================
@@ -223,7 +222,7 @@ function setOuterBorder(
 // ============================================================
 // ================= PACKING =================
 // ============================================================
-
+if (!isSeaLion) {
 packingSheet.pageSetup.paperSize = 9;
 packingSheet.pageSetup.orientation = "portrait";
 
@@ -516,21 +515,6 @@ totalValueCell.alignment = { horizontal: "right" };
 totalValueCell.numFmt = "#,##0";
 
 setOuterBorder(packingSheet, totalsRow, totalsRow, 1, 8);
-
-
-// 🖼️ LOGO PACKING
-try {
-  const logoUrl = new URL("/logo.jpeg", req.url).toString();
-  const response = await fetch(logoUrl);
-  if (response.ok) {
-    const arrayBuffer = await response.arrayBuffer();
-    const base64Image =
-      "data:image/png;base64," + Buffer.from(arrayBuffer).toString("base64");
-    const imageId = wb.addImage({ base64: base64Image, extension: "png" });
-    packingSheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 128, height: 110 } });
-  }
-} catch (error) {
-  console.log("Logo fetch error:", error);
 }
 
 // ============================================================
