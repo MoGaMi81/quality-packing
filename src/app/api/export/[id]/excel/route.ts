@@ -4,6 +4,7 @@ import ExcelJS from "exceljs";
 import fs from "fs";
 import path from "path";
 import { buildSeaLionExcel } from "@/lib/export/seaLionExcel";
+import { buildSeaLionPackingSheet } from "@/lib/export/seaLionPacking";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -69,11 +70,6 @@ function formatAmountInWords(amount: number): string {
 export const runtime = "nodejs";
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 
-
-
-const wb = new ExcelJS.Workbook();
-const invoiceSheet = wb.addWorksheet("Invoice");
-const packingSheet = wb.addWorksheet("Packing");
 const darkBlueText = { argb: "FF1F4E79" };
 const accentBlue = { argb: "FF2F75B5" };
 
@@ -130,7 +126,7 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
   const code = packing.client_code?.toUpperCase() || "";
   const name = packing.client_name?.toUpperCase() || "";
 
-  const isSeaLion = packing.client_code === "SL";
+ 
 
   // ============================================================
   // 3️⃣ LÍNEAS
@@ -157,12 +153,31 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
     return NextResponse.json({ error: e2.message }, { status: 500 });
   }
 
-  const headerRow = packingSheet.getRow(13);
+ const isSeaLion = packing.client_code === "SL";
+
   const packingForSeaLion = {
   ...packing,
   lines: lines ?? [],
   clientData,
 };
+
+// ============================================================
+  // 5️⃣ WORKBOOK
+  // ============================================================
+
+  const wb = new ExcelJS.Workbook();
+  const invoiceSheet = wb.addWorksheet("Invoice");
+
+  let packingSheet;
+
+  if (isSeaLion) {
+    packingSheet = wb.addWorksheet("Purchase Order Lines");
+    await buildSeaLionPackingSheet(packingSheet, packingForSeaLion);
+  } else {
+    packingSheet = wb.addWorksheet("Packing");
+    await buildSeaLionPackingSheet(packingSheet, lines ?? []);
+  }
+   const headerRow = packingSheet.getRow(13);
 
 // ============================================================
 // 🔧 UTILIDADES (ARRIBA DEL TODO)
@@ -1134,23 +1149,6 @@ const safeClient =
   clientName?.toUpperCase().replace(/[^A-Z0-9]/g, "_") || "CLIENT";
 
 const filename = `Packing_Invoice_${safeClient}_${packing.invoice_no}.xlsx`;
-
-if (isSeaLion) {
-  const wbSea = await buildSeaLionExcel(packingForSeaLion);
-
-  const buffer = await wbSea.xlsx.writeBuffer();
-
-  return new Response(buffer, {
-    headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename=${filename}`,
-    },
-  });
-}
-// ============================================================
-// EXPORT NORMAL (TU CÓDIGO ACTUAL)
-// ============================================================
 
 const buffer = await wb.xlsx.writeBuffer();
 
