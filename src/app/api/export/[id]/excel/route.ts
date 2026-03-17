@@ -127,9 +127,10 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
 
   const clientTaxId = clientData?.tax_id ?? "";
 
-  const isSeaLion =
-  packing.client_code === "SEALION" ||
-  packing.client_name?.toUpperCase().includes("SEA LION");
+  const code = packing.client_code?.toUpperCase() || "";
+const name = packing.client_name?.toUpperCase() || "";
+
+const isSeaLion = packing.client_code === "SL";
 
   // ============================================================
   // 3️⃣ LÍNEAS
@@ -1130,7 +1131,7 @@ const safeClient =
 const filename = `Packing_Invoice_${safeClient}_${packing.invoice_no}.xlsx`;
 
 if (isSeaLion) {
-  const wb = await buildSeaLionExcel(packing);
+  const wbSea = await buildSeaLionExcel(packing);
 
   const buffer = await wb.xlsx.writeBuffer();
 
