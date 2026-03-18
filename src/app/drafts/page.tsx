@@ -25,11 +25,11 @@ export default function DraftsPage() {
   const router = useRouter();
   const role = getRole() as Role;
 
-  // 🔑 Validación de rol antes de renderizar
+useEffect(() => {
   if (role === "admin") {
     router.replace("/admin");
-    return null;
   }
+}, [role, router]);
 
   /* ================= LOAD ================= */
   async function load() {

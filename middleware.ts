@@ -57,8 +57,15 @@ export function middleware(req: NextRequest) {
   }
 
   // 3) --- VALIDAR SESIÓN ---
-  const raw = req.cookies.get("qp_session")?.value;
+    const raw = req.cookies.get("qp_session")?.value;
   if (!raw) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { ok: false, error: "Sesión no válida o expirada" },
+        { status: 401 }
+      );
+    }
+
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -74,12 +81,18 @@ export function middleware(req: NextRequest) {
     }
 
     return NextResponse.next();
-  } catch {
+    } catch {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { ok: false, error: "Sesión inválida" },
+        { status: 401 }
+      );
+    }
+
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
-  }
-}
+  }}
 
 export const config = {
   matcher: ["/((?!_next|static|favicon.ico).*)"],

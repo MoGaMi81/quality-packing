@@ -132,8 +132,7 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
               return;
             }
 
-            router.replace("/facturacion");
-            router.refresh();
+            window.location.href = "/facturacion";
           }}
         >
           Facturar
