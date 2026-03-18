@@ -18,6 +18,7 @@ export default function InvoicePage({
 }: { params: { id: string } }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [lastInvoice, setLastInvoice] = useState<string | null>(null);
 
   useEffect(() => {
     secureFetch(`/api/packings/${params.id}/invoice`)
@@ -25,6 +26,20 @@ export default function InvoicePage({
       .then(setData)
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  // 🔹 cargar última factura usada
+  useEffect(() => {
+    async function loadLastInvoice() {
+      try {
+        const res = await fetch("/api/packings/last-invoice");
+        const data = await res.json();
+        setLastInvoice(data.invoice_no);
+      } catch {
+        setLastInvoice(null);
+      }
+    }
+    loadLastInvoice();
+  }, []);
 
   if (loading) return <p>Cargando factura…</p>;
   if (!data) return <p>No encontrado</p>;
@@ -38,6 +53,14 @@ export default function InvoicePage({
         <h1 className="text-2xl font-bold">FACTURA</h1>
 
         <p><b>Cliente:</b> {header.client_name}</p>
+
+        {/* 🔹 mostrar última factura usada */}
+        {lastInvoice && (
+          <div className="mb-2 text-sm text-gray-600">
+            Última factura usada: <b>{lastInvoice}</b>
+          </div>
+        )}
+
         <p><b>Invoice:</b> {header.invoice}</p>
         <p><b>Fecha:</b> {header.date.slice(0, 10)}</p>
 
