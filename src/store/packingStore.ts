@@ -78,7 +78,7 @@ export const usePackingStore = create<State>((set, get) => {
       })),
 
     /* ---------- lines ---------- */
-    setLines: (lines) => set({ lines }),
+    setLines: (lines: PackingLine[]) => set({ lines }),
 
     addLine: (ln) =>
       set((state) => ({
