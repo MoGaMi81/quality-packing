@@ -49,6 +49,43 @@ const [showConfirm, setShowConfirm] = useState(false);
   /* =====================
      SIMPLE / RANGO
   ===================== */
+
+  function handleScan() {
+  if (!code) return;
+
+  const parts = code.trim().split(/\s+/);
+
+  // 🔥 FORMATO: CODE LBS
+  const scannedCode = parts[0];
+  const scannedLbs = Number(parts[1]);
+
+  const species = getByCode(scannedCode);
+
+  if (!species || !scannedLbs) return;
+
+  const startBoxNo = getNextBoxNo();
+
+  const newLine: PackingLine = {
+    box_no: startBoxNo,
+    is_combined: false,
+    code: species.code ?? "",
+    description_en: species.description_en ?? "",
+    scientific_name: species.scientific_name ?? "",
+    form: species.form ?? "",
+    size: species.size ?? "",
+    pounds: scannedLbs,
+  };
+
+  addLines([newLine]);
+
+  // 🔥 RESET TOTAL
+  setCode("");
+
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
+}
+  
   function addSimple() {
     const species = getByCode(code);
 if (!species || pounds <= 0 || qty <= 0) return;
@@ -253,14 +290,19 @@ setTimeout(() => {
             />
           )}
 
-          <input
-            type="number"
-            min={1}
-            placeholder="Lbs"
-            value={pounds}
-            onChange={e => setPounds(Number(e.target.value))}
-            className="border p-2 rounded"
-          />
+         {/* SCAN */}
+<input
+  ref={inputRef}
+  placeholder="Ej: SG1 55"
+  value={code}
+  onChange={e => setCode(e.target.value.toUpperCase())}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleScan();
+    }
+  }}
+  className="border p-2 rounded w-full"
+/>
         </div>
 
         {/* ACTIONS */}
