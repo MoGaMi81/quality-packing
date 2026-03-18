@@ -26,8 +26,15 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [openNewSpecies, setOpenNewSpecies] = useState(false);
   const [pendingCode, setPendingCode] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-
   const [combinedLines, setCombinedLines] = useState<PackingLine[]>([]);
+
+  const [conflict, setConflict] = useState<{
+  oldCode: string;
+  newCode: string;
+  desc: string;
+} | null>(null);
+
+const [showConfirm, setShowConfirm] = useState(false);
 
   if (!open) return null;
 
@@ -44,7 +51,27 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   ===================== */
   function addSimple() {
     const species = getByCode(code);
-    if (!species || pounds <= 0 || qty <= 0) return;
+if (!species || pounds <= 0 || qty <= 0) return;
+
+// 🔴 VALIDACIÓN CLAVE DIFERENTE
+const existing = lines.find(
+  (l) =>
+    l.description_en === species.description_en &&
+    l.size === species.size &&
+    l.form === species.form &&
+    l.code !== species.code
+);
+
+if (existing) {
+  setConflict({
+  oldCode: existing.code ?? "",
+  newCode: species.code ?? "",
+  desc: species.description_en ?? "",
+});
+
+  setShowConfirm(true);
+  return;
+}
 
     const startBoxNo = getNextBoxNo();
 
@@ -113,6 +140,28 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     setPounds(0);
     setCombinedLines([]);
   }
+
+  function replaceSpeciesCode(newCode: string) {
+  const species = getByCode(newCode);
+  if (!species) return;
+
+  const updated = lines.map((l) => {
+    if (
+      l.description_en === species.description_en &&
+      l.size === species.size &&
+      l.form === species.form
+    ) {
+      return {
+        ...l,
+        code: species.code,
+      };
+    }
+    return l;
+  });
+
+  // 🔥 usamos addLines para reinsertar (o si tienes replaceLines mejor)
+  addLines(updated);
+}
 
   /* =====================
      UI
@@ -255,15 +304,55 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
           setErr(null);
           setSuccess("Especie guardada");
           setOpenNewSpecies(false);
-
-          // 🔄 refrescar catálogo
           await reload();
-
-          // 🔥 ahora sí ya existe en memoria
           const newCode = payload.map.code;
           setCode(newCode);
         }}
       />
+
+      {showConfirm && conflict && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white p-4 rounded shadow w-[320px]">
+      <h3 className="font-bold mb-2">Conflicto de especie</h3>
+
+      <p className="text-sm mb-2">
+        Esta especie ya existe con otra clave
+      </p>
+
+      <p className="text-sm">
+        <b>{conflict.desc}</b>
+      </p>
+
+      <p className="text-sm mt-2">
+        Anterior: <b>{conflict.oldCode}</b>
+      </p>
+
+      <p className="text-sm">
+        Nueva: <b>{conflict.newCode}</b>
+      </p>
+
+      <div className="flex gap-2 mt-4">
+        <button
+          className="flex-1 bg-black text-white py-1 rounded"
+          onClick={() => {
+            replaceSpeciesCode(conflict.newCode);
+            setShowConfirm(false);
+          }}
+        >
+          Actualizar
+        </button>
+
+        <button
+          className="flex-1 border py-1 rounded"
+          onClick={() => setShowConfirm(false)}
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
