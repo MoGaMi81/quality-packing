@@ -23,7 +23,15 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
-  const role = getRole() as Role;
+  const [role, setRole] = useState<Role | null>(null);
+
+useEffect(() => {
+  setRole(getRole() as Role);
+}, []);
+
+  useEffect(() => {
+  router.refresh();
+}, []);
 
 useEffect(() => {
   if (role === "admin") {
@@ -54,8 +62,8 @@ useEffect(() => {
   }
 
   useEffect(() => {
-    load();
-  }, []);
+  load();
+}, [role]);
 
   /* ================= LOGOUT ================= */
   async function logout() {
