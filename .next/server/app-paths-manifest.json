@@ -1,1 +1,3 @@
-{}
+{
+  "/api/packings/last-invoice/route": "app/api/packings/last-invoice/route.js"
+}
