@@ -125,7 +125,7 @@ export async function buildSeaLionPackingSheet(
       l.size,
       l.pounds,
       l.box_no,
-      l.price ?? "$ #,##0.00",
+      l.price ?? "",
     ];
 
     row++;

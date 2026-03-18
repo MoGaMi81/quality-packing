@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 import { usePackingStore } from "@/store/packingStore";
 import type { PackingLine } from "@/domain/packing/types";
@@ -25,6 +25,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [pounds, setPounds] = useState(0);
   const [openNewSpecies, setOpenNewSpecies] = useState(false);
   const [pendingCode, setPendingCode] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
  
   const [combinedLines, setCombinedLines] = useState<PackingLine[]>([]);
@@ -39,70 +40,80 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     return nums.length ? Math.max(...nums) + 1 : 1;
   }
 
-  /* =====================
-     SIMPLE / RANGO
-  ===================== */
-  function addSimple() {
-    const species = getByCode(code);
-    if (!species || pounds <= 0 || qty <= 0) return;
+ /* =====================
+   SIMPLE / RANGO
+===================== */
+function addSimple() {
+  const species = getByCode(code);
+  if (!species || pounds <= 0 || qty <= 0) return;
 
-    const startBoxNo = getNextBoxNo();
+  const startBoxNo = getNextBoxNo();
 
-    const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
-      box_no: startBoxNo + i,
-      is_combined: false,
-      code: species.code,
-      description_en: species.description_en,
-      scientific_name: species.scientific_name ?? null,
-      form: species.form,
-      size: species.size,
-      pounds,
-    }));
+  const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
+    box_no: startBoxNo + i,
+    is_combined: false,
+    code: species.code,
+    description_en: species.description_en,
+    scientific_name: species.scientific_name ?? null,
+    form: species.form,
+    size: species.size,
+    pounds,
+  }));
 
-    addLines(newLines);
-    resetAll();
-    onClose();
-  }
+  addLines(newLines);
+  resetAll();
 
-  /* =====================
-     COMBINADA
-  ===================== */
-  function addCombinedLine() {
-    const species = getByCode(code);
-    if (!species || pounds <= 0) return;
+  // 🔹 limpiar y enfocar
+  setCode("");
+  setQty(1);
+  inputRef.current?.focus();
+}
 
-    const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
+/* =====================
+   COMBINADA
+===================== */
+function addCombinedLine() {
+  const species = getByCode(code);
+  if (!species || pounds <= 0) return;
 
-    const line: PackingLine = {
-      box_no: boxNo,
-      is_combined: true,
-      code: species.code,
-      description_en: species.description_en,
-      scientific_name: species.scientific_name ?? null,
-      form: species.form,
-      size: species.size,
-      pounds,
-    };
+  const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
 
-    setCombinedLines(prev => [...prev, line]);
-    setCode("");
-    setPounds(0);
-  }
+  const line: PackingLine = {
+    box_no: boxNo,
+    is_combined: true,
+    code: species.code,
+    description_en: species.description_en,
+    scientific_name: species.scientific_name ?? null,
+    form: species.form,
+    size: species.size,
+    pounds,
+  };
 
-  function saveCombinedBox() {
-    if (!combinedLines.length) return;
-    addLines(combinedLines);
-    resetAll();
-    onClose();
-  }
+  setCombinedLines(prev => [...prev, line]);
 
-  function resetAll() {
-    setCode("");
-    setQty(1);
-    setPounds(0);
-    setCombinedLines([]);
-  }
+  // 🔹 limpiar y enfocar
+  setCode("");
+  setPounds(0);
+  inputRef.current?.focus();
+}
 
+function saveCombinedBox() {
+  if (!combinedLines.length) return;
+  addLines(combinedLines);
+  resetAll();
+
+  // 🔹 limpiar y enfocar
+  setCode("");
+  setQty(1);
+  inputRef.current?.focus();
+}
+
+function resetAll() {
+  setCode("");
+  setQty(1);
+  setPounds(0);
+  setCombinedLines([]);
+}
   /* =====================
      UI
   ===================== */
