@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function BoxesWizardModal({ open, onClose }: Props) {
-  const { lines, addLines } = usePackingStore();
+  const { lines, addLines, setLines } = usePackingStore();
   const { getByCode, loading, reload } = useSpeciesCatalog();
 
   const [mode, setMode] = useState<Mode>("SIMPLE");
@@ -159,8 +159,7 @@ if (existing) {
     return l;
   });
 
-  // 🔥 usamos addLines para reinsertar (o si tienes replaceLines mejor)
-  addLines(updated);
+  setLines(updated);
 }
 
   /* =====================
@@ -335,9 +334,10 @@ if (existing) {
         <button
           className="flex-1 bg-black text-white py-1 rounded"
           onClick={() => {
-            replaceSpeciesCode(conflict.newCode);
-            setShowConfirm(false);
-          }}
+          replaceSpeciesCode(conflict.newCode);
+          setShowConfirm(false);
+          setConflict(null);
+        }}
         >
           Actualizar
         </button>
