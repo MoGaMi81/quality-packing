@@ -27,7 +27,6 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [pendingCode, setPendingCode] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
- 
   const [combinedLines, setCombinedLines] = useState<PackingLine[]>([]);
 
   if (!open) return null;
@@ -40,80 +39,81 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
     return nums.length ? Math.max(...nums) + 1 : 1;
   }
 
- /* =====================
-   SIMPLE / RANGO
-===================== */
-function addSimple() {
-  const species = getByCode(code);
-  if (!species || pounds <= 0 || qty <= 0) return;
+  /* =====================
+     SIMPLE / RANGO
+  ===================== */
+  function addSimple() {
+    const species = getByCode(code);
+    if (!species || pounds <= 0 || qty <= 0) return;
 
-  const startBoxNo = getNextBoxNo();
+    const startBoxNo = getNextBoxNo();
 
-  const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
-    box_no: startBoxNo + i,
-    is_combined: false,
-    code: species.code,
-    description_en: species.description_en,
-    scientific_name: species.scientific_name ?? null,
-    form: species.form,
-    size: species.size,
-    pounds,
-  }));
+    const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
+      box_no: startBoxNo + i,
+      is_combined: false,
+      code: species.code,
+      description_en: species.description_en,
+      scientific_name: species.scientific_name ?? null,
+      form: species.form,
+      size: species.size,
+      pounds,
+    }));
 
-  addLines(newLines);
-  resetAll();
+    addLines(newLines);
+    resetAll();
 
-  // 🔹 limpiar y enfocar
-  setCode("");
-  setQty(1);
-  inputRef.current?.focus();
-}
+    // 🔹 limpiar y enfocar clave de especie
+    setCode("");
+    setQty(1);
+    inputRef.current?.focus();
+  }
 
-/* =====================
-   COMBINADA
-===================== */
-function addCombinedLine() {
-  const species = getByCode(code);
-  if (!species || pounds <= 0) return;
+  /* =====================
+     COMBINADA
+  ===================== */
+  function addCombinedLine() {
+    const species = getByCode(code);
+    if (!species || pounds <= 0) return;
 
-  const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
+    const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
 
-  const line: PackingLine = {
-    box_no: boxNo,
-    is_combined: true,
-    code: species.code,
-    description_en: species.description_en,
-    scientific_name: species.scientific_name ?? null,
-    form: species.form,
-    size: species.size,
-    pounds,
-  };
+    const line: PackingLine = {
+      box_no: boxNo,
+      is_combined: true,
+      code: species.code,
+      description_en: species.description_en,
+      scientific_name: species.scientific_name ?? null,
+      form: species.form,
+      size: species.size,
+      pounds,
+    };
 
-  setCombinedLines(prev => [...prev, line]);
+    setCombinedLines(prev => [...prev, line]);
 
-  // 🔹 limpiar y enfocar
-  setCode("");
-  setPounds(0);
-  inputRef.current?.focus();
-}
+    // 🔹 limpiar y enfocar clave de especie
+    setCode("");
+    setPounds(0);
+    inputRef.current?.focus();
+  }
 
-function saveCombinedBox() {
-  if (!combinedLines.length) return;
-  addLines(combinedLines);
-  resetAll();
+  function saveCombinedBox() {
+    if (!combinedLines.length) return;
+    addLines(combinedLines);
+    resetAll();
 
-  // 🔹 limpiar y enfocar
-  setCode("");
-  setQty(1);
-  inputRef.current?.focus();
-}
+    // 🔹 limpiar y enfocar clave de especie
+    setCode("");
+    setQty(1);
+    inputRef.current?.focus();
+  }
 
-function resetAll() {
-  setCode("");
-  setQty(1);
-  setPounds(0);
-  setCombinedLines([]);
-}
+  function resetAll() {
+    setCode("");
+    setQty(1);
+    setPounds(0);
+    setCombinedLines([]);
+  }
+
   /* =====================
      UI
   ===================== */
@@ -154,27 +154,33 @@ function resetAll() {
 
         {/* CLAVE */}
         <input
+          ref={inputRef}
           placeholder="Clave de especie"
           value={code}
           onChange={e => setCode(e.target.value.toUpperCase())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              mode === "COMBINADA" ? addCombinedLine() : addSimple();
+            }
+          }}
           className="border p-2 rounded w-full"
         />
 
         {code && !loading && !species && (
-  <div className="mt-2 text-sm">
-    <span className="text-red-600">Clave no encontrada</span>
+          <div className="mt-2 text-sm">
+            <span className="text-red-600">Clave no encontrada</span>
 
-    <button
-      className="ml-3 text-blue-600 underline"
-      onClick={() => {
-        setPendingCode(code);
-        setOpenNewSpecies(true);
-      }}
-    >
-      Crear especie nueva
-    </button>
-  </div>
-)}
+            <button
+              className="ml-3 text-blue-600 underline"
+              onClick={() => {
+                setPendingCode(code);
+                setOpenNewSpecies(true);
+              }}
+            >
+              Crear especie nueva
+            </button>
+          </div>
+        )}
 
         {/* ✅ INFO DE LA ESPECIE */}
         {code && species && (
@@ -242,22 +248,22 @@ function resetAll() {
         </button>
       </div>
       <NewSpeciesBundleModal
-  open={openNewSpecies}
-  presetCode={pendingCode}
-  onClose={() => setOpenNewSpecies(false)}
-  onCreated={async (payload) => {
-    setErr(null);
-    setSuccess("Especie guardada");
-  setOpenNewSpecies(false);
+        open={openNewSpecies}
+        presetCode={pendingCode}
+        onClose={() => setOpenNewSpecies(false)}
+        onCreated={async (payload) => {
+          setErr(null);
+          setSuccess("Especie guardada");
+          setOpenNewSpecies(false);
 
-  // 🔄 refrescar catálogo
-  await reload();
+          // 🔄 refrescar catálogo
+          await reload();
 
-  // 🔥 ahora sí ya existe en memoria
-  const newCode = payload.map.code;
-  setCode(newCode);
-}}
-/>
+          // 🔥 ahora sí ya existe en memoria
+          const newCode = payload.map.code;
+          setCode(newCode);
+        }}
+      />
     </div>
   );
 }
