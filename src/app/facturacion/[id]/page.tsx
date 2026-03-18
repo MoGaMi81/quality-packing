@@ -24,33 +24,50 @@ type Draft = {
 export default function FacturacionDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
   const draftId = params.id;
-  
+
   const [data, setData] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoiceNo, setInvoiceNo] = useState("");
   const [guide, setGuide] = useState("");
+  const [lastInvoice, setLastInvoice] = useState<string | null>(null);
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; draft: Draft; lines: DraftLine[] }>(
-  `/api/packing-drafts/${draftId}`
-)
-  .then((r) => {
-    if (!r.ok) throw new Error();
-    setData({
-      ...r.draft,
-      lines: r.lines,
-    });
-  })
+      `/api/packing-drafts/${draftId}`
+    )
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        setData({
+          ...r.draft,
+          lines: r.lines,
+        });
+      })
       .catch(() => alert("Error cargando draft"))
       .finally(() => setLoading(false));
   }, [draftId]);
+
+  useEffect(() => {
+    async function loadLastInvoice() {
+      try {
+        const r = await fetch("/api/packings/last-invoice", {
+          cache: "no-store",
+        });
+        const j = await r.json();
+        setLastInvoice(j?.invoice_no ?? null);
+      } catch {
+        setLastInvoice(null);
+      }
+    }
+
+    loadLastInvoice();
+  }, []);
 
   if (loading) return <main className="p-6">Cargando…</main>;
   if (!data) return <main className="p-6">No encontrado</main>;
 
   return (
     <main className="p-6 space-y-6">
-      <button onClick={() => router.back()} className="px-3 py-1 border rounded">
+      <button onClick={() => router.push("/facturacion")} className="px-3 py-1 border rounded">
         ← Volver
       </button>
 
@@ -61,10 +78,16 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
         <div><b>Fecha Draft:</b> {new Date(data.created_at).toLocaleDateString()}</div>
       </div>
 
-      
       <div className="border rounded p-4 space-y-4">
         <div>
           <label className="block text-sm font-semibold">Número de factura</label>
+
+          {lastInvoice && (
+            <div className="mb-2 text-sm text-gray-600">
+              Última factura usada: <b>{lastInvoice}</b>
+            </div>
+          )}
+
           <input
             className="border rounded px-3 py-1 w-full"
             value={invoiceNo}
@@ -115,7 +138,6 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
         </button>
       </div>
 
-      
       <table className="border-collapse border w-full text-sm">
         <thead>
           <tr>
