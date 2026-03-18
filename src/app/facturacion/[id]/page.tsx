@@ -113,16 +113,17 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
             }
 
             const res = await fetch(
-              `/api/packing-drafts/${draftId}/finish-facturation`,
-              {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  invoice_no: invoiceNo,
-                  guide,
-                }),
-              }
-            );
+  `/api/packing-drafts/${draftId}/finish-facturation`,
+  {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      invoice_no: invoiceNo,
+      guide,
+    }),
+  }
+);
 
             const json = await res.json();
 
