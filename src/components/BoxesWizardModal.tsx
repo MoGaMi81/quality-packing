@@ -86,13 +86,16 @@ if (existing) {
       pounds,
     }));
 
-    addLines(newLines);
-    resetAll();
+   addLines(newLines);
 
-    // 🔹 limpiar y enfocar clave de especie
-    setCode("");
-    setQty(1);
-    inputRef.current?.focus();
+// 🔥 mantener modo scanner
+setCode("");
+setPounds(0);
+setQty(1);
+
+setTimeout(() => {
+  inputRef.current?.focus();
+}, 0);
   }
 
   /* =====================
