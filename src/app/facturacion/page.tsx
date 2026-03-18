@@ -13,7 +13,7 @@ export default function FacturacionHome() {
     if (!role) return;
 
     if (role !== "facturacion" && role !== "admin") {
-      router.replace("/inicio");
+      router.replace("/");
     } else {
       setAuthorized(true);
     }
