@@ -11,10 +11,13 @@ export async function GET() {
     .from("packings")
     .select("invoice_no")
     .not("invoice_no", "is", null)
-    .order("invoice_no", { ascending: false }) // 🔥 cambio aquí
-    .limit(1);
+    .order("id", { ascending: false })
+    .limit(1)
+    .single();
 
-  return NextResponse.json({
-    invoice_no: data?.[0]?.invoice_no ?? null,
-  });
+  if (error || !data) {
+    return NextResponse.json({ invoice_no: null });
+  }
+
+  return NextResponse.json({ invoice_no: data.invoice_no });
 }
