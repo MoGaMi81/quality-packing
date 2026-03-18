@@ -31,7 +31,9 @@ export default function InvoicePage({
   useEffect(() => {
     async function loadLastInvoice() {
       try {
-        const res = await fetch("/api/packings/last-invoice");
+        const res = await fetch("/api/packings/last-invoice", {
+  cache: "no-store",
+});
         const data = await res.json();
         setLastInvoice(data.invoice_no);
       } catch {

@@ -131,7 +131,8 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
               return;
             }
 
-            router.push("/facturacion");
+            router.replace("/facturacion");
+            router.refresh();
           }}
         >
           Facturar
