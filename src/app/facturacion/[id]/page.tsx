@@ -65,9 +65,10 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   }, []);
 
   useEffect(() => {
-  invoiceRef.current?.focus();
+  setTimeout(() => {
+    invoiceRef.current?.focus();
+  }, 0);
 }, []);
-
 
   if (loading) return <main className="p-6">Cargando…</main>;
   if (!data) return <main className="p-6">No encontrado</main>;
@@ -101,6 +102,15 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   className="border rounded px-3 py-1 w-full"
   value={invoiceNo}
   onChange={(e) => setInvoiceNo(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      // aquí decides qué hacer:
+      // opción A: mover foco al campo guía
+      // option B: ejecutar directamente la acción de facturar
+      // ejemplo mover foco:
+      document.querySelector<HTMLInputElement>('input[name="guide"]')?.focus();
+    }
+  }}
 />
         </div>
 
