@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getRole } from "@/lib/role";
+import { getSession, getRole } from "@/lib/session";
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -23,43 +23,35 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
-  const [role, setRole] = useState<Role | null>(null);
-
-useEffect(() => {
-  setRole(getRole() as Role);
-}, []);
+  const role = getRole() as Role; // ✅ directo
 
   useEffect(() => {
-  router.refresh();
-}, []);
-
-useEffect(() => {
-  if (role === "admin") {
-    router.replace("/admin");
-  }
-}, [role, router]);
+    if (role === "admin") {
+      router.replace("/admin");
+    }
+  }, [role, router]);
 
   /* ================= LOAD ================= */
-  async function load() {
-    setLoading(true);
-    try {
-      const r = await fetch("/api/packing-drafts/list", {
-        cache: "no-store",
-      });
-      const data = await r.json();
+async function load() {
+  try {
+    const res = await fetch("/api/packing-drafts/list", {
+  cache: "no-store",
+});
 
-      if (data.ok) {
-        setDrafts(data.drafts || []);
-      } else {
-        setDrafts([]);
-      }
-    } catch (e) {
-      console.error(e);
-      setDrafts([]);
-    } finally {
-      setLoading(false);
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data?.error || "Error cargando drafts");
     }
+
+    setDrafts(data.drafts ?? []);
+  } catch (err) {
+    console.error(err);
+    alert("No se pudieron cargar los drafts");
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
   load();
