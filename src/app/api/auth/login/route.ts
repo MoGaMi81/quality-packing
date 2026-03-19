@@ -64,22 +64,35 @@ export async function POST(req: Request) {
     );
   }
 
+  // ✅ Nueva sesión real
+  const session = {
+    id: user.id,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    ts: Date.now(), // útil para debug / expiración futura
+  };
+
   const res = NextResponse.json({
     ok: true,
-    user: {
-      id: user.id,
-      role: user.role,
-      name: user.name,
-      email: user.email,
-    },
+    user: session,
   });
 
+  // 🔐 cookie REAL de sesión
+  res.cookies.set("qp_session", encodeURIComponent(JSON.stringify(session)), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  // ❌ opcional: eliminar si ya no la usas
   res.cookies.set("role", user.role, {
-  httpOnly: false,
-  sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
-  path: "/",
-});
+    httpOnly: false,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 
   return res;
 }

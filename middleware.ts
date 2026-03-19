@@ -73,15 +73,22 @@ export function middleware(req: NextRequest) {
 
   // 4) --- VALIDAR ROL ---
   try {
-    const json = JSON.parse(decodeURIComponent(raw));
-    const role = (json.role || "").toLowerCase();
+  const json = JSON.parse(decodeURIComponent(raw));
 
-    if (!["admin", "proceso", "facturacion"].includes(role)) {
-      throw new Error("Rol inválido");
-    }
+  const role = (json.role || "").toLowerCase();
+  const userId = json.id;
 
-    return NextResponse.next();
-    } catch {
+  // 🔐 Validaciones reales de sesión
+  if (!userId) {
+    throw new Error("Sesión sin usuario");
+  }
+
+  if (!["admin", "proceso", "facturacion"].includes(role)) {
+    throw new Error("Rol inválido");
+  }
+
+  return NextResponse.next();
+} catch {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { ok: false, error: "Sesión inválida" },
