@@ -1,9 +1,10 @@
+// src/app/packings/drafts/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { getRole } from "@/lib/role";
+import { getSession, getRole } from "@/lib/session"; // ✅ nuevo import
 import { resolveClientName } from "@/lib/resolveClient";
 import PricingModal from "@/components/PricingModal";
 
@@ -20,13 +21,9 @@ type DraftResponse = {
   lines: any[];
 };
 
-export default function DraftEditorPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function DraftEditorPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const role = getRole() ?? "proceso";
+  const role = getRole() ?? "proceso"; // ✅ directo desde session
 
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -34,7 +31,6 @@ export default function DraftEditorPage({
   const [openPricing, setOpenPricing] = useState(false);
 
   /* ================= LOAD DRAFT ================= */
-
   async function loadDraft() {
     try {
       const data = await fetchJSON<DraftResponse>(
@@ -60,7 +56,6 @@ export default function DraftEditorPage({
   }, [params.id]);
 
   /* ================= GUARDAR DRAFT ================= */
-
   async function saveDraft() {
     if (!draft) return;
 
@@ -89,18 +84,14 @@ export default function DraftEditorPage({
   }
 
   /* ================= PRICING (ADMIN) ================= */
-
   async function savePricing(prices: Record<string, number>) {
     if (!draft) return;
 
-    const res = await fetch(
-      `/api/packing-drafts/${draft.id}/pricing`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prices }),
-      }
-    );
+    const res = await fetch(`/api/packing-drafts/${draft.id}/pricing`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prices }),
+    });
 
     const data = await res.json();
     if (!res.ok || !data.ok) {
@@ -114,7 +105,6 @@ export default function DraftEditorPage({
   }
 
   /* ================= CONTINUAR ================= */
-
   function continuar() {
     router.replace(`/packings/new?draft=${draft?.id}`);
   }
