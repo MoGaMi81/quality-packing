@@ -26,10 +26,6 @@ export default function DraftsPage() {
   const role = getRole() as Role; // ✅ directo
 
   useEffect(() => {
-    router.refresh();
-  }, []);
-
-  useEffect(() => {
     if (role === "admin") {
       router.replace("/admin");
     }
