@@ -1,9 +1,9 @@
 // src/app/packings/view/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BackButton from "@/components/BackButton";
-import { secureFetch } from "@/lib/secureFetch";  
+import { secureFetch } from "@/lib/secureFetch";
 import { getRole } from "@/lib/role";
 import InvoiceSummary from "@/components/InvoiceSummary";
 
@@ -13,14 +13,22 @@ export default function PackingViewPage() {
   const [data, setData] = useState<any | null>(null);
   const [err, setErr] = useState("");
 
+  // referencia al input
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // auto focus al cargar
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   const buscar = async () => {
     setErr("");
     setData(null);
     if (!invoice?.trim()) return;
 
     try {
-      const r = await secureFetch(`/api/packings/by-invoice/${invoice}`); 
-      const res = await r.json();                                        
+      const r = await secureFetch(`/api/packings/by-invoice/${invoice}`);
+      const res = await r.json();
 
       if (!r.ok || !res.ok) {
         setErr(res?.error || "No encontrado");
@@ -44,10 +52,11 @@ export default function PackingViewPage() {
 
       <div className="flex gap-3">
         <input
+          ref={inputRef}
           className="border px-3 py-2 rounded w-40"
           value={invoice}
           onChange={(e) => setInvoice(e.target.value.toUpperCase())}
-          placeholder="Factura #"
+          placeholder="Número de factura"
         />
         <button className="px-3 py-2 border rounded" onClick={buscar}>
           Buscar
@@ -56,9 +65,7 @@ export default function PackingViewPage() {
 
       {err && <p className="text-red-600">{err}</p>}
 
-      {data && (
-        <InvoiceSummary packing={data} />
-      )}
+      {data && <InvoiceSummary packing={data} />}
     </main>
   );
 }
