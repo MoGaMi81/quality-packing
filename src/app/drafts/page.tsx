@@ -36,26 +36,26 @@ export default function DraftsPage() {
   }, [role, router]);
 
   /* ================= LOAD ================= */
-  async function load() {
-    setLoading(true);
-    try {
-      const r = await fetch("/api/packing-drafts/list", {
-        cache: "no-store",
-      });
-      const data = await r.json();
+async function load() {
+  try {
+    const res = await fetch("/api/packing-drafts", {
+      cache: "no-store",
+    });
 
-      if (data.ok) {
-        setDrafts(data.drafts || []);
-      } else {
-        setDrafts([]);
-      }
-    } catch (e) {
-      console.error(e);
-      setDrafts([]);
-    } finally {
-      setLoading(false);
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data?.error || "Error cargando drafts");
     }
+
+    setDrafts(data.drafts ?? []);
+  } catch (err) {
+    console.error(err);
+    alert("No se pudieron cargar los drafts");
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
   load();
