@@ -13,10 +13,8 @@ export default function PackingViewPage() {
   const [data, setData] = useState<any | null>(null);
   const [err, setErr] = useState("");
 
-  // referencia al input
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // auto focus al cargar
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -52,15 +50,15 @@ export default function PackingViewPage() {
 
       <div className="flex gap-3">
         <input
-  ref={inputRef}
-  className="border px-3 py-2 rounded w-40"
-  value={invoice}
-  onChange={(e) => setInvoice(e.target.value.toUpperCase())}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") buscar();
-  }}
-  placeholder="Número de factura"
-/>
+          ref={inputRef}
+          className="border px-3 py-2 rounded w-40"
+          value={invoice}
+          onChange={(e) => setInvoice(e.target.value.toUpperCase())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") buscar();
+          }}
+          placeholder="Número de factura"
+        />
         <button className="px-3 py-2 border rounded" onClick={buscar}>
           Buscar
         </button>
