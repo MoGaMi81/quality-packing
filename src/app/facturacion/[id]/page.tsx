@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +24,8 @@ type Draft = {
 export default function FacturacionDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
   const draftId = params.id;
+  const invoiceRef = useRef<HTMLInputElement>(null);
+
 
   const [data, setData] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,11 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
     loadLastInvoice();
   }, []);
 
+  useEffect(() => {
+  invoiceRef.current?.focus();
+}, []);
+
+
   if (loading) return <main className="p-6">Cargando…</main>;
   if (!data) return <main className="p-6">No encontrado</main>;
 
@@ -90,10 +97,11 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
           )}
 
           <input
-            className="border rounded px-3 py-1 w-full"
-            value={invoiceNo}
-            onChange={(e) => setInvoiceNo(e.target.value)}
-          />
+  ref={invoiceRef}
+  className="border rounded px-3 py-1 w-full"
+  value={invoiceNo}
+  onChange={(e) => setInvoiceNo(e.target.value)}
+/>
         </div>
 
         <div>
