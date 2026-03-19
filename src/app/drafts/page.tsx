@@ -35,6 +35,32 @@ export default function DraftsPage() {
     }
   }, [role, router]);
 
+  /* ================= LOAD ================= */
+  async function load() {
+    setLoading(true);
+    try {
+      const r = await fetch("/api/packing-drafts/list", {
+        cache: "no-store",
+      });
+      const data = await r.json();
+
+      if (data.ok) {
+        setDrafts(data.drafts || []);
+      } else {
+        setDrafts([]);
+      }
+    } catch (e) {
+      console.error(e);
+      setDrafts([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+  load();
+}, [role]);
+
   /* ================= LOGOUT ================= */
   async function logout() {
     try {
@@ -198,8 +224,4 @@ export default function DraftsPage() {
       </div>
     </main>
   );
-}
-
-function load() {
-  throw new Error("Function not implemented.");
 }
