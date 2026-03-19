@@ -1,10 +1,11 @@
+// src/app/packings/ver-factura/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { getRole } from "@/lib/role";
-import { calculateBoxStats } from "@/domain/packing/boxStats"; // ✅ nuevo import
+import { getSession, getRole } from "@/lib/session";
+import { calculateBoxStats } from "@/domain/packing/boxStats";
 
 type Line = {
   box_no: number;
@@ -31,11 +32,7 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    setRole(getRole());
-  }, []);
+  const role = getRole(); // ✅ directo desde session
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
