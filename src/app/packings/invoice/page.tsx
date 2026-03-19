@@ -2,7 +2,11 @@
 "use client";
 
 import { useState } from "react";
-import { getRole } from "@/lib/role";
+// ❌ viejo
+// import { getRole } from "@/lib/role";
+
+// ✅ nuevo
+import { getSession, getRole } from "@/lib/session";
 
 export default function InvoiceFinder() {
   const role = getRole();

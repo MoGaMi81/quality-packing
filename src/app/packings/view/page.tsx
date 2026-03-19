@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import BackButton from "@/components/BackButton";
 import { secureFetch } from "@/lib/secureFetch";
-import { getRole } from "@/lib/role";
+import { getSession, getRole } from "@/lib/session";
 import InvoiceSummary from "@/components/InvoiceSummary";
 
 export default function PackingViewPage() {
@@ -15,8 +15,11 @@ export default function PackingViewPage() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // auto focus al cargar
   useEffect(() => {
-    inputRef.current?.focus();
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   }, []);
 
   const buscar = async () => {
