@@ -42,6 +42,7 @@ export default function VerFacturaPage() {
 
   const [data, setData] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(
@@ -128,7 +129,7 @@ export default function VerFacturaPage() {
       </div>
 
       {/* BOTONES SOLO ADMIN */}
-      {role === "admin" && data?.packing_id && (
+      {role?.toLowerCase() === "admin" && data?.packing_id && (
         <div className="flex justify-end gap-4 mt-4">
           <a
             href={`/api/export/${data.packing_id}/excel`}
