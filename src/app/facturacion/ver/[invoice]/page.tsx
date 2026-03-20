@@ -32,7 +32,8 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
-  const role = getRole(); // ✅ directo desde session
+  const session = getSession();
+  const role = session?.role;
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
