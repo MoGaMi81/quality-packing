@@ -86,13 +86,7 @@ export async function POST(req: Request) {
     path: "/",
   });
 
-  // ❌ opcional: eliminar si ya no la usas
-  res.cookies.set("role", user.role, {
-    httpOnly: false,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
+  
 
   return res;
 }
