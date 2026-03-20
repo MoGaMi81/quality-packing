@@ -79,14 +79,22 @@ export async function POST(req: Request) {
   });
 
   // 🔐 cookie REAL de sesión
-  res.cookies.set("qp_session", encodeURIComponent(JSON.stringify(session)), {
-    httpOnly: true,
+  res.cookies.set(
+  "qp_session",
+  encodeURIComponent(
+    JSON.stringify({
+      user_id: user.id,
+      email: user.email,
+      role: user.role,
+    })
+  ),
+  {
+    httpOnly: false, // 👈 importante para frontend
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-  });
-
-  
+  }
+);  
 
   return res;
 }
