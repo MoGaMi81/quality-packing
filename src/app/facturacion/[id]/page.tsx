@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { useRouter } from "next/navigation";
+import { getSession } from "@/lib/session";
 
 type DraftLine = {
   box_no: number;
@@ -32,6 +33,13 @@ export default function FacturacionDetail({ params }: { params: { id: string } }
   const [invoiceNo, setInvoiceNo] = useState("");
   const [guide, setGuide] = useState("");
   const [lastInvoice, setLastInvoice] = useState<string | null>(null);
+
+  const [role, setRole] = useState<string | null>(null);
+
+useEffect(() => {
+  const s = getSession();
+  setRole(s?.role ?? null);
+}, []);
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; draft: Draft; lines: DraftLine[] }>(
