@@ -32,8 +32,7 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
-  const session = getSession();
-  const role = session?.role;
+  
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
@@ -42,6 +41,13 @@ export default function VerFacturaPage() {
 
   const [data, setData] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [role, setRole] = useState<string | null>(null);
+
+useEffect(() => {
+  const s = getSession();
+  setRole(s?.role ?? null);
+}, []);
   
 
   useEffect(() => {
@@ -129,7 +135,7 @@ export default function VerFacturaPage() {
       </div>
 
       {/* BOTONES SOLO ADMIN */}
-      {role?.toLowerCase() === "admin" && data?.packing_id && (
+      {role === "admin" && data?.packing_id && (
         <div className="flex justify-end gap-4 mt-4">
           <a
             href={`/api/export/${data.packing_id}/excel`}
