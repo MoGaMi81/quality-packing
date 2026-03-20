@@ -46,6 +46,7 @@ export default function VerFacturaPage() {
 
 useEffect(() => {
   const s = getSession();
+  console.log("SESSION:", s);
   setRole(s?.role ?? null);
 }, []);
   
