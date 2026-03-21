@@ -26,6 +26,11 @@ export default function DraftsPage() {
   const [role, setRole] = useState<Role | null>(null);
 
   useEffect(() => {
+  const r = getRoleSafe() as Role | null;
+  setRole(r ?? "proceso"); // ✅ fallback seguro
+}, []);
+
+  useEffect(() => {
     setRole(getRoleSafe() as Role);  // ✅ reemplazo en lectura
   }, []);
 
