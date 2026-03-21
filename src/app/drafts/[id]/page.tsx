@@ -23,14 +23,13 @@ type DraftResponse = {
 
 export default function DraftEditorPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const role = getRoleSafe() ?? "proceso"; // ✅ fallback
+  const role = (getRoleSafe() as "admin" | "proceso" | "facturacion" | null) ?? "proceso";
 
 
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [lines, setLines] = useState<any[]>([]);
   const [openPricing, setOpenPricing] = useState(false);
-  
 
   /* ================= LOAD DRAFT ================= */
   async function loadDraft() {
@@ -51,7 +50,6 @@ export default function DraftEditorPage({ params }: { params: { id: string } }) 
       setLoading(false);
     }
   }
-  if (!role) return null;
 
   useEffect(() => {
     loadDraft();
