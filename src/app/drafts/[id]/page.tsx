@@ -31,6 +31,10 @@ export default function DraftEditorPage({ params }: { params: { id: string } }) 
   const [lines, setLines] = useState<any[]>([]);
   const [openPricing, setOpenPricing] = useState(false);
 
+  useEffect(() => {
+  setRole(getRoleSafe());
+}, []);
+  
   /* ================= LOAD DRAFT ================= */
   async function loadDraft() {
     try {
@@ -188,4 +192,8 @@ export default function DraftEditorPage({ params }: { params: { id: string } }) 
       />
     </main>
   );
+}
+
+function setRole(arg0: string | null) {
+  throw new Error("Function not implemented.");
 }
