@@ -42,10 +42,10 @@ export default function VerFacturaPage() {
   const [loading, setLoading] = useState(true);
 
   const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    setRole(getRoleSafe()); // ✅ reemplazo en lectura
-  }, []);
+  
+useEffect(() => {
+  setRole(getRoleSafe() ?? "admin"); // ✅ fallback
+}, []);
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(
