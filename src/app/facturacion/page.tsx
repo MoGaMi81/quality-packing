@@ -9,6 +9,15 @@ export default function FacturacionHome() {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
+  const role = getRoleSafe() ?? "facturacion"; // ✅ fallback
+  if (role !== "facturacion" && role !== "admin") {
+    router.replace("/");
+  } else {
+    setAuthorized(true);
+  }
+}, [router]);
+
+  useEffect(() => {
     const role = getRoleSafe(); // ✅ reemplazo en lectura
     if (!role) return;
 
