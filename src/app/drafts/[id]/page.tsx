@@ -50,6 +50,7 @@ export default function DraftEditorPage({ params }: { params: { id: string } }) 
       setLoading(false);
     }
   }
+  if (!role) return null;
 
   useEffect(() => {
     loadDraft();

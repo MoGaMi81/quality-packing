@@ -41,6 +41,8 @@ export default function DraftsPage() {
     }
   }, [role, router]);
 
+  if (!role) return null;
+
   /* ================= LOAD ================= */
   async function load() {
     setLoading(true);

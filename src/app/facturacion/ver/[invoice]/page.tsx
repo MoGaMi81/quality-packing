@@ -64,6 +64,7 @@ export default function VerFacturaPage() {
 
   if (loading) return <main className="p-6">Cargando factura…</main>;
   if (!data) return null;
+  if (!role) return null;
 
   /* =============================
      TOTALES

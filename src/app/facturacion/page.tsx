@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRoleSafe } from "@/lib/session"; // ✅ reemplazo correcto
+const [role, setRole] = useState<string | null>(null);
 
 export default function FacturacionHome() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function FacturacionHome() {
       setAuthorized(true);
     }
   }, [router]);
+  if (!role) return null;
 
   async function logout() {
     try {
