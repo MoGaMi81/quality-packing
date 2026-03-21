@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { getRole } from "@/lib/role";
+import { getRoleSafe } from "@/lib/session"; // ✅ reemplazo correcto
 import { calculateBoxStats } from "@/domain/packing/boxStats";
 
 type Line = {
@@ -32,7 +32,6 @@ type Invoice = {
 };
 
 export default function VerFacturaPage() {
-  
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
   const { invoice } = useParams<{ invoice: string }>();
@@ -44,10 +43,9 @@ export default function VerFacturaPage() {
 
   const [role, setRole] = useState<string | null>(null);
 
-useEffect(() => {
-  setRole(getRole());
-}, []);
-  
+  useEffect(() => {
+    setRole(getRoleSafe()); // ✅ reemplazo en lectura
+  }, []);
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(

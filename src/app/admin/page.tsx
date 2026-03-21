@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getRole } from "@/lib/role";
+import { getRoleSafe } from "@/lib/session";
 
 
 export default function AdminPage() {
@@ -13,7 +14,7 @@ export default function AdminPage() {
   const [pendingPricing, setPendingPricing] = useState(0);
 
   useEffect(() => {
-    const role = getRole();
+    const role = getRoleSafe();
 
     if (!role) return;
 

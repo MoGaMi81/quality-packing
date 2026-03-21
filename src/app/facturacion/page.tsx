@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getRole } from "@/lib/role";
+import { getRoleSafe } from "@/lib/session"; // ✅ reemplazo correcto
 
 export default function FacturacionHome() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    const role = getRole();
+    const role = getRoleSafe(); // ✅ reemplazo en lectura
     if (!role) return;
 
     if (role !== "facturacion" && role !== "admin") {

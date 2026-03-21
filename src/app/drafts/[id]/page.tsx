@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { getSession, getRole } from "@/lib/session"; // ✅ nuevo import
+import { getSession, getRoleSafe } from "@/lib/session"; // ✅ reemplazo correcto
 import { resolveClientName } from "@/lib/resolveClient";
 import PricingModal from "@/components/PricingModal";
 
@@ -23,7 +23,7 @@ type DraftResponse = {
 
 export default function DraftEditorPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const role = getRole() ?? "proceso"; // ✅ directo desde session
+  const role = getRoleSafe() ?? "proceso"; // ✅ reemplazo en lectura
 
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getRole } from "@/lib/role";
+import { getRoleSafe } from "@/lib/session";  // ✅ reemplazo correcto
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -25,19 +25,19 @@ export default function DraftsPage() {
   const router = useRouter();
   const [role, setRole] = useState<Role | null>(null);
 
-useEffect(() => {
-  setRole(getRole() as Role);
-}, []);
+  useEffect(() => {
+    setRole(getRoleSafe() as Role);  // ✅ reemplazo en lectura
+  }, []);
 
   useEffect(() => {
-  router.refresh();
-}, []);
+    router.refresh();
+  }, []);
 
-useEffect(() => {
-  if (role === "admin") {
-    router.replace("/admin");
-  }
-}, [role, router]);
+  useEffect(() => {
+    if (role === "admin") {
+      router.replace("/admin");
+    }
+  }, [role, router]);
 
   /* ================= LOAD ================= */
   async function load() {
@@ -62,8 +62,8 @@ useEffect(() => {
   }
 
   useEffect(() => {
-  load();
-}, [role]);
+    load();
+  }, [role]);
 
   /* ================= LOGOUT ================= */
   async function logout() {
