@@ -30,9 +30,6 @@ export default function DraftsPage() {
   setRole(r ?? "proceso"); // ✅ fallback seguro
 }, []);
 
-  useEffect(() => {
-    setRole(getRoleSafe() as Role);  // ✅ reemplazo en lectura
-  }, []);
 
   useEffect(() => {
     router.refresh();

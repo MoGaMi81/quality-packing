@@ -23,7 +23,8 @@ type DraftResponse = {
 
 export default function DraftEditorPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const role = getRoleSafe() ?? "proceso"; // ✅ reemplazo en lectura
+  const role = (getRoleSafe() as "admin" | "proceso" | "facturacion" | null) ?? "proceso";
+
 
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
