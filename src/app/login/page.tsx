@@ -27,7 +27,7 @@ export default function LoginPage() {
 
     const role = data.user.role;
 
-// 🔥 NUEVO: guardar qp_session correctamente
+// 🔐 sesión única real (cookie)
 const session = {
   user_id: data.user.id,
   role: role,
@@ -35,26 +35,18 @@ const session = {
 
 document.cookie = `qp_session=${encodeURIComponent(
   JSON.stringify(session)
-)}; path=/`;
+)}; path=/; SameSite=Lax`;
 
-// (opcional mantener por compatibilidad temporal)
-localStorage.setItem("role", role);
-localStorage.setItem("user_id", data.user.id);
-
-// UI sync
-document.body.dataset.role = role;
-
-    // REDIRECCIÓN SEGÚN ROL
-    if (role === "admin") {
-      window.location.href = "/admin";
-    } else if (role === "proceso") {
-      window.location.href = "/drafts";
-    } else if (role === "facturacion") {
-      window.location.href = "/facturacion";
-    } else {
-      window.location.href = "/login";
-    }
-  };
+// REDIRECCIÓN SEGÚN ROL
+if (role === "admin") {
+  window.location.href = "/admin";
+} else if (role === "proceso") {
+  window.location.href = "/drafts";
+} else if (role === "facturacion") {
+  window.location.href = "/facturacion";
+} else {
+  window.location.href = "/login";
+}
 
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
@@ -82,4 +74,4 @@ document.body.dataset.role = role;
       </form>
     </main>
   );
-}
+}}

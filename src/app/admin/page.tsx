@@ -36,6 +36,7 @@ export default function AdminPage() {
       try {
         const r = await fetch("/api/admin/pricing/pending-count", {
           cache: "no-store",
+          credentials: "include",
         });
 
         const d = await r.json();

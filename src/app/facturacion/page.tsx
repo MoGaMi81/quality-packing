@@ -30,11 +30,16 @@ export default function FacturacionHome() {
   }
 
   async function logout() {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch {}
-    router.replace("/login");
-  }
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+    });
+  } catch {}
+  router.replace("/login");
+}
+
 
   return (
     <main className="max-w-xl mx-auto p-6 space-y-8">

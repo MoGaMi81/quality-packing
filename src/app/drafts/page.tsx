@@ -54,6 +54,7 @@ export default function DraftsPage() {
       try {
         const r = await fetch("/api/packing-drafts/list", {
           cache: "no-store",
+          credentials: "include",
         });
 
         const data = await r.json();
