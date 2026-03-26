@@ -1,4 +1,3 @@
-// src/app/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -28,10 +27,21 @@ export default function LoginPage() {
 
     const role = data.user.role;
 
+// 🔥 NUEVO: guardar qp_session correctamente
+const session = {
+  user_id: data.user.id,
+  role: role,
+};
+
+document.cookie = `qp_session=${encodeURIComponent(
+  JSON.stringify(session)
+)}; path=/`;
+
+// (opcional mantener por compatibilidad temporal)
 localStorage.setItem("role", role);
 localStorage.setItem("user_id", data.user.id);
 
-// 🔥 sincronizar con sistema actual de roles
+// UI sync
 document.body.dataset.role = role;
 
     // REDIRECCIÓN SEGÚN ROL

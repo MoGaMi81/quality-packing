@@ -1,40 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getRole } from "@/lib/role";
-import { getRoleSafe } from "@/lib/session";
+export const dynamic = "force-dynamic";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getRoleSafe } from "@/lib/session";
 
 export default function AdminPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const refresh = searchParams.get("refresh");
 
+  const [role, setRole] = useState<string | null>(null);
   const [pendingPricing, setPendingPricing] = useState(0);
 
+  // 🔐 cargar sesión
   useEffect(() => {
-    const role = getRoleSafe();
+    const r = getRoleSafe();
+    console.log("ROLE DEBUG ADMIN:", r);
+    setRole(r);
+  }, []);
 
-    if (!role) return;
+  // ⏳ esperando sesión
+  if (!role) {
+    return <div className="p-6">Cargando sesión...</div>;
+  }
 
-    if (role !== "admin") {
-      router.replace("/");
-    }
-  }, [router]);
+  // 🚫 acceso inválido
+  if (role !== "admin") {
+    router.replace("/");
+    return null;
+  }
 
+  // 📊 cargar datos SOLO si es admin
   useEffect(() => {
-  const load = async () => {
-    const r = await fetch("/api/admin/pricing/pending-count", {
-      cache: "no-store",
-    });
+    if (role !== "admin") return;
 
-    const d = await r.json();
-    setPendingPricing(d.count ?? 0);
-  };
+    const load = async () => {
+      const r = await fetch("/api/admin/pricing/pending-count", {
+        cache: "no-store",
+      });
 
-  load();
-}, []);
+      const d = await r.json();
+      setPendingPricing(d.count ?? 0);
+    };
+
+    load();
+  }, [role]);
 
   const Card = ({
     title,
@@ -59,26 +69,24 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold mb-8">Admin</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card
+          title={`Precio (${pendingPricing} pendientes)`}
+          desc="Packings pendientes de precios"
+          onClick={() => router.push("/admin/pricing")}
+        />
 
-  <Card
-    title={`Precio (${pendingPricing} pendientes)`}
-    desc="Packings pendientes de precios"
-    onClick={() => router.push("/admin/pricing")}
-  />
+        <Card
+          title="Ver"
+          desc="Consulta general de packings"
+          onClick={() => router.push("/admin/view")}
+        />
 
-  <Card
-    title="Ver"
-    desc="Consulta general de packings"
-    onClick={() => router.push("/admin/view")}
-  />
-
-  <Card
-    title="Usuarios"
-    desc="Administrar usuarios del sistema"
-    onClick={() => router.push("/admin/users")}
-  />
-
-</div>
+        <Card
+          title="Usuarios"
+          desc="Administrar usuarios del sistema"
+          onClick={() => router.push("/admin/users")}
+        />
+      </div>
     </div>
   );
 }
