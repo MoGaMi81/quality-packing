@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getRoleSafe } from "@/lib/session";  // ✅ reemplazo correcto
+import { getRoleSafe } from "@/lib/session";
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -19,29 +19,34 @@ type Draft = {
 };
 
 export default function DraftsPage() {
+  const router = useRouter();
+
+  const [role, setRole] = useState<Role | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const router = useRouter();
-  const [role, setRole] = useState<Role | null>(null);
-
+  // 🔐 cargar sesión
   useEffect(() => {
-  const r = getRoleSafe() as Role | null;
-  setRole(r ?? "proceso"); // ✅ fallback seguro
-}, []);
-
-
-  useEffect(() => {
-    router.refresh();
+    const r = getRoleSafe() as Role | null;
+    console.log("ROLE DEBUG DRAFTS:", r);
+    setRole(r);
   }, []);
 
-  useEffect(() => {
-    if (role === "admin") {
-      router.replace("/admin");
-    }
-  }, [role, router]);
+  // ⏳ esperando sesión
+  if (!role) {
+    return <p className="p-6">Cargando sesión...</p>;
+  }
 
-  if (!role) return null;
+  // 🔁 redirecciones por rol
+  if (role === "admin") {
+    router.replace("/admin");
+    return null;
+  }
+
+  if (role !== "proceso" && role !== "facturacion") {
+    router.replace("/");
+    return null;
+  }
 
   /* ================= LOAD ================= */
   async function load() {
@@ -65,7 +70,9 @@ export default function DraftsPage() {
     }
   }
 
+  // 🔄 cargar drafts cuando role esté listo
   useEffect(() => {
+    if (!role) return;
     load();
   }, [role]);
 
@@ -79,9 +86,7 @@ export default function DraftsPage() {
 
   /* ================= DELETE ================= */
   async function deleteDraft(id: string) {
-    if (!confirm("¿Eliminar este draft? Esta acción no se puede deshacer.")) {
-      return;
-    }
+    if (!confirm("¿Eliminar este draft?")) return;
 
     const r = await fetch(`/api/packing-drafts/${id}/delete`, {
       method: "DELETE",
@@ -96,7 +101,7 @@ export default function DraftsPage() {
     load();
   }
 
-  /* ================= VISIBLE DRAFTS ================= */
+  /* ================= FILTRO ================= */
   const visibleDrafts = drafts.filter((d) => {
     if (role === "proceso") return d.status === "PROCESS";
     if (role === "facturacion") return d.status === "PROCESS_DONE";
@@ -167,9 +172,7 @@ export default function DraftsPage() {
               </div>
             </div>
 
-            {/* BOTONES */}
             <div className="flex gap-2">
-              {/* PROCESO */}
               {role === "proceso" && (
                 <>
                   <Link
@@ -181,16 +184,12 @@ export default function DraftsPage() {
 
                   <button
                     onClick={async () => {
-                      if (!confirm("¿Finalizar proceso y enviar a facturación?"))
-                        return;
+                      if (!confirm("¿Finalizar proceso?")) return;
 
                       const r = await fetch(
                         `/api/packing-drafts/${d.id}/finish-process`,
                         {
                           method: "PATCH",
-                          headers: {
-                            "x-role": role,
-                          },
                         }
                       );
 
@@ -217,7 +216,6 @@ export default function DraftsPage() {
                 </>
               )}
 
-              {/* FACTURACIÓN */}
               {role === "facturacion" && (
                 <Link
                   href={`/facturacion/${d.id}`}

@@ -10,30 +10,23 @@ export default function FacturacionHome() {
   const router = useRouter();
 
   const [role, setRole] = useState<string | null>(null);
-  const [authorized, setAuthorized] = useState(false);
 
-  // 🔐 cargar sesión (UNA sola vez)
+  // 🔐 cargar sesión
   useEffect(() => {
     const r = getRoleSafe();
+    console.log("ROLE DEBUG FACT:", r);
     setRole(r);
+  }, []);
 
-    if (!r) return;
-
-    if (r !== "facturacion" && r !== "admin") {
-      router.replace("/");
-    } else {
-      setAuthorized(true);
-    }
-  }, [router]);
-
-  // ⏳ mientras carga sesión
+  // ⏳ esperando sesión
   if (!role) {
     return <div>Cargando sesión...</div>;
   }
 
-  // ⏳ validando acceso
-  if (!authorized) {
-    return <div>Cargando...</div>;
+  // 🚫 acceso inválido
+  if (role !== "facturacion" && role !== "admin") {
+    router.replace("/");
+    return null;
   }
 
   async function logout() {
