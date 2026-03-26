@@ -25,58 +25,55 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔐 cargar sesión
+  // 🔐 1. cargar sesión
   useEffect(() => {
     const r = getRoleSafe() as Role | null;
-    console.log("ROLE DEBUG DRAFTS:", r);
+    console.log("ROLE DRAFTS:", r);
     setRole(r);
   }, []);
 
-  // ⏳ esperando sesión
-  if (!role) {
-    return <p className="p-6">Cargando sesión...</p>;
-  }
-
-  // 🔁 redirecciones por rol
-  if (role === "admin") {
-    router.replace("/admin");
-    return null;
-  }
-
-  if (role !== "proceso" && role !== "facturacion") {
-    router.replace("/");
-    return null;
-  }
-
-  /* ================= LOAD ================= */
-  async function load() {
-    setLoading(true);
-    try {
-      const r = await fetch("/api/packing-drafts/list", {
-        cache: "no-store",
-      });
-      const data = await r.json();
-
-      if (data.ok) {
-        setDrafts(data.drafts || []);
-      } else {
-        setDrafts([]);
-      }
-    } catch (e) {
-      console.error(e);
-      setDrafts([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // 🔄 cargar drafts cuando role esté listo
+  // 🔁 2. redirecciones SEGURAS
   useEffect(() => {
     if (!role) return;
+
+    if (role === "admin") {
+      router.replace("/admin");
+    }
+
+    if (role !== "proceso" && role !== "facturacion") {
+      router.replace("/");
+    }
+  }, [role, router]);
+
+  // 📦 3. cargar drafts
+  useEffect(() => {
+    if (!role) return;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const r = await fetch("/api/packing-drafts/list", {
+          cache: "no-store",
+        });
+
+        const data = await r.json();
+
+        if (data.ok) {
+          setDrafts(data.drafts || []);
+        } else {
+          setDrafts([]);
+        }
+      } catch (e) {
+        console.error(e);
+        setDrafts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     load();
   }, [role]);
 
-  /* ================= LOGOUT ================= */
   async function logout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -84,13 +81,13 @@ export default function DraftsPage() {
     router.replace("/login");
   }
 
-  /* ================= DELETE ================= */
   async function deleteDraft(id: string) {
     if (!confirm("¿Eliminar este draft?")) return;
 
     const r = await fetch(`/api/packing-drafts/${id}/delete`, {
       method: "DELETE",
     });
+
     const data = await r.json();
 
     if (!r.ok || !data.ok) {
@@ -98,19 +95,28 @@ export default function DraftsPage() {
       return;
     }
 
-    load();
+    // recargar
+    setDrafts((prev) => prev.filter((d) => d.id !== id));
   }
 
-  /* ================= FILTRO ================= */
+  // ⏳ estados controlados
+  if (!role) {
+    return <p className="p-6">Cargando sesión...</p>;
+  }
+
+  if (role !== "proceso" && role !== "facturacion") {
+    return <p className="p-6">Redirigiendo...</p>;
+  }
+
+  if (loading) {
+    return <p className="p-6">Cargando borradores…</p>;
+  }
+
   const visibleDrafts = drafts.filter((d) => {
     if (role === "proceso") return d.status === "PROCESS";
     if (role === "facturacion") return d.status === "PROCESS_DONE";
     return false;
   });
-
-  if (loading) {
-    return <p className="p-6">Cargando borradores…</p>;
-  }
 
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-4">
@@ -181,31 +187,6 @@ export default function DraftsPage() {
                   >
                     Editar
                   </Link>
-
-                  <button
-                    onClick={async () => {
-                      if (!confirm("¿Finalizar proceso?")) return;
-
-                      const r = await fetch(
-                        `/api/packing-drafts/${d.id}/finish-process`,
-                        {
-                          method: "PATCH",
-                        }
-                      );
-
-                      const data = await r.json();
-
-                      if (!r.ok || !data.ok) {
-                        alert(data?.error || "No se pudo finalizar");
-                        return;
-                      }
-
-                      load();
-                    }}
-                    className="px-3 py-1 rounded bg-blue-600 text-white"
-                  >
-                    Finalizar proceso
-                  </button>
 
                   <button
                     onClick={() => deleteDraft(d.id)}
