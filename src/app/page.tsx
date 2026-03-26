@@ -5,12 +5,18 @@ export default function Home() {
   const cookieStore = cookies();
   const session = cookieStore.get("qp_session");
 
-  if (!session) {
+  // 🚫 NO hay cookie → login
+  if (!session?.value) {
     redirect("/login");
   }
 
   try {
     const parsed = JSON.parse(session.value);
+
+    // 🚫 session inválida
+    if (!parsed?.role) {
+      redirect("/login");
+    }
 
     if (parsed.role === "admin") {
       redirect("/admin");
@@ -27,6 +33,7 @@ export default function Home() {
     // fallback
     redirect("/login");
   } catch {
+    // 🚫 JSON corrupto → limpiar y login
     redirect("/login");
   }
 }
