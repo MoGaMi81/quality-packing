@@ -1,44 +1,46 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getRoleSafe } from "@/lib/session"; // ✅ reemplazo correcto
-const [role, setRole] = useState<string | null>(null);
+import { getRoleSafe } from "@/lib/session";
 
 export default function FacturacionHome() {
   const router = useRouter();
+
+  const [role, setRole] = useState<string | null>(null);
   const [authorized, setAuthorized] = useState(false);
 
+  // 🔐 cargar sesión (UNA sola vez)
   useEffect(() => {
-  const role = getRoleSafe() ?? "facturacion"; // ✅ fallback
-  if (role !== "facturacion" && role !== "admin") {
-    router.replace("/");
-  } else {
-    setAuthorized(true);
-  }
-}, [router]);
+    const r = getRoleSafe();
+    setRole(r);
 
-  useEffect(() => {
-    const role = getRoleSafe(); // ✅ reemplazo en lectura
-    if (!role) return;
+    if (!r) return;
 
-    if (role !== "facturacion" && role !== "admin") {
+    if (r !== "facturacion" && r !== "admin") {
       router.replace("/");
     } else {
       setAuthorized(true);
     }
   }, [router]);
-  if (!role) return null;
+
+  // ⏳ mientras carga sesión
+  if (!role) {
+    return <div>Cargando sesión...</div>;
+  }
+
+  // ⏳ validando acceso
+  if (!authorized) {
+    return <div>Cargando...</div>;
+  }
 
   async function logout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {}
     router.replace("/login");
-  }
-
-  if (!authorized) {
-    return <div>Cargando...</div>;
   }
 
   return (
