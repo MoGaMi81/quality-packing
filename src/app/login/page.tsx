@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -12,6 +14,8 @@ export default function LoginPage() {
     const r = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 
@@ -27,26 +31,27 @@ export default function LoginPage() {
 
     const role = data.user.role;
 
-// 🔐 sesión única real (cookie)
 const session = {
   user_id: data.user.id,
-  role: role,
+  role,
 };
 
 document.cookie = `qp_session=${encodeURIComponent(
   JSON.stringify(session)
-)}; path=/; SameSite=Lax`;
+)}; path=/; SameSite=Lax; Secure`;
 
-// REDIRECCIÓN SEGÚN ROL
+router.refresh();
+
 if (role === "admin") {
-  window.location.href = "/admin";
+  router.replace("/admin");
 } else if (role === "proceso") {
-  window.location.href = "/drafts";
+  router.replace("/drafts");
 } else if (role === "facturacion") {
-  window.location.href = "/facturacion";
+  router.replace("/facturacion");
 } else {
-  window.location.href = "/login";
+  router.replace("/login");
 }
+  };
 
   return (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
@@ -74,4 +79,4 @@ if (role === "admin") {
       </form>
     </main>
   );
-}}
+}
