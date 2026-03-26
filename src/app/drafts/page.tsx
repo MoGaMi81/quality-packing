@@ -79,7 +79,7 @@ export default function DraftsPage() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {}
-    router.replace("/login");
+    router.replace("/");
   }
 
   async function deleteDraft(id: string) {
