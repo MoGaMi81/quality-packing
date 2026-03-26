@@ -1,15 +1,23 @@
-// src/lib/requireRole.ts
+export function requireRole(req: Request, roles: string[]) {
+  const cookie = req.headers
+    .get("cookie")
+    ?.split("; ")
+    .find((c) => c.startsWith("qp_session="));
 
-export function requireRole(req: Request, allowed: string[]) {
-  const role = req.headers.get("x-user-role");
-
-  if (!role) {
+  if (!cookie) {
     throw new Error("Unauthorized");
   }
 
-  if (!allowed.includes(role)) {
-    throw new Error("Forbidden");
-  }
+  try {
+    const value = decodeURIComponent(cookie.split("=")[1]);
+    const session = JSON.parse(value);
 
-  return role;
+    if (!roles.includes(session.role)) {
+      throw new Error("Forbidden");
+    }
+
+    return session;
+  } catch {
+    throw new Error("Unauthorized");
+  }
 }
