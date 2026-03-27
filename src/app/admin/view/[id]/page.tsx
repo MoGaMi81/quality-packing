@@ -17,6 +17,14 @@ export default function ViewPacking() {
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
+  if (!role) return;
+
+  if (role !== "admin") {
+    router.replace("/");
+  }
+}, [role, router]);
+
+  useEffect(() => {
     const r = getRoleSafe();
     console.log("ROLE VIEW:", r);
     setRole(r);
@@ -65,13 +73,12 @@ export default function ViewPacking() {
       : null;
 
   if (!role) {
-    return <div className="p-6">Cargando sesión...</div>;
-  }
+  return <div className="p-6">Cargando sesión...</div>;
+}
 
-  if (role !== "admin") {
-    router.replace("/");
-    return null;
-  }
+if (role !== "admin") {
+  return <div className="p-6">Redirigiendo...</div>;
+}
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -132,28 +139,28 @@ export default function ViewPacking() {
         </div>
       </div>
 
-      {/* ✅ Botones extras */}
-      {packing.pricing_status === "DONE" && (
-        <div className="mt-6 flex justify-end gap-4">
-          <a
-            href={`/api/export/${id}/excel`}
-            className="px-4 py-2 bg-black text-white rounded"
-          >
-            Exportar Excel
-          </a>
+     {/* ✅ Botones SOLO ADMIN */}
+{role === "admin" && packing.pricing_status === "DONE" && (
+  <div className="mt-6 flex justify-end gap-4">
+    <a
+      href={`/api/export/${id}/excel`}
+      className="px-4 py-2 bg-black text-white rounded"
+    >
+      Exportar Excel
+    </a>
 
-          <button
-            onClick={() =>
-              router.replace(
-                `/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`
-              )
-            }
-            className="px-4 py-2 border rounded"
-          >
-            Ver Factura
-          </button>
-        </div>
-      )}
+    <button
+      onClick={() =>
+        router.replace(
+          `/facturacion/ver/${packing.invoice_no}?from=admin&returnId=${packing.id}`
+        )
+      }
+      className="px-4 py-2 border rounded"
+    >
+      Ver Factura
+    </button>
+  </div>
+)}
 
       {/* TABLA */}
       <div className="border rounded p-4">
