@@ -2,25 +2,27 @@ import { cookies } from "next/headers";
 
 export type Role = "admin" | "proceso" | "facturacion" | null;
 
-/**
- * Obtiene el rol desde cookie (misma fuente que usa el frontend).
- * Compatible con el sistema actual de auth.
- */
 export async function getRoleFromRequest(): Promise<Role> {
   const cookieStore = cookies();
+  const session = cookieStore.get("qp_session");
 
-  // Ajusta el nombre si tu cookie se llama distinto
-  const roleCookie =
-  cookieStore.get("role")?.value ||
-  cookieStore.get("qp_role")?.value;
+  if (!session?.value) return null;
 
-  if (!roleCookie) return null;
+  try {
+    const parsed = JSON.parse(session.value);
 
-  const role = roleCookie.toLowerCase();
+    const role = parsed?.role;
 
-  if (role === "admin" || role === "proceso" || role === "facturacion") {
-    return role;
+    if (
+      role === "admin" ||
+      role === "proceso" ||
+      role === "facturacion"
+    ) {
+      return role;
+    }
+
+    return null;
+  } catch {
+    return null;
   }
-
-  return null;
 }

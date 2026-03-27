@@ -12,18 +12,32 @@ type User = {
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   async function loadUsers() {
+  setLoading(true);
+
+  try {
     const r = await fetch("/api/admin/users/list", {
-  cache: "no-store",
-  credentials: "include",
-});
+      cache: "no-store",
+      credentials: "include",
+    });
+
     const d = await r.json();
 
     if (d.ok) {
-      setUsers(d.users);
+      setUsers(d.users || []);
+    } else {
+      console.error("Error backend:", d);
+      setUsers([]);
     }
+  } catch (e) {
+    console.error("Error fetch:", e);
+    setUsers([]);
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     loadUsers();
@@ -56,6 +70,7 @@ export default function AdminUsers() {
 
          await fetch("/api/admin/users/create", {
   method: "POST",
+  credentials: "include", // 🔥 FALTABA
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     email,
@@ -146,13 +161,14 @@ loadUsers();
       if (!password) return;
 
       await fetch("/api/admin/users/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: u.id,
-          password,
-        }),
-      });
+  method: "POST",
+  credentials: "include", // 🔥 FALTABA
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    id: u.id,
+    password,
+  }),
+});
 
       alert("Contraseña actualizada");
     }}
