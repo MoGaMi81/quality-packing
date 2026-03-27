@@ -44,10 +44,10 @@ export default function VerFacturaPage() {
 
 
   useEffect(() => {
-    const r = getRoleSafe();
-    // ✅ fallback: si no hay rol, asumimos "admin" para que se muestren los botones
-    setRole(r ?? "admin");
-  }, []);
+  const r = getRoleSafe();
+  console.log("ROLE FACTURA:", r);
+  setRole(r);
+}, []);
 
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(
@@ -85,6 +85,10 @@ export default function VerFacturaPage() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+
+    if (!role) {
+  return <main className="p-6">Cargando sesión...</main>;
+}
 
   return (
     <main className="p-6 space-y-6">
