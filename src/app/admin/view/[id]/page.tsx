@@ -15,7 +15,8 @@ export default function ViewPacking() {
   const [packing, setPacking] = useState<any>(null);
 
   useEffect(() => {
-    secureFetch(`/api/packings/${id}`, { cache: "no-store" })
+    secureFetch(`/api/packings/${id}`, { cache: "no-store",
+  credentials: "include", })
       .then((r) => r.json())                                   
       .then((res) => {
         if (!res?.ok) throw new Error();

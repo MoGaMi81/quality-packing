@@ -35,7 +35,8 @@ export default function DraftEditorPage({ params }: { params: { id: string } }) 
     try {
       const data = await fetchJSON<DraftResponse>(
         `/api/packing-drafts/${params.id}`,
-        { cache: "no-store" }
+        { cache: "no-store",
+      credentials: "include", }
       );
 
       if (!data.ok) throw new Error("Draft inválido");

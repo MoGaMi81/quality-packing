@@ -38,6 +38,7 @@ export default function PricingPage({
       try {
         const res = await secureFetch(`/api/packings/${packingId}`, {
           cache: "no-store",
+  credentials: "include",
         }); // ✅ secureFetch
         const json = await res.json();
 

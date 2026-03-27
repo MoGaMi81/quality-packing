@@ -52,7 +52,9 @@ export default function AdminView() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    secureFetch("/api/admin/packings/latest", { cache: "no-store" })
+    secureFetch("/api/admin/packings/latest", { 
+      cache: "no-store",
+      credentials: "include", })
       .then(r => r.json())
       .then(d => setLatest(d.packings ?? []));
   }, []);

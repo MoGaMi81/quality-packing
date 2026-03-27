@@ -21,6 +21,8 @@ export default function NewDraftPage() {
 
     const r = await fetch("/api/packing-drafts/save", {
       method: "POST",
+      cache: "no-store",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         header: {
