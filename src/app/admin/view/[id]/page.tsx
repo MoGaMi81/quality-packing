@@ -8,16 +8,26 @@ import { useParams, useRouter } from "next/navigation";
 import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación cambiada
 import { groupBoxesForView } from "@/domain/packing/view";
 import type { ViewBox } from "@/domain/packing/view";
+import { getRoleSafe } from "@/lib/session";
 
 export default function ViewPacking() {
   const { id } = useParams();
   const router = useRouter();
   const [packing, setPacking] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    secureFetch(`/api/packings/${id}`, { cache: "no-store",
-  credentials: "include", })
-      .then((r) => r.json())                                   
+    const r = getRoleSafe();
+    console.log("ROLE VIEW:", r);
+    setRole(r);
+  }, []);
+
+  useEffect(() => {
+    secureFetch(`/api/packings/${id}`, {
+      cache: "no-store",
+      credentials: "include",
+    })
+      .then((r) => r.json())
       .then((res) => {
         if (!res?.ok) throw new Error();
         setPacking(res.packing);
@@ -39,8 +49,9 @@ export default function ViewPacking() {
     0
   );
 
+  // Cálculo de totalUSD con validación de rol
   const totalUSD =
-    packing.pricing_status === "DONE"
+    role === "admin" && packing.pricing_status === "DONE"
       ? boxes.reduce(
           (s: number, b: ViewBox) =>
             s +
@@ -53,35 +64,51 @@ export default function ViewPacking() {
         )
       : null;
 
+  if (!role) {
+    return <div className="p-6">Cargando sesión...</div>;
+  }
+
+  if (role !== "admin") {
+    router.replace("/");
+    return null;
+  }
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <button onClick={() => router.back()} className="mb-4">
         ← Volver
       </button>
 
-      <div className="flex justify-between items-start mb-4">
-  <h1 className="text-2xl font-bold">
-    Factura: {packing.invoice_no}
-  </h1>
+      {/* Render condicional dentro del return */}
+      {role === "admin" && packing.pricing_status === "DONE" && (
+        <div className="mb-4 text-green-600">
+          Pricing completado y visible solo para admin
+        </div>
+      )}
 
-  {totalUSD != null && (
-    <div className="text-right">
-      <div className="text-sm text-gray-500">TOTAL USD</div>
-      <div className="text-xl font-bold">
-        {totalUSD.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          minimumFractionDigits: 2,
-        })}
+      <div className="flex justify-between items-start mb-4">
+        <h1 className="text-2xl font-bold">
+          Factura: {packing.invoice_no}
+        </h1>
+        {totalUSD != null && (
+          <div className="text-right">
+            <div className="text-sm text-gray-500">TOTAL USD</div>
+            <div className="text-xl font-bold">
+              {totalUSD.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 2,
+              })}
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  )}
-</div>
 
       {/* HEADER */}
       <div className="border rounded p-4 mb-6 space-y-1">
         <div>
-          <b>Cliente:</b> {packing.client_name ?? packing.client_code ?? "—"}
+          <b>Cliente:</b>{" "}
+          {packing.client_name ?? packing.client_code ?? "—"}
         </div>
         <div className="text-sm text-gray-500">
           {new Date(packing.created_at).toLocaleString()}

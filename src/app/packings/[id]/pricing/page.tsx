@@ -6,6 +6,7 @@ import PricingModal from "@/components/PricingModal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
 import type { PackingLine } from "@/domain/packing/types";
+import { getRoleSafe } from "@/lib/session";
 
 type Packing = {
   id: string;
@@ -28,8 +29,16 @@ export default function PricingPage({
   const [lines, setLines] = useState<PackingLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [openPricing, setOpenPricing] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
 
   /* ================= LOAD ================= */
+
+  useEffect(() => {
+  const r = getRoleSafe();
+  console.log("ROLE PRICING:", r);
+  setRole(r);
+}, []);
+
   useEffect(() => {
     async function load() {
       try {
@@ -88,6 +97,15 @@ export default function PricingPage({
     (sum, l) => sum + (l.pounds ?? 0),
     0
   );
+
+  if (!role) {
+  return <main className="p-6">Cargando sesión...</main>;
+}
+
+if (role !== "admin") {
+  router.replace("/");
+  return null;
+}
 
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
