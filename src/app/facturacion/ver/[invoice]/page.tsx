@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { getRoleSafe } from "@/lib/session"; // ✅ reemplazo correcto
 import { calculateBoxStats } from "@/domain/packing/boxStats";
+import RoleGuard from "@/components/RoleGuard";
 
 type Line = {
   box_no: number;
@@ -40,15 +40,6 @@ export default function VerFacturaPage() {
   const [data, setData] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [role, setRole] = useState<string | null>(null);
-
-
-  useEffect(() => {
-  const r = getRoleSafe();
-  console.log("ROLE FACTURA:", r);
-  setRole(r);
-}, []);
-
   useEffect(() => {
     fetchJSON<{ ok: boolean; invoice: Invoice }>(
       `/api/facturacion/by-invoice/${invoice}`
@@ -63,7 +54,6 @@ export default function VerFacturaPage() {
 
   if (loading) return <main className="p-6">Cargando factura…</main>;
   if (!data) return null;
-  if (!role) return null;
 
   /* =============================
      TOTALES
@@ -86,166 +76,150 @@ export default function VerFacturaPage() {
       maximumFractionDigits: 2,
     });
 
-    if (!role) {
-  return <main className="p-6">Cargando sesión...</main>;
-}
-
   return (
-    <main className="p-6 space-y-6">
-      {/* HEADER */}
-      <div className="flex justify-between items-start">
-        <button
-          onClick={() => {
-            if (from === "admin" && returnId) {
-              router.replace(`/admin/view/${returnId}`);
-            } else {
-              router.replace("/facturacion");
-            }
-          }}
-          className="px-3 py-1 border rounded"
-        >
-          ← Volver
-        </button>
+    <RoleGuard allow={["admin"]}>
+      <main className="p-6 space-y-6">
+        {/* HEADER */}
+        <div className="flex justify-between items-start">
+          <button
+            onClick={() => {
+              if (from === "admin" && returnId) {
+                router.replace(`/admin/view/${returnId}`);
+              } else {
+                router.replace("/facturacion");
+              }
+            }}
+            className="px-3 py-1 border rounded"
+          >
+            ← Volver
+          </button>
 
-        <h1 className="text-2xl font-bold">Factura {data.invoice_no}</h1>
+          <h1 className="text-2xl font-bold">Factura {data.invoice_no}</h1>
 
-        <div className="text-right">
-          <div className="text-sm text-gray-500">TOTAL USD</div>
-          <div className="text-2xl font-bold">
-            ${formatMoney(totalAmount)}
+          <div className="text-right">
+            <div className="text-sm text-gray-500">TOTAL USD</div>
+            <div className="text-2xl font-bold">
+              ${formatMoney(totalAmount)}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* INFO */}
-      <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm">
-        <div>
-          <div><b>Cliente:</b> {data.client_name}</div>
-          <div><b>Guía:</b> {data.guide || "-"}</div>
-          <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
+        {/* INFO */}
+        <div className="border rounded p-4 grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <div><b>Cliente:</b> {data.client_name}</div>
+            <div><b>Guía:</b> {data.guide || "-"}</div>
+            <div><b>Fecha:</b> {new Date(data.date).toLocaleString()}</div>
+          </div>
+
+          <div>
+            <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
+            <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
+          </div>
+
+          <div>
+            <div><b>Caja chica:</b> {smallBoxes}</div>
+            <div><b>Caja grande:</b> {largeBoxes}</div>
+            <div><b>Total cajas:</b> {totalBoxes}</div>
+          </div>
         </div>
 
-        <div>
-          <div><b>NET WEIGHT:</b> {formatInt(totalNet)} lbs</div>
-          <div><b>GROSS WEIGHT (+31%):</b> {formatInt(totalGross)} lbs</div>
-        </div>
+        {/* BOTONES SOLO ADMIN */}
+        {data?.packing_id && (
+          <div className="flex justify-end gap-4 mt-4">
+            <a
+              href={`/api/export/${data.packing_id}/excel`}
+              className="px-4 py-2 bg-black text-white rounded"
+            >
+              Exportar Excel
+            </a>
 
-        {/* ✅ Mostrar cajas con calculateBoxStats */}
-        <div>
-          <div><b>Caja chica:</b> {smallBoxes}</div>
-          <div><b>Caja grande:</b> {largeBoxes}</div>
-          <div><b>Total cajas:</b> {totalBoxes}</div>
-        </div>
-      </div>
+            <button
+              onClick={async () => {
+                if (!confirm("¿Reabrir pricing para editar precios?")) return;
 
-      {/* BOTONES SOLO ADMIN */}
-      {role === "admin" && data?.packing_id && (
-        <div className="flex justify-end gap-4 mt-4">
-          <a
-            href={`/api/export/${data.packing_id}/excel`}
-            className="px-4 py-2 bg-black text-white rounded"
-          >
-            Exportar Excel
-          </a>
+                const res = await fetch(
+                  `/api/packings/${data.packing_id}/reopen-pricing`,
+                  { method: "PATCH", credentials: "include" }
+                );
 
-          <button
-            onClick={async () => {
-              if (!confirm("¿Reabrir pricing para editar precios?")) return;
+                const json = await res.json();
 
-              const res = await fetch(
-                `/api/packings/${data.packing_id}/reopen-pricing`,
-                { method: "PATCH" }
-              );
+                if (!json.ok) {
+                  alert(json.error || "Error reabriendo pricing");
+                  return;
+                }
 
-              const json = await res.json();
+                router.replace(`/admin/pricing/${data.packing_id}`);
+              }}
+              className="px-4 py-2 border rounded"
+            >
+              Editar precios
+            </button>
 
-              if (!json.ok) {
-                alert(json.error || "Error reabriendo pricing");
-                return;
-              }
+            <button
+              onClick={async () => {
+                if (!confirm("¿Reabrir este packing como Draft?")) return;
 
-              router.replace(`/admin/pricing/${data.packing_id}`);
-            }}
-            className="px-4 py-2 border rounded"
-          >
-            Editar precios
-          </button>
+                const res = await fetch(
+                  `/api/packings/${data.packing_id}/reopen-draft`,
+                  { method: "PATCH", credentials: "include" }
+                );
 
-          <button
-            onClick={async () => {
-              if (!confirm("¿Reabrir este packing como Draft?")) return;
+                const json = await res.json();
 
-              const res = await fetch(
-                `/api/packings/${data.packing_id}/reopen-draft`,
-                { method: "PATCH" }
-              );
+                if (!json.ok) {
+                  alert(json.error);
+                  return;
+                }
 
-              const json = await res.json();
+                router.replace(`/drafts/${json.draftId}`);
+              }}
+              className="px-4 py-2 border rounded text-red-600"
+            >
+              Editar Especies
+            </button>
+          </div>
+        )}
 
-              if (!json.ok) {
-                alert(json.error);
-                return;
-              }
-
-              router.replace(`/drafts/${json.draftId}`);
-            }}
-            className="px-4 py-2 border rounded text-red-600"
-          >
-            Editar Especies
-          </button>
-        </div>
-      )}
-
-      {/* TABLE */}
-      <div className="overflow-auto">
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-2 py-1 text-right">Boxes</th>
-              <th className="border px-2 py-1 text-right">Pounds</th>
-              <th className="border px-2 py-1">Description</th>
-              <th className="border px-2 py-1">Size</th>
-              <th className="border px-2 py-1">Form</th>
-              <th className="border px-2 py-1">Scientific Name</th>
-              <th className="border px-2 py-1 text-right">Price</th>
-              <th className="border px-2 py-1 text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.lines.map((l, i) => (
-              <tr key={i}>
-                <td className="border px-2 py-1 text-right">{l.boxes}</td>
-                <td className="border px-2 py-1 text-right">
-                  {formatInt(l.pounds)}
-                </td>
-                <td className="border px-2 py-1">{l.description}</td>
-                <td className="border px-2 py-1">{l.size}</td>
-                <td className="border px-2 py-1">{l.form}</td>
-                <td className="border px-2 py-1">{l.scientific_name}</td>
-
-                <td className="border px-2 py-1 text-right">
-                  {l.price != null ? l.price.toFixed(2) : "-"}
-                </td>
-                <td className="border px-2 py-1 text-right">
-                  {l.amount != null ? formatMoney(l.amount) : "0.00"}
-                </td>
+        {/* TABLE */}
+        <div className="overflow-auto">
+          <table className="w-full border text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border px-2 py-1 text-right">Boxes</th>
+                <th className="border px-2 py-1 text-right">Pounds</th>
+                <th className="border px-2 py-1">Description</th>
+                <th className="border px-2 py-1">Size</th>
+                <th className="border px-2 py-1">Form</th>
+                <th className="border px-2 py-1">Scientific Name</th>
+                <th className="border px-2 py-1 text-right">Price</th>
+                <th className="border px-2 py-1 text-right">Amount</th>
               </tr>
-            ))}
-          </tbody>
-          <tfoot className="font-semibold bg-gray-50">
-            <tr>
-              <td className="border px-2 py-1 text-right">TOTAL</td>
-              <td className="border px-2 py-1 text-right">
-                {formatInt(totalNet)} lbs
-              </td>
-              <td colSpan={5} className="border" />
-              <td className="border px-2 py-1 text-right">
-                {formatMoney(totalAmount)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </main>
+            </thead>
+            <tbody>
+              {data.lines.map((l, i) => (
+                <tr key={i}>
+                  <td className="border px-2 py-1 text-right">{l.boxes}</td>
+                  <td className="border px-2 py-1 text-right">
+                    {formatInt(l.pounds)}
+                  </td>
+                  <td className="border px-2 py-1">{l.description}</td>
+                  <td className="border px-2 py-1">{l.size}</td>
+                  <td className="border px-2 py-1">{l.form}</td>
+                  <td className="border px-2 py-1">{l.scientific_name}</td>
+                  <td className="border px-2 py-1 text-right">
+                    {l.price != null ? l.price.toFixed(2) : "-"}
+                  </td>
+                  <td className="border px-2 py-1 text-right">
+                    {l.amount != null ? formatMoney(l.amount) : "0.00"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </RoleGuard>
   );
 }

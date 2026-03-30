@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRoleSafe } from "@/lib/session";
+import RoleGuard from "@/components/RoleGuard";
 
 export default function FacturacionHome() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function FacturacionHome() {
   }
 
   return (
+    <RoleGuard allow={["facturacion", "admin"]}>
     <main className="max-w-xl mx-auto p-6 space-y-8">
       {/* HEADER */}
       <div className="flex items-center justify-between">
@@ -82,5 +84,6 @@ export default function FacturacionHome() {
         Facturar packings pendientes o consultar facturas ya emitidas
       </div>
     </main>
+    </RoleGuard>
   );
 }

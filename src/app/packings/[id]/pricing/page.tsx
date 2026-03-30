@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PricingModal from "@/components/PricingModal";
 import { fetchJSON } from "@/lib/fetchJSON";
-import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
+import { secureFetch } from "@/lib/secureFetch";
 import type { PackingLine } from "@/domain/packing/types";
-import { getRoleSafe } from "@/lib/session";
+import RoleGuard from "@/components/RoleGuard";
 
 type Packing = {
   id: string;
@@ -29,16 +29,8 @@ export default function PricingPage({
   const [lines, setLines] = useState<PackingLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [openPricing, setOpenPricing] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
 
   /* ================= LOAD ================= */
-
-  useEffect(() => {
-  const r = getRoleSafe();
-  console.log("ROLE PRICING:", r);
-  setRole(r);
-}, []);
-
   useEffect(() => {
     async function load() {
       try {
@@ -98,69 +90,62 @@ export default function PricingPage({
     0
   );
 
-  if (!role) {
-  return <main className="p-6">Cargando sesión...</main>;
-}
-
-if (role !== "admin") {
-  router.replace("/");
-  return null;
-}
-
   return (
-    <main className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <button
-          onClick={() => router.replace("/admin")}
-          className="px-3 py-1 border rounded"
-        >
-          ← Volver
-        </button>
+    <RoleGuard allow={["admin"]}>
+      <main className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => router.replace("/admin")}
+            className="px-3 py-1 border rounded"
+          >
+            ← Volver
+          </button>
 
-        <h1 className="text-2xl font-bold">Pricing</h1>
+          <h1 className="text-2xl font-bold">Pricing</h1>
 
-        <div />
-      </div>
-
-      {/* INFO */}
-      <div className="border rounded p-4 space-y-1">
-        <div>
-          <b>Factura:</b> {packing.invoice_no}
+          <div />
         </div>
-        <div>
-          <b>Cliente:</b> {packing.client_name || packing.client_code}
-        </div>
-        <div className="text-sm text-gray-500">
-          {new Date(packing.created_at).toLocaleString()}
-        </div>
-      </div>
 
-      {/* RESUMEN */}
-      <div className="border rounded p-4">
-        <h2 className="font-semibold mb-2">Resumen</h2>
-        <div className="text-sm text-gray-600">
-          {lines.length} líneas · {totalLbs.toFixed(2)} lbs
+        {/* INFO */}
+        <div className="border rounded p-4 space-y-1">
+          <div>
+            <b>Factura:</b> {packing.invoice_no}
+          </div>
+          <div>
+            <b>Cliente:</b> {packing.client_name || packing.client_code}
+          </div>
+          <div className="text-sm text-gray-500">
+            {new Date(packing.created_at).toLocaleString()}
+          </div>
         </div>
-      </div>
 
-      {/* ACTIONS */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setOpenPricing(true)}
-          className="px-5 py-2 bg-green-700 text-white rounded"
-        >
-          Capturar precios
-        </button>
-      </div>
+        {/* RESUMEN */}
+        <div className="border rounded p-4">
+          <h2 className="font-semibold mb-2">Resumen</h2>
+          <div className="text-sm text-gray-600">
+            {lines.length} líneas · {totalLbs.toFixed(2)} lbs
+          </div>
+        </div>
 
-      {/* MODAL */}
-      <PricingModal
-        open={openPricing}
-        lines={lines}
-        onClose={() => setOpenPricing(false)}
-        onSave={savePrices}
-      />
-    </main>
+        {/* ACTIONS */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setOpenPricing(true)}
+            className="px-5 py-2 bg-green-700 text-white rounded"
+          >
+            Capturar precios
+          </button>
+        </div>
+
+        {/* MODAL */}
+        <PricingModal
+          open={openPricing}
+          lines={lines}
+          onClose={() => setOpenPricing(false)}
+          onSave={savePrices}
+        />
+      </main>
+    </RoleGuard>
   );
 }
