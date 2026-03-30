@@ -5,7 +5,7 @@ export const fetchCache = "force-no-store";
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { secureFetch } from "@/lib/secureFetch";   // ✅ Importación añadida
+import { secureFetch } from "@/lib/secureFetch"; 
 import PricingModal from "@/components/PricingModal";
 import type { PackingLine } from "@/domain/packing/types";
 

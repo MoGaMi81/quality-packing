@@ -43,7 +43,7 @@ export default function AdminHome() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">Pricing</h1>
-      <p className="text-gray-600 mb-6">Packings pendientes de pricing</p>
+      <p className="text-gray-600 mb-6">Packings pendientes de precio</p>
 
       {packings.length === 0 && (
         <div className="text-gray-500">No hay packings pendientes</div>
