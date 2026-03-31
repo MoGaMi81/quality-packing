@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getRoleFromRequest } from "@/lib/role-server";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -41,6 +42,15 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  // 🔐 Verificación de rol al inicio
+  const role = await getRoleFromRequest();
+  if (!role) {
+    return NextResponse.json(
+      { ok: false, error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const invoice_no = params.id.toUpperCase();
 
   /* =====================================================
@@ -171,7 +181,7 @@ export async function GET(
     const key = `${l.description_en}|||${l.form}|||${l.size}`;
 
     if (!normalMap.has(key)) {
-        normalMap.set(key, {
+      normalMap.set(key, {
         line_id: l.id,
         box_no: Number(l.box_no),
         boxes: 1,

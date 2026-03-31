@@ -22,7 +22,7 @@ type Draft = {
 export default function DraftsPage() {
   const router = useRouter();
 
-  const [role, setRole] = useState<Role | null>(null); // 🔥 role sigue existiendo
+  const [role, setRole] = useState<Role | null>(null); 
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +32,7 @@ export default function DraftsPage() {
   setRole(r);
 }, []);
 
-  // 📦 cargar drafts
+  // 📦 ******cargar drafts******
   useEffect(() => {
     const load = async () => {
       setLoading(true);
