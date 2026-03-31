@@ -4,14 +4,15 @@ export type Role = "admin" | "proceso" | "facturacion" | null;
 
 export async function getRoleFromRequest(): Promise<Role> {
   const cookieStore = cookies();
-  const session = cookieStore.get("qp_session");
 
-  if (!session?.value) return null;
+  const sessionCookie = cookieStore.get("qp_session")?.value;
+
+  if (!sessionCookie) return null;
 
   try {
-    const parsed = JSON.parse(session.value);
+    const session = JSON.parse(decodeURIComponent(sessionCookie));
 
-    const role = parsed?.role;
+    const role = session?.role;
 
     if (
       role === "admin" ||
