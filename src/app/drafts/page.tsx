@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import RoleGuard from "@/components/RoleGuard";
 
+type Role = "admin" | "proceso" | "facturacion";
+
 type Draft = {
   client_name: string;
   id: string;
@@ -19,6 +21,7 @@ type Draft = {
 export default function DraftsPage() {
   const router = useRouter();
 
+  const [role, setRole] = useState<Role | null>(null); // 🔥 role sigue existiendo
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,6 +82,13 @@ export default function DraftsPage() {
     return <p className="p-6">Cargando borradores…</p>;
   }
 
+  // ✅ filtro por role y status
+  const visibleDrafts = drafts.filter((d) => {
+    if (role === "proceso") return d.status === "PROCESS";
+    if (role === "facturacion") return d.status === "PROCESS_DONE";
+    return false;
+  });
+
   return (
     <RoleGuard allow={["proceso", "facturacion"]}>
       <main className="max-w-3xl mx-auto p-6 space-y-4">
@@ -97,12 +107,14 @@ export default function DraftsPage() {
           </div>
 
           <div className="flex gap-2">
-            <Link
-              href="/drafts/new"
-              className="px-4 py-2 bg-blue-600 text-white rounded text-sm"
-            >
-              Nuevo Draft
-            </Link>
+            {role === "proceso" && (
+              <Link
+                href="/drafts/new"
+                className="px-4 py-2 bg-blue-600 text-white rounded text-sm"
+              >
+                Nuevo Draft
+              </Link>
+            )}
 
             <button
               onClick={logout}
@@ -115,13 +127,13 @@ export default function DraftsPage() {
 
         {/* LISTA */}
         <div className="space-y-3">
-          {drafts.length === 0 && (
+          {visibleDrafts.length === 0 && (
             <div className="text-center text-gray-500 py-12">
               No hay drafts pendientes
             </div>
           )}
 
-          {drafts.map((d) => (
+          {visibleDrafts.map((d) => (
             <div
               key={d.id}
               className="border bg-white rounded-lg p-4 shadow-sm flex justify-between items-center"
@@ -136,47 +148,59 @@ export default function DraftsPage() {
               </div>
 
               <div className="flex gap-2">
-                <Link
-                  href={`/drafts/${d.id}`}
-                  className="px-3 py-1 rounded border"
-                >
-                  Editar
-                </Link>
+                {role === "proceso" && d.status === "PROCESS" && (
+                  <>
+                    <Link
+                      href={`/drafts/${d.id}`}
+                      className="px-3 py-1 rounded border"
+                    >
+                      Editar
+                    </Link>
 
-                <button
-                  onClick={async () => {
-                    if (!confirm("¿Finalizar proceso y enviar a facturación?"))
-                      return;
+                    <button
+                      onClick={async () => {
+                        if (!confirm("¿Finalizar proceso y enviar a facturación?"))
+                          return;
 
-                    const r = await fetch(
-                      `/api/packing-drafts/${d.id}/finish-process`,
-                      {
-                        method: "PATCH",
-                        credentials: "include",
-                      }
-                    );
+                        const r = await fetch(
+                          `/api/packing-drafts/${d.id}/finish-process`,
+                          {
+                            method: "PATCH",
+                            credentials: "include",
+                          }
+                        );
 
-                    const data = await r.json();
+                        const data = await r.json();
 
-                    if (!r.ok || !data.ok) {
-                      alert(data?.error || "No se pudo finalizar");
-                      return;
-                    }
+                        if (!r.ok || !data.ok) {
+                          alert(data?.error || "No se pudo finalizar");
+                          return;
+                        }
 
-                    // 🔥 recargar correctamente
-                    setDrafts((prev) => prev.filter((x) => x.id !== d.id));
-                  }}
-                  className="px-3 py-1 rounded bg-blue-600 text-white"
-                >
-                  Finalizar proceso
-                </button>
+                        setDrafts((prev) => prev.filter((x) => x.id !== d.id));
+                      }}
+                      className="px-3 py-1 rounded bg-blue-600 text-white"
+                    >
+                      Finalizar proceso
+                    </button>
 
-                <button
-                  onClick={() => deleteDraft(d.id)}
-                  className="px-3 py-1 rounded bg-red-600 text-white"
-                >
-                  Eliminar
-                </button>
+                    <button
+                      onClick={() => deleteDraft(d.id)}
+                      className="px-3 py-1 rounded bg-red-600 text-white"
+                    >
+                      Eliminar
+                    </button>
+                  </>
+                )}
+
+                {role === "facturacion" && d.status === "PROCESS_DONE" && (
+                  <Link
+                    href={`/facturacion/${d.id}`}
+                    className="px-4 py-1 rounded bg-orange-500 text-white"
+                  >
+                    Facturar
+                  </Link>
+                )}
               </div>
             </div>
           ))}
