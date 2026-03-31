@@ -1,19 +1,14 @@
-// src/lib/secureFetch.ts
-
-export async function secureFetch(url: string, options: RequestInit = {}) {
-  const role =
-    typeof window !== "undefined"
-      ? localStorage.getItem("role")
-      : null;
-
-  const headers = {
-    "Content-Type": "application/json",
-    "x-user-role": role || "",
-    ...(options.headers || {}),
-  };
-
+export async function secureFetch(
+  url: string,
+  options: RequestInit = {}
+) {
   return fetch(url, {
     ...options,
-    headers,
+    credentials: "include", // 🔥 CRÍTICO
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    cache: "no-store",
   });
 }

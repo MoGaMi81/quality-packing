@@ -78,6 +78,11 @@ export default function DraftsPage() {
   if (loading) {
     return <p className="p-6">Cargando borradores…</p>;
   }
+  function load() {
+    throw new Error("Function not implemented.");
+  }
+
+  //me quede en el paso 3 de chatGPT, pero ese finish esta borrado no aparece
 
   return (
     <RoleGuard allow={["proceso", "facturacion"]}>
@@ -144,6 +149,30 @@ export default function DraftsPage() {
                 >
                   Editar
                 </Link>
+
+                <button
+                    onClick={async () => {
+                      if (!confirm("¿Finalizar proceso y enviar a facturación?"))
+                        return;
+
+                      const r = await fetch(`/api/packing-drafts/${d.id}/finish-process`, {
+  method: "PATCH",
+  credentials: "include", // 🔥 FALTABA
+});
+
+                      const data = await r.json();
+
+                      if (!r.ok || !data.ok) {
+                        alert(data?.error || "No se pudo finalizar");
+                        return;
+                      }
+
+                      load();
+                    }}
+                    className="px-3 py-1 rounded bg-blue-600 text-white"
+                  >
+                    Finalizar proceso
+                  </button>
 
                 <button
                   onClick={() => deleteDraft(d.id)}

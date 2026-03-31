@@ -38,7 +38,7 @@ const session = {
 
 document.cookie = `qp_session=${encodeURIComponent(
   JSON.stringify(session)
-)}; path=/; SameSite=Lax; Secure`;
+)}; path=/; SameSite=Lax`;
 
 router.refresh();
 
