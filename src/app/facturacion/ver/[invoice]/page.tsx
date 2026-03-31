@@ -41,16 +41,23 @@ export default function VerFacturaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJSON<{ ok: boolean; invoice: Invoice }>(
-      `/api/facturacion/by-invoice/${invoice}`
-    )
-      .then((r) => {
-        if (!r.ok) throw new Error("Factura no encontrada");
-        setData(r.invoice);
-      })
-      .catch(() => alert("Error cargando factura"))
-      .finally(() => setLoading(false));
-  }, [invoice]);
+  fetchJSON<{ ok: boolean; invoice?: Invoice; error?: string }>(
+    `/api/facturacion/by-invoice/${invoice}`
+  )
+    .then((r) => {
+      if (!r.ok) {
+        alert(r.error || "Factura no encontrada");
+        return;
+      }
+
+      setData(r.invoice!);
+    })
+    .catch((e) => {
+      console.error(e);
+      alert("Error cargando factura");
+    })
+    .finally(() => setLoading(false));
+}, [invoice]);
 
   if (loading) return <main className="p-6">Cargando factura…</main>;
   if (!data) return null;
