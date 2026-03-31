@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import RoleGuard from "@/components/RoleGuard";
+import { getRoleSafe } from "@/lib/session";
 
 type Role = "admin" | "proceso" | "facturacion";
 
@@ -24,6 +25,12 @@ export default function DraftsPage() {
   const [role, setRole] = useState<Role | null>(null); // 🔥 role sigue existiendo
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  const r = getRoleSafe() as Role | null;
+  console.log("ROLE DRAFTS:", r);
+  setRole(r);
+}, []);
 
   // 📦 cargar drafts
   useEffect(() => {
@@ -78,16 +85,16 @@ export default function DraftsPage() {
     setDrafts((prev) => prev.filter((d) => d.id !== id));
   }
 
-  if (loading) {
-    return <p className="p-6">Cargando borradores…</p>;
-  }
-
   // ✅ filtro por role y status
   const visibleDrafts = drafts.filter((d) => {
     if (role === "proceso") return d.status === "PROCESS";
     if (role === "facturacion") return d.status === "PROCESS_DONE";
     return false;
   });
+
+  if (loading) {
+    return <p className="p-6">Cargando borradores…</p>;
+  }
 
   return (
     <RoleGuard allow={["proceso", "facturacion"]}>
