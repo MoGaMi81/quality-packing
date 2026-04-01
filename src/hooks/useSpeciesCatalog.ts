@@ -48,10 +48,38 @@ export function useSpeciesCatalog() {
     [items]
   );
 
+  const findClosestMatch = useCallback(
+  (input: string) => {
+    if (!input) return null;
+
+    const raw = input.toUpperCase();
+
+    // quitar talla (ej: 1-2, 2-4, etc)
+    const cleaned = raw.replace(/\d+-\d+/g, "").trim();
+
+    return items.find((i) =>
+      cleaned.includes(i.description_en.toUpperCase())
+    ) ?? null;
+  },
+  [items]
+);
+
+const getScientificSuggestion = useCallback(
+  (input: string) => {
+    const match = findClosestMatch(input);
+    return match?.scientific_name ?? null;
+  },
+  [findClosestMatch]
+);
+
   return {
-    loading,
-    getByCode,
-    items,
-    reload: load, // 🔥 CLAVE
-  };
+  loading,
+  getByCode,
+  items,
+  reload: load,
+
+  // 🔥 NUEVO
+  findClosestMatch,
+  getScientificSuggestion,
+};
 }

@@ -223,9 +223,6 @@ const [showConfirm, setShowConfirm] = useState(false);
   ===================== */
   const species = getByCode(code);
 
-  function setErr(arg0: null) {
-    throw new Error("Function not implemented.");
-  }
 
   function setSuccess(arg0: string) {
     throw new Error("Function not implemented.");
@@ -408,7 +405,6 @@ const [showConfirm, setShowConfirm] = useState(false);
         presetCode={pendingCode}
         onClose={() => setOpenNewSpecies(false)}
         onCreated={async (payload) => {
-          setErr(null);
           setSuccess("Especie guardada");
           setOpenNewSpecies(false);
           await reload();
