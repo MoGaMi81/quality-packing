@@ -223,7 +223,6 @@ const [showConfirm, setShowConfirm] = useState(false);
   ===================== */
   const species = getByCode(code);
 
-
   function setSuccess(arg0: string) {
     throw new Error("Function not implemented.");
   }

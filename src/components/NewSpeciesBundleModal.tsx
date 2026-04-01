@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import type { NewSpeciesBundleInput } from "@/domain/models/newInputs";
+import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog"; // 🛠️ PASO 1 — IMPORTAR
 
 type Props = {
   open: boolean;
@@ -34,6 +35,8 @@ export default function NewSpeciesBundleModal({
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const { getScientificSuggestion } = useSpeciesCatalog(); // 🛠️ PASO 2 — USAR EL HOOK
+
   useEffect(() => {
     if (open) {
       setForm({
@@ -46,6 +49,20 @@ export default function NewSpeciesBundleModal({
       setErr(null);
     }
   }, [open, presetCode]);
+
+  // 🛠️ PASO 4 — DETECTAR CAMBIO EN NAME
+  useEffect(() => {
+    if (!form.name_en) return;
+
+    // solo autocompletar si está vacío
+    if (form.scientific_name) return;
+
+    const suggestion = getScientificSuggestion(form.name_en);
+
+    if (suggestion) {
+      setForm((prev) => ({ ...prev, scientific_name: suggestion }));
+    }
+  }, [form.name_en, form.scientific_name, getScientificSuggestion]);
 
   const update = (k: keyof NewSpeciesBundleInput, v: string) =>
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -87,7 +104,6 @@ export default function NewSpeciesBundleModal({
   return (
     <Modal open={open} title="New Species (by key)" onClose={onClose}>
       <div className="space-y-4">
-
         {err && (
           <div className="bg-red-100 text-red-700 p-2 rounded text-sm">
             {err}
@@ -135,9 +151,7 @@ export default function NewSpeciesBundleModal({
         {/* SIZE + FORM */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Size *
-            </label>
+            <label className="block text-sm font-medium mb-1">Size *</label>
             <input
               className="w-full border rounded px-3 py-2"
               value={form.size}
@@ -146,9 +160,7 @@ export default function NewSpeciesBundleModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Form
-            </label>
+            <label className="block text-sm font-medium mb-1">Form</label>
             <input
               className="w-full border rounded px-3 py-2"
               value={form.form}
