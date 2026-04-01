@@ -1,16 +1,20 @@
-// src/app/packings/invoice/page.tsx
 "use client";
 
-import { useState } from "react";
-// ❌ viejo
-// import { getRole } from "@/lib/role";
-
-// ✅ nuevo
-import { getSession, getRole } from "@/lib/session";
+import { useEffect, useState } from "react";
+import { getRoleSafe } from "@/lib/session";
 
 export default function InvoiceFinder() {
-  const role = getRole();
+  const [role, setRole] = useState<string | null>(null);
   const [inv, setInv] = useState("");
+
+  useEffect(() => {
+    setRole(getRoleSafe());
+  }, []);
+
+  // ⛔ evitar falso "denegado" mientras carga
+  if (role === null) {
+    return <main className="p-6">Cargando...</main>;
+  }
 
   if (role !== "facturacion" && role !== "admin") {
     return <main className="p-6 text-red-600">Acceso denegado.</main>;
@@ -18,12 +22,14 @@ export default function InvoiceFinder() {
 
   const go = () => {
     if (!inv?.trim()) return;
-    window.location.href = `/packings/${inv?.trim().toUpperCase()}/invoice`;
+    window.location.href = `/packings/${inv.trim().toUpperCase()}/invoice`;
   };
 
   return (
     <main className="max-w-xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center">Consultar Factura</h1>
+      <h1 className="text-2xl font-bold text-center">
+        Consultar Factura
+      </h1>
 
       <input
         className="border rounded w-full px-3 py-2"
