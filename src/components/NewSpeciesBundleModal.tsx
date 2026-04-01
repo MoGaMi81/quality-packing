@@ -1,10 +1,13 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { fetchJSON } from "@/lib/fetchJSON";
 import type { NewSpeciesBundleInput } from "@/domain/models/newInputs";
-import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog"; // 🛠️ PASO 1 — IMPORTAR
+import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 
 type Props = {
   open: boolean;
