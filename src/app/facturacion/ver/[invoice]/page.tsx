@@ -84,7 +84,7 @@ export default function VerFacturaPage() {
     });
 
   return (
-    <RoleGuard allow={["admin"]}>
+    <RoleGuard allow={["admin", "facturacion"]}>
       <main className="p-6 space-y-6">
         {/* HEADER */}
         <div className="flex justify-between items-start">
