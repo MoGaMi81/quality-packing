@@ -1,196 +1,178 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-
-import { useState, useEffect } from "react";
-import Modal from "./Modal";
-import { fetchJSON } from "@/lib/fetchJSON";
-import type { NewSpeciesBundleInput } from "@/domain/models/newInputs";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { useSpeciesCatalog } from "@/hooks/useSpeciesCatalog";
 
 type Props = {
   open: boolean;
   presetCode?: string;
   onClose: () => void;
-  onCreated: (payload: {
-    map: any;
-    species: any;
-    size: any;
-    form: any;
-  }) => void;
+  onCreated: (payload: any) => void;
 };
 
 export default function NewSpeciesBundleModal({
   open,
-  presetCode = "",
+  presetCode,
   onClose,
   onCreated,
 }: Props) {
-  const [form, setForm] = useState<NewSpeciesBundleInput>({
-    code: "",
-    name_en: "",
-    scientific_name: "",
-    size: "",
-    form: "W&G",
-  });
+  const { getScientificSuggestion, reload } = useSpeciesCatalog();
 
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [description, setDescription] = useState("");
+  const [scientificName, setScientificName] = useState("");
+  const [size, setSize] = useState("");
+  const [form, setForm] = useState("W&G");
 
-  const { getScientificSuggestion } = useSpeciesCatalog(); // 🛠️ PASO 2 — USAR EL HOOK
+  // 🔥 NUEVO CONTROL
+  const [scientificNameAuto, setScientificNameAuto] = useState(true);
 
+  // ============================================================
+  // 🔄 RESET AL ABRIR
+  // ============================================================
   useEffect(() => {
     if (open) {
-      setForm({
-        code: presetCode,
-        name_en: "",
-        scientific_name: "",
-        size: "",
-        form: "W&G",
-      });
-      setErr(null);
+      setCode(presetCode || "");
+      setDescription("");
+      setScientificName("");
+      setSize("");
+      setForm("W&G");
+      setScientificNameAuto(true);
     }
   }, [open, presetCode]);
 
-  // 🛠️ PASO 4 — DETECTAR CAMBIO EN NAME
+  // ============================================================
+  // 🤖 AUTOCOMPLETE INTELIGENTE
+  // ============================================================
   useEffect(() => {
-    if (!form.name_en) return;
+    if (!description) return;
 
-    // solo autocompletar si está vacío
-    if (form.scientific_name) return;
+    const suggestion = getScientificSuggestion(description);
 
-    const suggestion = getScientificSuggestion(form.name_en);
-
-    if (suggestion) {
-      setForm((prev) => ({ ...prev, scientific_name: suggestion }));
+    if (!scientificName || scientificNameAuto) {
+      if (suggestion) {
+        setScientificName(suggestion);
+        setScientificNameAuto(true);
+      }
     }
-  }, [form.name_en, form.scientific_name, getScientificSuggestion]);
+  }, [description]);
 
-  const update = (k: keyof NewSpeciesBundleInput, v: string) =>
-    setForm((prev) => ({ ...prev, [k]: v }));
-
-  const submit = async () => {
-    setErr(null);
-
-    if (!form.code?.trim() || !form.name_en?.trim() || !form.size?.trim()) {
-      setErr("Code, Name EN and Size are required");
+  // ============================================================
+  // 💾 GUARDAR
+  // ============================================================
+  const handleSave = async () => {
+    if (!code || !description || !size || !form) {
+      alert("Completa los campos requeridos");
       return;
     }
 
-    setLoading(true);
+    const { data, error } = await supabase
+      .from("species")
+      .insert([
+        {
+          code: code.toUpperCase(),
+          description_en: description.toUpperCase(),
+          scientific_name: scientificName || null,
+          size,
+          form,
+        },
+      ])
+      .select()
+      .single();
 
-    try {
-      const res = await fetchJSON<{
-        ok: true;
-        map: any;
-        species: any;
-        size: any;
-        form: any;
-      }>("/api/catalogs/species-bundle", {
-        method: "POST",
-        body: JSON.stringify({
-          ...form,
-          code: form.code.toUpperCase(),
-        }),
-      });
-
-      onCreated(res);
-      onClose();
-    } catch (e: any) {
-      setErr(e.message || "Error saving species");
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error(error);
+      alert("Error al guardar especie");
+      return;
     }
+
+    // 🔥 FEEDBACK
+    alert("Especie guardada correctamente");
+
+    // 🔥 refrescar catálogo
+    await reload();
+
+    onCreated({
+      map: {
+        code: data.code,
+      },
+    });
   };
 
+  if (!open) return null;
+
   return (
-    <Modal open={open} title="New Species (by key)" onClose={onClose}>
-      <div className="space-y-4">
-        {err && (
-          <div className="bg-red-100 text-red-700 p-2 rounded text-sm">
-            {err}
-          </div>
-        )}
+    <div className="p-6 bg-white rounded shadow max-w-lg mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">New Species (by key)</h2>
+        <button onClick={onClose}>Cerrar</button>
+      </div>
 
-        {/* CODE */}
+      {/* CODE */}
+      <label className="block text-sm font-medium">Key (code) *</label>
+      <input
+        className="w-full border p-2 rounded mb-3"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+      />
+
+      {/* NAME */}
+      <label className="block text-sm font-medium">Name EN *</label>
+      <input
+        className="w-full border p-2 rounded mb-3"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+
+      {/* SCIENTIFIC */}
+      <label className="block text-sm font-medium">Scientific name</label>
+      <input
+        className="w-full border p-2 rounded mb-3"
+        value={scientificName}
+        onChange={(e) => {
+          setScientificName(e.target.value);
+          setScientificNameAuto(false); // 🔥 evita override
+        }}
+      />
+
+      {/* SIZE + FORM */}
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Key (code) *
-          </label>
+          <label className="block text-sm font-medium">Size *</label>
           <input
-            className="w-full border rounded px-3 py-2"
-            value={form.code}
-            onChange={(e) => update("code", e.target.value.toUpperCase())}
+            className="w-full border p-2 rounded"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
           />
         </div>
 
-        {/* NAME */}
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Name EN *
-          </label>
+          <label className="block text-sm font-medium">Form</label>
           <input
-            className="w-full border rounded px-3 py-2"
-            value={form.name_en}
-            onChange={(e) => update("name_en", e.target.value.toUpperCase())}
+            className="w-full border p-2 rounded"
+            value={form}
+            onChange={(e) => setForm(e.target.value)}
           />
-        </div>
-
-        {/* SCIENTIFIC */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Scientific name
-          </label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={form.scientific_name}
-            onChange={(e) =>
-              update("scientific_name", e.target.value.toUpperCase())
-            }
-          />
-        </div>
-
-        {/* SIZE + FORM */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">Size *</label>
-            <input
-              className="w-full border rounded px-3 py-2"
-              value={form.size}
-              onChange={(e) => update("size", e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Form</label>
-            <input
-              className="w-full border rounded px-3 py-2"
-              value={form.form}
-              onChange={(e) => update("form", e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* ACTIONS */}
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border rounded"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={submit}
-            className="px-4 py-2 bg-black text-white rounded"
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
         </div>
       </div>
-    </Modal>
+
+      {/* BUTTONS */}
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={onClose}
+          className="border px-4 py-2 rounded"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleSave}
+          className="bg-black text-white px-4 py-2 rounded"
+        >
+          Save
+        </button>
+      </div>
+    </div>
   );
 }

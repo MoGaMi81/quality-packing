@@ -404,12 +404,19 @@ const [showConfirm, setShowConfirm] = useState(false);
         presetCode={pendingCode}
         onClose={() => setOpenNewSpecies(false)}
         onCreated={async (payload) => {
-          setSuccess("Especie guardada");
-          setOpenNewSpecies(false);
-          await reload();
-          const newCode = payload.map.code;
-          setCode(newCode);
-        }}
+  setOpenNewSpecies(false);
+
+  await reload(); // 🔥 refresca catálogo
+
+  const newCode = payload.map.code;
+
+  setCode(newCode);
+
+  // 🔥 forzar re-render + focus
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
+}}
       />
 
       {showConfirm && conflict && (
