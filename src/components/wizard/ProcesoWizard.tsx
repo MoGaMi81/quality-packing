@@ -1,32 +1,40 @@
-//src/components/ProcesoWizard.tsx
-
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import { useRouter } from "next/navigation";
-import { getRole, can } from "@/lib/role";   // ← IMPORTANTE
+import { getRoleSafe } from "@/lib/session"; // ✅ NUEVO
+
+// ✅ reemplazo de "can"
+const can = {
+  startPacking: (r: string | null) =>
+    r === "proceso" || r === "admin",
+};
 
 export default function ProcesoWizard() {
   const [open, setOpen] = useState(false);
   const [invoice, setInvoice] = useState("");
+  const [role, setRole] = useState<string | null>(null); // ✅ NUEVO
   const router = useRouter();
 
-  const role = getRole() ?? "proceso"; // proceso | facturacion | admin
+  // ✅ leer sesión correctamente
+  useEffect(() => {
+    setRole(getRoleSafe());
+  }, []);
 
   const continueOrRoute = async () => {
     const inv = invoice?.trim().toUpperCase();
     if (!inv) return;
 
-    // --- NUEVA API EN SUPABASE ---
-    const r = await fetch(`/api/invoices/check?no=${encodeURIComponent(inv)}`);
+    const r = await fetch(
+      `/api/invoices/check?no=${encodeURIComponent(inv)}`
+    );
     const data = await r.json();
 
     // ==============================
     //     SI YA EXISTE FACTURA
     // ==============================
     if (data.exists) {
-      // ---- ROL PROCESO ----
       if (role === "proceso") {
         const go = confirm(
           `La factura ${inv} ya existe.\n¿Deseas abrirla en edición?`
@@ -36,35 +44,37 @@ export default function ProcesoWizard() {
         return;
       }
 
-      // ---- ROL FACTURACIÓN ----
       if (role === "facturacion") {
-        const go = confirm(`La factura ${inv} ya existe.\n¿Ver factura?`);
+        const go = confirm(
+          `La factura ${inv} ya existe.\n¿Ver factura?`
+        );
         if (go) router.replace(`/packings/${inv}/view`);
         setOpen(false);
         return;
       }
 
-      // ---- ROL ADMIN ----
-      const opt = prompt(
-        `La factura ${inv} ya existe.\nOpciones: view, edit, pricing, export`,
-        "view"
-      );
+      if (role === "admin") {
+        const opt = prompt(
+          `La factura ${inv} ya existe.\nOpciones: view, edit, pricing, export`,
+          "view"
+        );
 
-      if (!opt) return;
-      const cmd = opt.toLowerCase();
+        if (!opt) return;
+        const cmd = opt.toLowerCase();
 
-      if (cmd === "view") router.replace(`/packings/${inv}/view`);
-      if (cmd === "edit") router.replace(`/packings/${inv}/edit`);
-      if (cmd === "pricing") router.replace(`/packings/${inv}/pricing`);
-      if (cmd === "export")
-        window.location.href = `/api/export/excel?invoice=${inv}`;
+        if (cmd === "view") router.replace(`/packings/${inv}/view`);
+        if (cmd === "edit") router.replace(`/packings/${inv}/edit`);
+        if (cmd === "pricing") router.replace(`/packings/${inv}/pricing`);
+        if (cmd === "export")
+          window.location.href = `/api/export/excel?invoice=${inv}`;
 
-      setOpen(false);
-      return;
+        setOpen(false);
+        return;
+      }
     }
 
     // ==============================
-    //     SI **NO** EXISTE FACTURA
+    //     SI NO EXISTE FACTURA
     // ==============================
     if (!can.startPacking(role)) {
       alert("No tienes permiso para crear un nuevo packing.");
@@ -74,6 +84,9 @@ export default function ProcesoWizard() {
     router.replace(`/packings?invoice=${inv}`);
     setOpen(false);
   };
+
+  // 🔒 evitar glitch visual
+  if (role === null) return null;
 
   return (
     <>
@@ -96,27 +109,27 @@ export default function ProcesoWizard() {
           />
 
           <form
-  onSubmit={(e) => {
-    e.preventDefault();
-    continueOrRoute();
-  }}
-  className="flex justify-end gap-2"
->
-  <button
-    type="button"
-    className="rounded border px-3 py-2"
-    onClick={() => setOpen(false)}
-  >
-    Cancelar
-  </button>
+            onSubmit={(e) => {
+              e.preventDefault();
+              continueOrRoute();
+            }}
+            className="flex justify-end gap-2"
+          >
+            <button
+              type="button"
+              className="rounded border px-3 py-2"
+              onClick={() => setOpen(false)}
+            >
+              Cancelar
+            </button>
 
-  <button
-    type="submit"
-    className="rounded bg-black px-3 py-2 text-white"
-  >
-    Continuar
-         </button>
-         </form>
+            <button
+              type="submit"
+              className="rounded bg-black px-3 py-2 text-white"
+            >
+              Continuar
+            </button>
+          </form>
         </div>
       </Modal>
     </>

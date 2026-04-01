@@ -4,11 +4,11 @@
 import { useEffect, useRef, useState } from "react";
 import BackButton from "@/components/BackButton";
 import { secureFetch } from "@/lib/secureFetch";
-import { getSession, getRole } from "@/lib/session";
+import { getRoleSafe } from "@/lib/session";
 import InvoiceSummary from "@/components/InvoiceSummary";
 
 export default function PackingViewPage() {
-  const role = getRole();
+  const role = getRoleSafe();
   const [invoice, setInvoice] = useState("");
   const [data, setData] = useState<any | null>(null);
   const [err, setErr] = useState("");

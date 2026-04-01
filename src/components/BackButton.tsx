@@ -1,9 +1,9 @@
 "use client";
 
-import { getRole } from "@/lib/role";
+import { getRoleSafe } from "@/lib/session";
 
 export default function BackButton() {
-  const role = getRole();
+  const role = getRoleSafe();
 
   const goBack = () => {
     if (role === "facturacion") window.location.href = "/packings/view";
