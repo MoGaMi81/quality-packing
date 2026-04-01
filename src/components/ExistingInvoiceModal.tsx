@@ -1,7 +1,8 @@
 // src/components/ExistingInvoiceModal.tsx
 "use client";
 
-import { getRole } from "@/lib/role";
+import { getRoleSafe } from "@/lib/session";
+import { useState, useEffect } from "react";
 
 type Props = {
   open: boolean;
@@ -10,7 +11,12 @@ type Props = {
 };
 
 export default function ExistingInvoiceModal({ open, invoice, onClose }: Props) {
-  const role = getRole();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRole(getRoleSafe());
+  }, []);
+
   if (!open) return null;
 
   // Roles que NO deben ver este modal
@@ -73,4 +79,3 @@ export default function ExistingInvoiceModal({ open, invoice, onClose }: Props) 
     </div>
   );
 }
-
