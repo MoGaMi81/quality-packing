@@ -52,14 +52,20 @@ export function useSpeciesCatalog() {
   (input: string) => {
     if (!input) return null;
 
-    const raw = input.toUpperCase();
+    const cleanInput = input
+      .toUpperCase()
+      .replace(/\d+-\d+/g, "") // quitar talla
+      .replace(/\s+/g, " ")
+      .trim();
 
-    // quitar talla (ej: 1-2, 2-4, etc)
-    const cleaned = raw.replace(/\d+-\d+/g, "").trim();
+    const words = cleanInput.split(" ");
 
-    return items.find((i) =>
-      cleaned.includes(i.description_en.toUpperCase())
-    ) ?? null;
+    return items.find((i) => {
+      const desc = i.description_en.toUpperCase();
+
+      // 🔥 match por palabras (no por frase completa)
+      return words.some((w) => desc.includes(w));
+    }) ?? null;
   },
   [items]
 );
