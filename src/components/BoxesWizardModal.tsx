@@ -28,6 +28,10 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [combinedLines, setCombinedLines] = useState<PackingLine[]>([]);
 
+  const [simpleMode, setSimpleMode] = useState<"CANTIDAD" | "RANGO">("CANTIDAD");
+const [rangeFrom, setRangeFrom] = useState<number | "">("");
+const [rangeTo, setRangeTo] = useState<number | "">("");
+
   const [conflict, setConflict] = useState<{
   oldCode: string;
   newCode: string;
@@ -46,57 +50,104 @@ const [showConfirm, setShowConfirm] = useState(false);
     return nums.length ? Math.max(...nums) + 1 : 1;
   }
 
+  function boxExists(boxNo: number): boolean {
+  return lines.some(l => Number(l.box_no) === boxNo);
+}
+
   /* =====================
      SIMPLE / RANGO
   ===================== */
   function addSimple() {
-    const species = getByCode(code);
-if (!species || pounds <= 0 || qty <= 0) return;
+  const species = getByCode(code);
+  if (!species || pounds <= 0) return;
 
-// 🔴 VALIDACIÓN CLAVE DIFERENTE
-const existing = lines.find(
-  (l) =>
-    l.description_en === species.description_en &&
-    l.size === species.size &&
-    l.form === species.form &&
-    l.code !== species.code
-);
+  if (simpleMode === "CANTIDAD" && qty <= 0) return;
 
-if (existing) {
-  setConflict({
-  oldCode: existing.code ?? "",
-  newCode: species.code ?? "",
-  desc: species.description_en ?? "",
-});
+  const existing = lines.find(
+    (l) =>
+      l.description_en === species.description_en &&
+      l.size === species.size &&
+      l.form === species.form &&
+      l.code !== species.code
+  );
 
-  setShowConfirm(true);
-  return;
-}
+  if (existing) {
+    setConflict({
+      oldCode: existing.code ?? "",
+      newCode: species.code ?? "",
+      desc: species.description_en ?? "",
+    });
 
-    const startBoxNo = getNextBoxNo();
-
-    const newLines: PackingLine[] = Array.from({ length: qty }, (_, i) => ({
-      box_no: startBoxNo + i,
-      is_combined: false,
-      code: species.code,
-      description_en: species.description_en,
-      scientific_name: species.scientific_name ?? null,
-      form: species.form,
-      size: species.size,
-      pounds,
-    }));
-
-   addLines(newLines);
-
-// 🔥 mantener modo scanner
-setCode("");
-setPounds(0);
-setQty(1);
-
-setTimeout(() => {
-  inputRef.current?.focus();
-}, 0);
+    setShowConfirm(true);
+    return;
   }
+
+  let boxNumbers: number[] = [];
+
+  // =========================
+  // MODO CANTIDAD (igual que hoy)
+  // =========================
+  if (simpleMode === "CANTIDAD") {
+    const startBoxNo = getNextBoxNo();
+    boxNumbers = Array.from({ length: qty }, (_, i) => startBoxNo + i);
+  }
+
+  // =========================
+  // MODO RANGO (nuevo)
+  // =========================
+  if (simpleMode === "RANGO") {
+    const from = Number(rangeFrom);
+    const to = Number(rangeTo);
+
+    if (!from || !to) {
+      alert("Completa el rango");
+      return;
+    }
+
+    if (from <= 0 || to <= 0 || to < from) {
+      alert("Rango inválido");
+      return;
+    }
+
+    const repeated = [];
+    for (let n = from; n <= to; n++) {
+      if (boxExists(n)) repeated.push(n);
+    }
+
+    if (repeated.length > 0) {
+      alert(`Ya existen cajas dentro de ese rango: ${repeated.join(", ")}`);
+      return;
+    }
+
+    for (let n = from; n <= to; n++) {
+      boxNumbers.push(n);
+    }
+  }
+
+  const newLines: PackingLine[] = boxNumbers.map((box_no) => ({
+    box_no,
+    is_combined: false,
+    code: species.code,
+    description_en: species.description_en,
+    scientific_name: species.scientific_name ?? null,
+    form: species.form,
+    size: species.size,
+    pounds,
+  }));
+
+  addLines(newLines);
+
+  // 🔥 mantener modo scanner
+  setCode("");
+  setPounds(0);
+  setQty(1);
+  setRangeFrom("");
+  setRangeTo("");
+
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
+}
 
   /* =====================
      COMBINADA
@@ -138,11 +189,13 @@ setTimeout(() => {
   }
 
   function resetAll() {
-    setCode("");
-    setQty(1);
-    setPounds(0);
-    setCombinedLines([]);
-  }
+  setCode("");
+  setQty(1);
+  setRangeFrom("");
+  setRangeTo("");
+  setPounds(0);
+  setCombinedLines([]);
+}
 
   function replaceSpeciesCode(newCode: string) {
   const species = getByCode(newCode);
@@ -240,28 +293,80 @@ setTimeout(() => {
           </div>
         )}
 
+        {mode === "SIMPLE" && (
+  <div className="flex gap-2 mt-3">
+    <button
+      type="button"
+      className={`flex-1 border rounded py-1 ${
+        simpleMode === "CANTIDAD" ? "bg-black text-white" : ""
+      }`}
+      onClick={() => setSimpleMode("CANTIDAD")}
+    >
+      Cantidad
+    </button>
+
+    <button
+      type="button"
+      className={`flex-1 border rounded py-1 ${
+        simpleMode === "RANGO" ? "bg-black text-white" : ""
+      }`}
+      onClick={() => setSimpleMode("RANGO")}
+    >
+      Rango
+    </button>
+  </div>
+)}
+
         {/* INPUTS */}
         <div className="grid grid-cols-2 gap-2 mt-3">
-          {mode === "SIMPLE" && (
-            <input
-              type="number"
-              min={1}
-              placeholder="Cajas"
-              value={qty}
-              onChange={e => setQty(Number(e.target.value))}
-              className="border p-2 rounded"
-            />
-          )}
+  {mode === "SIMPLE" && simpleMode === "CANTIDAD" && (
+    <input
+      type="number"
+      min={1}
+      placeholder="Cajas"
+      value={qty}
+      onChange={e => setQty(Number(e.target.value))}
+      className="border p-2 rounded"
+    />
+  )}
 
-          <input
-            type="number"
-            min={1}
-            placeholder="Lbs"
-            value={pounds}
-            onChange={e => setPounds(Number(e.target.value))}
-            className="border p-2 rounded"
-          />
-        </div>
+  {mode === "SIMPLE" && simpleMode === "RANGO" && (
+    <>
+      <input
+        type="number"
+        min={1}
+        placeholder="Desde"
+        value={rangeFrom}
+        onChange={e =>
+          setRangeFrom(e.target.value ? Number(e.target.value) : "")
+        }
+        className="border p-2 rounded"
+      />
+
+      <input
+        type="number"
+        min={1}
+        placeholder="Hasta"
+        value={rangeTo}
+        onChange={e =>
+          setRangeTo(e.target.value ? Number(e.target.value) : "")
+        }
+        className="border p-2 rounded"
+      />
+    </>
+  )}
+
+  {mode === "COMBINADA" && <div />}
+
+  <input
+    type="number"
+    min={1}
+    placeholder="Lbs"
+    value={pounds}
+    onChange={e => setPounds(Number(e.target.value))}
+    className="border p-2 rounded"
+  />
+</div>
 
         {/* ACTIONS */}
         {mode === "COMBINADA" ? (
@@ -355,7 +460,6 @@ setTimeout(() => {
     </div>
   </div>
 )}
-
     </div>
   );
 }
