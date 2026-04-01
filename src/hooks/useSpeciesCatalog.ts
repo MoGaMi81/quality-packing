@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export type SpeciesItem = {
   code: string;
   description_en: string;
@@ -48,24 +51,36 @@ export function useSpeciesCatalog() {
     [items]
   );
 
-  const findClosestMatch = useCallback(
+const findClosestMatch = useCallback(
   (input: string) => {
     if (!input) return null;
 
     const cleanInput = input
       .toUpperCase()
-      .replace(/\d+-\d+/g, "") // quitar talla
-      .replace(/\s+/g, " ")
+      .replace(/\d+-\d+/g, "")
       .trim();
 
-    const words = cleanInput.split(" ");
+    const words = cleanInput.split(" ").filter(w => w.length > 2);
 
-    return items.find((i) => {
-      const desc = i.description_en.toUpperCase();
+    let bestMatch = null;
+    let bestScore = 0;
 
-      // 🔥 match por palabras (no por frase completa)
-      return words.some((w) => desc.includes(w));
-    }) ?? null;
+    for (const item of items) {
+      const desc = item.description_en.toUpperCase();
+
+      let score = 0;
+
+      for (const w of words) {
+        if (desc.includes(w)) score++;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = item;
+      }
+    }
+
+    return bestMatch;
   },
   [items]
 );
