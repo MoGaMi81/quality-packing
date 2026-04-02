@@ -60,8 +60,12 @@ export default function LoginPage() {
       </h1>
 
       {/* Logo arriba del formulario */}
-      <div className="flex items-center justify-between p-6">
-  <img src="/logo.png" className="h-20" />
+      <div className="absolute top-6 left-6">
+  <img
+    src="/logo.png"
+    alt="Logo"
+    className="h-20 md:h-24"
+  />
 </div>
 
       <form onSubmit={submit} style={{ display: "flex", gap: 8 }}>
