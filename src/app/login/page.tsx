@@ -54,34 +54,59 @@ export default function LoginPage() {
   };
 
   return (
-    <main style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 48, fontWeight: 700, marginBottom: 24 }}>
-        Sign in
-      </h1>
+  <div className="relative min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
 
-      {/* Logo arriba del formulario */}
-      <div className="flex items-center justify-between p-6">
-  <img src="/logo.png" className="h-20" />
-</div>
+    {/* 🔷 LOGO */}
+    <div className="absolute top-6 left-6">
+      <img
+        src="/logo.png"
+        alt="Logo"
+        className="h-20 md:h-24"
+      />
+    </div>
 
-      <form onSubmit={submit} style={{ display: "flex", gap: 8 }}>
-        <input
-          placeholder="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ flex: 1, padding: 10 }}
-        />
-        <input
-          placeholder="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ flex: 1, padding: 10 }}
-        />
-        <button type="submit" style={{ padding: "10px 16px" }}>
-          Entrar
-        </button>
-      </form>
-    </main>
-  );
+    {/* 🔷 CONTENEDOR CENTRADO */}
+    <div className="flex items-center justify-center min-h-screen px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
+
+        {/* 🔹 TÍTULO */}
+        <h1 className="text-3xl font-bold text-center text-gray-800">
+          Sign in
+        </h1>
+
+        {/* 🔹 FORM */}
+        <form onSubmit={submit} className="space-y-4">
+
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
+          >
+<p className="text-sm text-gray-500 text-center">
+  Acceso al sistema Quality Packing
+</p>
+
+            Entrar
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+);
 }
