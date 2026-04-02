@@ -31,26 +31,26 @@ export default function LoginPage() {
 
     const role = data.user.role;
 
-const session = {
-  user_id: data.user.id,
-  role,
-};
+    const session = {
+      user_id: data.user.id,
+      role,
+    };
 
-document.cookie = `qp_session=${encodeURIComponent(
-  JSON.stringify(session)
-)}; path=/; SameSite=Lax`;
+    document.cookie = `qp_session=${encodeURIComponent(
+      JSON.stringify(session)
+    )}; path=/; SameSite=Lax`;
 
-router.refresh();
+    router.refresh();
 
-if (role === "admin") {
-  router.replace("/admin");
-} else if (role === "proceso") {
-  router.replace("/drafts");
-} else if (role === "facturacion") {
-  router.replace("/facturacion");
-} else {
-  router.replace("/login");
-}
+    if (role === "admin") {
+      router.replace("/admin");
+    } else if (role === "proceso") {
+      router.replace("/drafts");
+    } else if (role === "facturacion") {
+      router.replace("/facturacion");
+    } else {
+      router.replace("/login");
+    }
   };
 
   return (
@@ -58,6 +58,11 @@ if (role === "admin") {
       <h1 style={{ fontSize: 48, fontWeight: 700, marginBottom: 24 }}>
         Sign in
       </h1>
+
+      {/* Logo arriba del formulario */}
+      <div className="flex justify-center mb-6">
+        <img src="/logo.png" alt="Logo" className="h-16" />
+      </div>
 
       <form onSubmit={submit} style={{ display: "flex", gap: 8 }}>
         <input
