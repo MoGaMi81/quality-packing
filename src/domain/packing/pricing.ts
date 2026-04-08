@@ -18,10 +18,10 @@ function isGrouperWG(l: PackingLine): boolean {
 
   // ✅ SOLO estas 4 especies
   return (
-    desc.includes("BLACK GROUPER") ||
-    desc.includes("SCAMP GROUPER") ||
-    desc.includes("FIREBACK GROUPER") ||
-    desc.includes("GAG GROUPER")
+    desc.includes("BLACK GROUPER FRESH") ||
+    desc.includes("SCAMP GROUPER FRESH") ||
+    desc.includes("FIREBACK GROUPE FRESH") ||
+    desc.includes("GAG GROUPER FRESH")
   );
 }
 
