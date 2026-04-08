@@ -116,8 +116,12 @@ export async function POST(
         .update({ price })
         .eq("packing_id", packing_id)
         .eq("form", "W&G")
-        .ilike("description_en", "%GROUPER%")
-        .not("description_en", "ilike", "%FILLET%");
+.or(
+  "description_en.ilike.BLACK GROUPER FRESH%," +
+  "description_en.ilike.SCAMP GROUPER FRESH%," +
+  "description_en.ilike.FIRE BACK GROUPER FRESH%," +
+  "description_en.ilike.GAG GROUPER FRESH%"
+);
 
       if (error) {
         return NextResponse.json(
@@ -129,29 +133,32 @@ export async function POST(
       continue;
     }
 
-    const [code, form, size] = key.split("|");
+    // 🔥 NUEVO FORMATO description|||form|||size
+const parts = key.split("|||");
 
-    if (!code || !form || !size) {
-      return NextResponse.json(
-        { ok: false, error: `Clave inválida: ${key}` },
-        { status: 400 }
-      );
-    }
+if (parts.length !== 3) {
+  return NextResponse.json(
+    { ok: false, error: `Clave inválida: ${key}` },
+    { status: 400 }
+  );
+}
 
-    const { error } = await supabase
-      .from("packing_lines")
-      .update({ price })
-      .eq("packing_id", packing_id)
-      .eq("code", code)
-      .eq("form", form)
-      .eq("size", size);
+const [description, form, size] = parts;
 
-    if (error) {
-      return NextResponse.json(
-        { ok: false, error: error.message },
-        { status: 500 }
-      );
-    }
+const { error } = await supabase
+  .from("packing_lines")
+  .update({ price })
+  .eq("packing_id", packing_id)
+  .eq("description_en", description)
+  .eq("form", form)
+  .eq("size", size);
+
+if (error) {
+  return NextResponse.json(
+    { ok: false, error: error.message },
+    { status: 500 }
+  );
+}
   }
 
   /* =====================================================
