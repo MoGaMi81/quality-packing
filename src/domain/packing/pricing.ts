@@ -11,20 +11,21 @@ import type { PackingLine } from "./types";
 function isGrouperWG(l: PackingLine): boolean {
   if (l.form !== "W&G") return false;
 
-  const desc = l.description_en?.toUpperCase() || "";
+  const desc = l.description_en?.toUpperCase().trim() || "";
 
   // ❌ excluir fillet
   if (desc.includes("FILLET")) return false;
 
-  // ✅ SOLO estas 4 especies
-  return (
-    desc.includes("BLACK GROUPER FRESH") ||
-    desc.includes("SCAMP GROUPER FRESH") ||
-    desc.includes("FIREBACK GROUPE FRESH") ||
-    desc.includes("GAG GROUPER FRESH")
-  );
-}
+  // ✅ SOLO EXACTOS PERMITIDOS
+  const allowed = [
+    "BLACK GROUPER FRESH",
+    "SCAMP GROUPER FRESH",
+    "FIRE BACK GROUPER FRESH",
+    "GAG GROUPER FRESH",
+  ];
 
+  return allowed.some((name) => desc.startsWith(name));
+}
 // ----------------------------------------------------------
 // 2. Extraer especies únicas a las que se les debe pedir precio
 //
