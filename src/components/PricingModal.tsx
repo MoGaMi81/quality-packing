@@ -2,25 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { PackingLine } from "@/domain/packing/types";
-
-function isGrouperWG(l: PackingLine) {
-  return (
-    l.form === "W&G" &&
-    !l.description_en?.toUpperCase().includes("FILLET") &&
-    l.description_en?.toUpperCase().includes("GROUPER")
-  );
-}
-
-
-function priceKey(l: PackingLine) {
-  
-  if (isGrouperWG(l)) {
-    return "GROUPER_WG"; 
-  }
-
- 
-  return `${l.code}|${l.form}|${l.size}`;
-}
+import { extractPricingSpecies } from "@/domain/packing/pricing";
 
 type PriceReq = {
   key: string;
@@ -47,39 +29,46 @@ export default function PricingModal({
   useEffect(() => {
     if (!open) return;
 
-    const map = new Map<string, PriceReq>();
+    // 🔥 USAR SOLO EL ENGINE CENTRAL
+    const r = extractPricingSpecies(lines).map((req) => ({
+      key: req.key,
+      display: req.display,
+    }));
 
-    for (const l of lines) {
-      const key = priceKey(l);
-      if (!map.has(key)) {
-        map.set(key, {
-          key,
-          display:
-            key === "GROUPER_WG"
-              ? "GROUPER W&G"
-              : `${l.description_en} ${l.form} ${l.size}`,
-        });
+    setReqs(r);
+
+    // 🔹 inicializar valores (si ya hay precios)
+    const init: Record<string, string> = {};
+
+    for (const req of r) {
+      const exampleLine = lines.find((l) => {
+        const key =
+          req.key === "GROUPER_WG"
+            ? (
+                l.form === "W&G" &&
+                !l.description_en?.toUpperCase().includes("FILLET") &&
+                [
+                  "BLACK GROUPER FRESH",
+                  "SCAMP GROUPER FRESH",
+                  "FIRE BACK GROUPER FRESH",
+                  "GAG GROUPER FRESH",
+                ].some((name) =>
+                  (l.description_en ?? "").toUpperCase().startsWith(name)
+                )
+              )
+            : `${l.description_en}|||${l.form}|||${l.size}` === req.key;
+
+        return key;
+      });
+
+      if (exampleLine?.price != null) {
+        init[req.key] = exampleLine.price.toString();
+      } else {
+        init[req.key] = "";
       }
     }
 
-    const r = Array.from(map.values());
-    setReqs(r);
-
-    const init: Record<string, string> = {};
-
-for (const req of r) {
-  const exampleLine = lines.find(
-    (l) => priceKey(l) === req.key
-  );
-
-  if (exampleLine?.price != null) {
-    init[req.key] = exampleLine.price.toString();
-  } else {
-    init[req.key] = "";
-  }
-}
     setValues(init);
-
     setError("");
   }, [open, lines]);
 
@@ -90,10 +79,12 @@ for (const req of r) {
 
     for (const req of reqs) {
       const n = Number(values[req.key]);
+
       if (!Number.isFinite(n) || n <= 0) {
         setError(`Falta precio válido para ${req.display}`);
         return;
       }
+
       out[req.key] = n;
     }
 
@@ -103,14 +94,15 @@ for (const req of r) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded p-6 max-h-[85vh] overflow-y-auto">
-        <h2 className="text-xl font-bold">Precios</h2>
+      <div className="bg-white rounded p-6 max-h-[85vh] overflow-y-auto w-[420px]">
+        <h2 className="text-xl font-bold mb-4">Precios</h2>
 
         {reqs.map((req) => (
-          <div key={req.key} className="space-y-1">
+          <div key={req.key} className="space-y-1 mb-3">
             <label className="text-sm font-semibold block">
               {req.display}
             </label>
+
             <input
               className="border rounded px-3 py-1 w-full"
               value={values[req.key] ?? ""}
@@ -128,12 +120,18 @@ for (const req of r) {
           </div>
         ))}
 
-        {error && <div className="text-red-600 text-sm">{error}</div>}
+        {error && (
+          <div className="text-red-600 text-sm mb-2">{error}</div>
+        )}
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button className="px-3 py-1 border rounded" onClick={onClose}>
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            className="px-3 py-1 border rounded"
+            onClick={onClose}
+          >
             Cancelar
           </button>
+
           <button
             className="px-4 py-1 bg-black text-white rounded"
             onClick={save}
