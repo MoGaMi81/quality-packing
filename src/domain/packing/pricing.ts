@@ -9,10 +9,19 @@ import type { PackingLine } from "./types";
 // 1. Detectar GROUPER W&G REAL (sin depender de code)
 // ----------------------------------------------------------
 function isGrouperWG(l: PackingLine): boolean {
+  if (l.form !== "W&G") return false;
+
+  const desc = l.description_en?.toUpperCase() || "";
+
+  // ❌ excluir fillet
+  if (desc.includes("FILLET")) return false;
+
+  // ✅ SOLO estas 4 especies
   return (
-    l.form === "W&G" &&
-    !l.description_en?.toUpperCase().includes("FILLET") &&
-    l.description_en?.toUpperCase().includes("GROUPER")
+    desc.includes("BLACK GROUPER") ||
+    desc.includes("SCAMP GROUPER") ||
+    desc.includes("FIREBACK GROUPER") ||
+    desc.includes("GAG GROUPER")
   );
 }
 

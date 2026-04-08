@@ -18,12 +18,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     // 👇 Alias a la carpeta src para usar "@/..."
-    "baseUrl": "src",
     "paths": {
-      "@/*": [
-        "*"
-      ]
-    },
+  "@/*": ["./src/*"]
+},
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "incremental": true,
     "plugins": [
