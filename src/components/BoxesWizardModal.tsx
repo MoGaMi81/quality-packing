@@ -19,7 +19,6 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
 
   const [mode, setMode] = useState<Mode>("SIMPLE");
 
-  // inputs
   const [code, setCode] = useState("");
   const [qty, setQty] = useState(1);
   const [pounds, setPounds] = useState(0);
@@ -29,16 +28,16 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [combinedLines, setCombinedLines] = useState<PackingLine[]>([]);
 
   const [simpleMode, setSimpleMode] = useState<"CANTIDAD" | "RANGO">("CANTIDAD");
-const [rangeFrom, setRangeFrom] = useState<number | "">("");
-const [rangeTo, setRangeTo] = useState<number | "">("");
+  const [rangeFrom, setRangeFrom] = useState<number | "">("");
+  const [rangeTo, setRangeTo] = useState<number | "">("");
 
   const [conflict, setConflict] = useState<{
-  oldCode: string;
-  newCode: string;
-  desc: string;
-} | null>(null);
+    oldCode: string;
+    newCode: string;
+    desc: string;
+  } | null>(null);
 
-const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (!open) return null;
 
@@ -50,154 +49,157 @@ const [showConfirm, setShowConfirm] = useState(false);
     return nums.length ? Math.max(...nums) + 1 : 1;
   }
 
+  function getLastBoxInfo() {
+    const nums = lines
+      .map((l) => Number(l.box_no))
+      .filter((n) => Number.isFinite(n));
+
+    if (nums.length === 0) {
+      return { last: null, next: 1 };
+    }
+
+    const last = Math.max(...nums);
+
+    return {
+      last,
+      next: last + 1,
+    };
+  }
+
+  const { last, next } = getLastBoxInfo();
+
   function boxExists(boxNo: number): boolean {
-  return lines.some(l => Number(l.box_no) === boxNo);
-}
+    return lines.some(l => Number(l.box_no) === boxNo);
+  }
 
   /* =====================
      SIMPLE / RANGO
   ===================== */
   function addSimple() {
-  const species = getByCode(code);
-  if (!species || pounds <= 0) return;
-
-  if (simpleMode === "CANTIDAD" && qty <= 0) return;
-
-  const existing = lines.find(
-    (l) =>
-      l.description_en === species.description_en &&
-      l.size === species.size &&
-      l.form === species.form &&
-      l.code !== species.code
-  );
-
-  if (existing) {
-    setConflict({
-      oldCode: existing.code ?? "",
-      newCode: species.code ?? "",
-      desc: species.description_en ?? "",
-    });
-
-    setShowConfirm(true);
-    return;
-  }
-
-  let boxNumbers: number[] = [];
-
-  // =========================
-  // MODO CANTIDAD (igual que hoy)
-  // =========================
-  if (simpleMode === "CANTIDAD") {
-    const startBoxNo = getNextBoxNo();
-    boxNumbers = Array.from({ length: qty }, (_, i) => startBoxNo + i);
-  }
-
-  // =========================
-  // MODO RANGO (nuevo)
-  // =========================
-  if (simpleMode === "RANGO") {
-    const from = Number(rangeFrom);
-    const to = Number(rangeTo);
-
-    if (!from || !to) {
-      alert("Completa el rango");
-      return;
-    }
-
-    if (from <= 0 || to <= 0 || to < from) {
-      alert("Rango inválido");
-      return;
-    }
-
-    const repeated = [];
-    for (let n = from; n <= to; n++) {
-      if (boxExists(n)) repeated.push(n);
-    }
-
-    if (repeated.length > 0) {
-      alert(`Ya existen cajas dentro de ese rango: ${repeated.join(", ")}`);
-      return;
-    }
-
-    for (let n = from; n <= to; n++) {
-      boxNumbers.push(n);
-    }
-  }
-
-  const newLines: PackingLine[] = boxNumbers.map((box_no) => ({
-    box_no,
-    is_combined: false,
-    code: species.code,
-    description_en: species.description_en,
-    scientific_name: species.scientific_name ?? null,
-    form: species.form,
-    size: species.size,
-    pounds,
-  }));
-
-  addLines(newLines);
-
-  // 🔥 mantener modo scanner
-  setCode("");
-  setPounds(0);
-  setQty(1);
-  setRangeFrom("");
-  setRangeTo("");
-
-  setTimeout(() => {
-    inputRef.current?.focus();
-  }, 0);
-}
-
-  /* =====================
-     COMBINADA
-  ===================== */
-  function addCombinedLine() {
     const species = getByCode(code);
     if (!species || pounds <= 0) return;
 
-    const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
+    if (simpleMode === "CANTIDAD" && qty <= 0) return;
 
-    const line: PackingLine = {
-      box_no: boxNo,
-      is_combined: true,
+    const existing = lines.find(
+      (l) =>
+        l.description_en === species.description_en &&
+        l.size === species.size &&
+        l.form === species.form &&
+        l.code !== species.code
+    );
+
+    if (existing) {
+      setConflict({
+        oldCode: existing.code ?? "",
+        newCode: species.code ?? "",
+        desc: species.description_en ?? "",
+      });
+
+      setShowConfirm(true);
+      return;
+    }
+
+    let boxNumbers: number[] = [];
+
+    if (simpleMode === "CANTIDAD") {
+      const startBoxNo = getNextBoxNo();
+      boxNumbers = Array.from({ length: qty }, (_, i) => startBoxNo + i);
+    }
+
+    if (simpleMode === "RANGO") {
+      const from = Number(rangeFrom);
+      const to = Number(rangeTo);
+
+      if (!from || !to) {
+        alert("Completa el rango");
+        return;
+      }
+
+      if (from <= 0 || to <= 0 || to < from) {
+        alert("Rango inválido");
+        return;
+      }
+
+      const repeated = [];
+      for (let n = from; n <= to; n++) {
+        if (boxExists(n)) repeated.push(n);
+      }
+
+      if (repeated.length > 0) {
+        alert(`Ya existen cajas dentro de ese rango: ${repeated.join(", ")}`);
+        return;
+      }
+
+      for (let n = from; n <= to; n++) {
+        boxNumbers.push(n);
+      }
+    }
+
+    const newLines: PackingLine[] = boxNumbers.map((box_no) => ({
+      box_no,
+      is_combined: false,
       code: species.code,
       description_en: species.description_en,
       scientific_name: species.scientific_name ?? null,
       form: species.form,
       size: species.size,
       pounds,
-    };
+    }));
 
-    setCombinedLines(prev => [...prev, line]);
+    addLines(newLines);
 
-    // 🔹 limpiar y enfocar clave de especie
     setCode("");
     setPounds(0);
-    inputRef.current?.focus();
-  }
-
-  function saveCombinedBox() {
-    if (!combinedLines.length) return;
-    addLines(combinedLines);
-    resetAll();
-
-    // 🔹 limpiar y enfocar clave de especie
-    setCode("");
     setQty(1);
-    inputRef.current?.focus();
+    setRangeFrom("");
+    setRangeTo("");
+
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   }
 
-  function resetAll() {
+  // =====================
+// COMBINADA
+// =====================
+function addCombinedLine() {
+  const species = getByCode(code);
+  if (!species || pounds <= 0) return;
+
+  const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
+
+  const line: PackingLine = {
+    box_no: boxNo,
+    is_combined: true,
+    code: species.code,
+    description_en: species.description_en,
+    scientific_name: species.scientific_name ?? null,
+    form: species.form,
+    size: species.size,
+    pounds,
+  };
+
+  setCombinedLines(prev => [...prev, line]);
+
   setCode("");
-  setQty(1);
-  setRangeFrom("");
-  setRangeTo("");
   setPounds(0);
-  setCombinedLines([]);
+  inputRef.current?.focus();
 }
 
-  function replaceSpeciesCode(newCode: string) {
+function saveCombinedBox() {
+  if (!combinedLines.length) return;
+
+  addLines(combinedLines);
+
+  setCombinedLines([]);
+  setCode("");
+  setQty(1);
+
+  inputRef.current?.focus();
+}
+
+function replaceSpeciesCode(newCode: string) {
   const species = getByCode(newCode);
   if (!species) return;
 
@@ -221,16 +223,27 @@ const [showConfirm, setShowConfirm] = useState(false);
   /* =====================
      UI
   ===================== */
-  const species = getByCode(code);
 
-  function setSuccess(arg0: string) {
-    throw new Error("Function not implemented.");
-  }
+  const species = getByCode(code);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
       <div className="bg-white w-[520px] rounded p-4 shadow-lg">
-        <h2 className="font-bold mb-3">Agregar cajas</h2>
+
+        <h2 className="font-bold mb-1">Agregar cajas</h2>
+
+        {/* 🔥 NUEVO BLOQUE */}
+        <div className="text-sm text-gray-600 mb-3">
+          {last ? (
+            <>
+              Última caja: <b>{last}</b> · Siguiente: <b>{next}</b>
+            </>
+          ) : (
+            <>Primera caja: <b>1</b></>
+          )}
+        </div>
+
+        {/* resto de tu código SIN CAMBIOS */}
 
         {/* MODE */}
         <div className="flex gap-2 mb-4">
