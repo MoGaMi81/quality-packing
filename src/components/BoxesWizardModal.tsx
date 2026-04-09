@@ -30,6 +30,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [simpleMode, setSimpleMode] = useState<"CANTIDAD" | "RANGO">("CANTIDAD");
   const [rangeFrom, setRangeFrom] = useState<number | "">("");
   const [rangeTo, setRangeTo] = useState<number | "">("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [conflict, setConflict] = useState<{
     oldCode: string;
@@ -149,6 +150,20 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
 
     addLines(newLines);
 
+    function scrollToBottom() {
+  setTimeout(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: "smooth",
+    });
+  }, 50);
+}
+
+scrollToBottom();
+
     setCode("");
     setPounds(0);
     setQty(1);
@@ -192,6 +207,8 @@ function saveCombinedBox() {
 
   addLines(combinedLines);
 
+  scrollToBottom();
+
   setCombinedLines([]);
   setCode("");
   setQty(1);
@@ -228,7 +245,10 @@ function replaceSpeciesCode(newCode: string) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-white w-[520px] rounded p-4 shadow-lg">
+      <div
+  ref={containerRef}
+  className="bg-white w-[520px] rounded p-4 shadow-lg max-h-[85vh] overflow-y-auto"
+>
 
         <h2 className="font-bold mb-1">Agregar cajas</h2>
 
@@ -477,4 +497,8 @@ function replaceSpeciesCode(newCode: string) {
 )}
     </div>
   );
+}
+
+function scrollToBottom() {
+  throw new Error("Function not implemented.");
 }
