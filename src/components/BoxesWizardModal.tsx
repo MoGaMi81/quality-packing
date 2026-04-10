@@ -31,6 +31,7 @@ export default function BoxesWizardModal({ open, onClose }: Props) {
   const [rangeFrom, setRangeFrom] = useState<number | "">("");
   const [rangeTo, setRangeTo] = useState<number | "">("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const [currentCombinedBoxNo, setCurrentCombinedBoxNo] = useState<number | null>(null);
 
   const [conflict, setConflict] = useState<{
     oldCode: string;
@@ -175,14 +176,29 @@ scrollToBottom();
     }, 0);
   }
 
-  // =====================
+ // =====================
 // COMBINADA
 // =====================
 function addCombinedLine() {
   const species = getByCode(code);
   if (!species || pounds <= 0) return;
 
-  const boxNo = combinedLines[0]?.box_no ?? getNextBoxNo();
+  // Verificar si ya existe una línea con los mismos datos
+  const exists = combinedLines.some(
+    l =>
+      l.description_en === species.description_en &&
+      l.size === species.size &&
+      l.form === species.form &&
+      l.pounds === pounds
+  );
+
+  if (exists) return;
+
+  const boxNo = currentCombinedBoxNo ?? getNextBoxNo();
+
+  if (!currentCombinedBoxNo) {
+    setCurrentCombinedBoxNo(boxNo);
+  }
 
   const line: PackingLine = {
     box_no: boxNo,
@@ -196,6 +212,7 @@ function addCombinedLine() {
   };
 
   setCombinedLines(prev => [...prev, line]);
+  setCurrentCombinedBoxNo(null);
 
   setCode("");
   setPounds(0);
@@ -215,6 +232,7 @@ function saveCombinedBox() {
 
   inputRef.current?.focus();
 }
+
 
 function replaceSpeciesCode(newCode: string) {
   const species = getByCode(newCode);
