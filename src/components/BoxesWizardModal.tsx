@@ -222,7 +222,13 @@ function addCombinedLine() {
 function saveCombinedBox() {
   if (!combinedLines.length) return;
 
-  addLines(combinedLines);
+  const newLines = combinedLines.map(l => ({
+  ...l,
+}));
+
+addLines(newLines);
+setCombinedLines([]);
+setCurrentCombinedBoxNo(null);
 
   scrollToBottom();
 
