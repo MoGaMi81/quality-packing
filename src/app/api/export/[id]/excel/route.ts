@@ -486,6 +486,7 @@ const totalBoxesPacking = uniqueBoxes.size;
 
 const lastDataRow = packingRow - 1;
 const totalsRow = lastDataRow + 3;
+setOuterBorder(packingSheet, 13, totalsRow, 1, 8);
 
 const totalWeightPacking = sortedLines.reduce(
   (sum, l) => sum + l.pounds,
@@ -912,7 +913,22 @@ function writeInvoiceRow(data: {
 // 🔹 SIMPLES AGRUPADOS
 // ============================================================
 
-simpleMap.forEach((g) => {
+// 🔁 REEMPLAZO DEL BLOQUE EN INVOICE
+
+const sortedSimples = Array.from(simpleMap.values()).sort((a, b) => {
+  const desc = a.desc.localeCompare(b.desc);
+  if (desc !== 0) return desc;
+
+  const form = a.form.localeCompare(b.form);
+  if (form !== 0) return form;
+
+  return a.size.localeCompare(b.size, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+});
+
+sortedSimples.forEach((g) => {
   const amount = g.pounds * g.price;
   totalAmount += amount;
   totalLbs += g.pounds;
@@ -928,6 +944,7 @@ simpleMap.forEach((g) => {
     amount,
   });
 });
+
 
 // ============================================================
 // 🔹 COMBINADAS (BOX BY BOX)
