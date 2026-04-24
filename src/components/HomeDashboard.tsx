@@ -45,7 +45,7 @@ export default function HomeDashboard({
           )}
         </header>
 
-        <section className="mb-8 rounded-3xl bg-white/90 p-8 shadow-xl">
+        <section className="mb-8 rounded-3xl bg-white/85 backdrop-blur-md p-8 shadow-xl">
           <h1 className="text-4xl font-bold text-gray-900">{title}</h1>
           <p className="mt-2 text-lg text-gray-600">{subtitle}</p>
         </section>
@@ -55,7 +55,7 @@ export default function HomeDashboard({
             <button
               key={action.title}
               onClick={action.onClick}
-              className="group rounded-2xl bg-white/95 p-6 text-left shadow-lg transition hover:-translate-y-1 hover:shadow-2xl"
+              className="group rounded-2xl bg-white/90 backdrop-blur-md p-6 text-left shadow-lg transition hover:-translate-y-1 hover:shadow-2xl"
             >
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">
