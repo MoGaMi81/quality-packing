@@ -28,7 +28,7 @@ export default function HomeDashboard({
           alt=""
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-white/75 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-white/45 backdrop-blur-sm" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-8">
