@@ -1,1 +1,12 @@
-{}
+{
+  "/login/page": "app/login/page.js",
+  "/api/packings/[id]/route": "app/api/packings/[id]/route.js",
+  "/facturacion/ver/[invoice]/page": "app/facturacion/ver/[invoice]/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/page": "app/page.js",
+  "/api/admin/pricing/pending-count/route": "app/api/admin/pricing/pending-count/route.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/admin/view/page": "app/admin/view/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/view/[id]/page": "app/admin/view/[id]/page.js"
+}
