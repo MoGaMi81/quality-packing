@@ -87,13 +87,14 @@ const headerFontAWBLabel = { name: "Seaford", size: 13, bold: true };
   const { data: packing, error: e1 } = await supabase
     .from("packings")
     .select(`
-      id,
-      invoice_no,
-      guide,
-      client_code,
-      client_name,
-      created_at
-    `)
+  id,
+  invoice_no,
+  guide,
+  client_code,
+  client_name,
+  date,
+  created_at
+`)
     .eq("id", params.id)
     .single();
 
@@ -367,7 +368,7 @@ packingSheet.getCell("E11").value = "DATE";
 packingSheet.getCell("E11").font = headerFontMedium;
 packingSheet.getCell("E11").alignment = { horizontal: "left", vertical: "middle" };
 
-packingSheet.getCell("G11").value = packing.created_at?.slice(0, 10);
+packingSheet.getCell("G11").value = packing.date ?? "";
 packingSheet.getCell("G11").font = headerFontMedium;
 packingSheet.getCell("G11").alignment = { horizontal: "right", vertical: "middle" };
 setOuterBorder(packingSheet, 11, 11, 5, 8);
@@ -723,8 +724,7 @@ safeMerge(invoiceSheet, "G11:H11");
 invoiceSheet.getCell("E11").value = "DATE";
 invoiceSheet.getCell("E11").font = headerFontMedium;
 
-invoiceSheet.getCell("G11").value =
-packing.created_at?.slice(0, 10) ?? "";
+invoiceSheet.getCell("G11").value = packing.date ?? "";
 
 invoiceSheet.getCell("G11").font = headerFontMedium;
 invoiceSheet.getCell("G11").alignment = {
